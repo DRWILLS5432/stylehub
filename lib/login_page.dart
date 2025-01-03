@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -74,64 +76,63 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Widget _buildLoginTab() {
+    final TextEditingController emailController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
+
+    Future<void> _login() async {
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful!')),
+        );
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Login failed!')),
+        );
+      }
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          'Welcome Back',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
+        const Text('Welcome Back',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 40),
         TextField(
+          controller: emailController,
           decoration: InputDecoration(
             labelText: 'Email',
             fillColor: Colors.white,
             filled: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(height: 20),
         TextField(
+          controller: passwordController,
+          obscureText: true,
           decoration: InputDecoration(
             labelText: 'Password',
             fillColor: Colors.white,
             filled: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
           ),
-          obscureText: true,
         ),
         const SizedBox(height: 40),
         ElevatedButton(
-          onPressed: () {
-            // Логика для входа в систему
-          },
+          onPressed: _login,
           style: ElevatedButton.styleFrom(
-            minimumSize: const Size.fromHeight(50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            backgroundColor: Colors.black, // Цвет кнопки
-          ),
-          child: const Text(
-            'Log In',
-            style: TextStyle(fontSize: 18, color: Colors.white),
-          ),
-        ),
-        const SizedBox(height: 20),
-        TextButton(
-          onPressed: () {
-            // Логика для восстановления пароля
-          },
-          child: const Text(
-            'Recover',
-            style: TextStyle(color: Colors.deepPurple),
-          ),
+              minimumSize: const Size.fromHeight(50),
+              backgroundColor: Colors.black),
+          child: const Text('Log In',
+              style: TextStyle(fontSize: 18, color: Colors.white)),
         ),
       ],
     );
