@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'customer_page.dart';
+import 'specialist_page.dart';
 
 Future<void> addUser(String userId, String firstName, String lastName,
     String email, String role) async {
@@ -250,11 +251,11 @@ class _LoginPageState extends State<LoginPage>
               context,
               MaterialPageRoute(builder: (context) => CustomerPage()),
             );
-            // } else if (role == 'Stylist') {
-            //   Navigator.pushReplacement(
-            //     context,
-            //     MaterialPageRoute(builder: (context) => StylistPage()),
-            //   );
+          } else if (role == 'Stylist') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => SpecialistPage()),
+            );
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

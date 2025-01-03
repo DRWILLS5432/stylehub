@@ -5,12 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
-class CustomerPage extends StatefulWidget {
+class SpecialistPage extends StatefulWidget {
   @override
-  _CustomerPageState createState() => _CustomerPageState();
+  _SpecialistPageState createState() => _SpecialistPageState();
 }
 
-class _CustomerPageState extends State<CustomerPage> {
+class _SpecialistPageState extends State<SpecialistPage> {
   String? userName;
   Uint8List? _imageBytes;
 
@@ -128,12 +128,16 @@ class _CustomerPageState extends State<CustomerPage> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
+            icon: Icon(Icons.book),
             label: 'Appointments',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Likes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Schedule',
           ),
         ],
       ),
