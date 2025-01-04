@@ -61,6 +61,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+    - assets/haircut_icon.png
+    - assets/shave_icon.png
+    - assets/facials_icon.png
+    - assets/manicure_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

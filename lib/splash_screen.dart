@@ -14,15 +14,6 @@ class SplashScreen extends StatelessWidget {
               width: 150,
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Welcome to My App',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
             const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
