@@ -65,6 +65,7 @@ flutter:
     - assets/shave_icon.png
     - assets/facials_icon.png
     - assets/manicure_icon.png
+    - assets/categ_settings.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
