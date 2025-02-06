@@ -1,19 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:stylehub/constants/app/app_colors.dart';
+import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/constants/textstyle.dart';
+import 'package:stylehub/services/firebase_auth.dart';
+
 import 'customer_page.dart';
 import 'specialist_page.dart';
-
-Future<void> addUser(String userId, String firstName, String lastName,
-    String email, String role) async {
-  await FirebaseFirestore.instance.collection('users').doc(userId).set({
-    'firstName': firstName,
-    'lastName': lastName,
-    'email': email,
-    'role': role,
-  });
-}
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,10 +17,14 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
-    with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String? selectedRole; // Default role is null
+  String? selectedRole;
+  final FirebaseService _firebaseService = FirebaseService(); // Create an instance of FirebaseService
+
+  // Loading states
+  bool _isRegistering = false;
+  bool _isLoggingIn = false;
 
   @override
   void initState() {
@@ -39,41 +38,51 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFD7D1BE),
+      backgroundColor: AppColors.appBGColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 50),
-              Image.asset(
-                'assets/logo.png',
-                width: 150,
-              ),
-              const SizedBox(height: 20),
-              TabBar(
-                controller: _tabController,
-                indicatorColor: Colors.black,
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.grey,
-                tabs: const [
-                  Tab(text: 'Create account'),
-                  Tab(text: 'Log In'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.h),
+            child: Column(
+              children: [
+                // SizedBox(height: 20.h),
+                SizedBox(
+                  height: 120.h,
+                  child: Image.asset(
+                    'assets/logo.png',
+                    // width: 250.h,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                //  SizedBox(height: 20.h),
+                TabBar(
                   controller: _tabController,
-                  children: [
-                    _buildCreateAccountTab(),
-                    _buildLoginTab(),
+                  indicatorColor: Colors.black,
+                  labelColor: Colors.black,
+                  unselectedLabelColor: Colors.grey,
+                  tabs: [
+                    Tab(text: LocaleData.createAccount.getString(context)),
+                    Tab(text: LocaleData.login.getString(context)),
                   ],
                 ),
-              ),
-            ],
+                SizedBox(height: 40.h),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildCreateAccountTab(),
+                      _buildLoginTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -86,141 +95,198 @@ class _LoginPageState extends State<LoginPage>
     final TextEditingController emailController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
 
-    Future<void> _register() async {
+    Future<void> register() async {
       if (selectedRole == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a role.')),
+          const SnackBar(content: Text('Please select a role')),
         );
         return;
       }
 
+      setState(() {
+        _isRegistering = true; // Start loading
+      });
+
       try {
-        UserCredential userCredential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        User? user = await _firebaseService.registerUser(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
+          firstName: firstNameController.text.trim(),
+          lastName: lastNameController.text.trim(),
+          role: selectedRole!,
         );
-        // You can add additional user data to Firestore or any other database here
-        String userId = userCredential.user!.uid;
-        await addUser(
-            userId,
-            firstNameController.text.trim(),
-            lastNameController.text.trim(),
-            emailController.text.trim(),
-            selectedRole!);
-        print('User registered: $userId');
+
+        if (user != null) {
+          if (selectedRole == 'Customer') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => CustomerPage()),
+            );
+          } else if (selectedRole == 'Stylist') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => SpecialistPage()),
+            );
+          }
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful!')),
+          SnackBar(content: Text(e.toString())),
         );
-      } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Registration failed!')),
-        );
+      } finally {
+        setState(() {
+          _isRegistering = false; // Stop loading
+        });
       }
     }
 
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DropdownButtonFormField<String>(
+              borderRadius: BorderRadius.circular(14.dg),
               value: selectedRole,
-              hint: const Text('Select between Customer or Stylist'),
+              hint: Text(LocaleData.selectRole.getString(context), style: appTextStyle12K(AppColors.appGrayTextColor)),
               decoration: InputDecoration(
                 fillColor: Colors.white,
                 filled: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 15), // Adjust padding to match other fields
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 15.h),
               ),
               onChanged: (String? newValue) {
                 setState(() {
                   selectedRole = newValue;
                 });
               },
-              items: <String>['Customer', 'Stylist']
-                  .map<DropdownMenuItem<String>>((String value) {
+              items: <String>[
+                LocaleData.customer.getString(context),
+                LocaleData.stylist.getString(context),
+              ].map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
                 );
               }).toList(),
               isExpanded: true,
-              style: const TextStyle(
-                  color: Colors.black), // Set text color to black
-              dropdownColor:
-                  Colors.white, // Set dropdown background color to white
-              icon: const Icon(Icons.arrow_drop_down,
-                  color: Colors.black), // Set dropdown icon color to black
+              style: const TextStyle(color: Colors.black),
+              dropdownColor: Colors.white,
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
             ),
-            const SizedBox(height: 20),
-            TextField(
+            SizedBox(height: 20.h),
+            TextFormField(
               controller: firstNameController,
               decoration: InputDecoration(
-                labelText: 'First Name',
+                labelText: LocaleData.firstName.getString(context),
+                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
                 fillColor: Colors.white,
                 filled: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return LocaleData.firstNameRequired.getString(context);
+                }
+                return null;
+              },
             ),
-            const SizedBox(height: 20),
-            TextField(
+            SizedBox(height: 20.h),
+            TextFormField(
               controller: lastNameController,
               decoration: InputDecoration(
-                labelText: 'Last Name',
+                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                labelText: LocaleData.lastName.getString(context),
                 fillColor: Colors.white,
                 filled: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return LocaleData.lastNameRequired.getString(context);
+                }
+                return null;
+              },
             ),
-            const SizedBox(height: 20),
-            TextField(
+            SizedBox(height: 20.h),
+            TextFormField(
               controller: emailController,
               decoration: InputDecoration(
-                labelText: 'Email',
+                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                labelText: LocaleData.email.getString(context),
                 fillColor: Colors.white,
                 filled: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.h), borderSide: BorderSide.none),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return LocaleData.emailRequired.getString(context);
+                }
+                if (!validateEmail(value)) {
+                  // Use one of the validation methods above
+                  return LocaleData.emailInvalid.getString(context);
+                }
+                return null;
+              },
             ),
-            const SizedBox(height: 20),
-            TextField(
+            SizedBox(height: 20.h),
+            TextFormField(
               controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                labelText: LocaleData.password.getString(context),
                 fillColor: Colors.white,
                 filled: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return LocaleData.passwordRequired.getString(context);
+                } else if (value.length < 6) {
+                  return LocaleData.passwordInvalid.getString(context);
+                }
+                return null;
+              },
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: 40.h),
             ElevatedButton(
-              onPressed: _register,
-              style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                  backgroundColor: Colors.black),
-              child: const Text('Register',
-                  style: TextStyle(fontSize: 18, color: Colors.white)),
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  if (selectedRole != null) {
+                    // Form is valid AND a role is selected
+                    if (!_isRegistering) {
+                      // Check if not already registering
+                      register(); // Call the register function
+                    }
+                  } else {
+                    // Form is valid BUT NO role is selected
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(LocaleData.roleRequired.getString(context))),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(minimumSize: Size.fromHeight(50.h), backgroundColor: Colors.black),
+              child: _isRegistering
+                  ? SizedBox(
+                      height: 20.h,
+                      width: 20.w,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(LocaleData.register.getString(context), style: appTextStyle19(AppColors.whiteColor)),
             ),
             const SizedBox(height: 20),
-            const Text('Terms & Conditions Apply',
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
-            const Text('StyleHub 2024',
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(LocaleData.termsAndConditions.getString(context), style: appTextStyle12K(AppColors.appGrayTextColor)),
+            Text('StyleHub 2024', style: appTextStyle12K(AppColors.appGrayTextColor)),
           ],
         ),
       ),
@@ -231,21 +297,19 @@ class _LoginPageState extends State<LoginPage>
     final TextEditingController emailController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
 
-    Future<void> _login() async {
+    Future<void> login() async {
+      setState(() {
+        _isLoggingIn = true; // Start loading
+      });
+
       try {
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
+        User? user = await _firebaseService.loginUser(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
 
-        // Get the user role from Firestore
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .get();
-        if (userDoc.exists) {
-          String role = userDoc.get('role');
+        if (user != null) {
+          String? role = await _firebaseService.getUserRole(user.uid);
           if (role == 'Customer') {
             Navigator.pushReplacement(
               context,
@@ -257,58 +321,91 @@ class _LoginPageState extends State<LoginPage>
               MaterialPageRoute(builder: (context) => SpecialistPage()),
             );
           }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User not found!')),
-          );
         }
-      } on FirebaseAuthException catch (e) {
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Login failed!')),
+          SnackBar(content: Text(e.toString())),
         );
+      } finally {
+        setState(() {
+          _isLoggingIn = false; // Stop loading
+        });
       }
     }
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('Welcome Back',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 40),
-        TextField(
-          controller: emailController,
-          decoration: InputDecoration(
-            labelText: 'Email',
-            fillColor: Colors.white,
-            filled: true,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none),
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(LocaleData.welcomeBack.getString(context), style: appTextStyle23(AppColors.mainBlackTextColor)),
+          SizedBox(height: 40.h),
+          TextFormField(
+            controller: emailController,
+            decoration: InputDecoration(
+              labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+              hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+              labelText: LocaleData.email.getString(context),
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return LocaleData.emailRequired.getString(context);
+              }
+              if (!validateEmail(value)) {
+                // Use one of the validation methods above
+                return LocaleData.emailInvalid.getString(context);
+              }
+              return null;
+            },
           ),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: passwordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'Password',
-            fillColor: Colors.white,
-            filled: true,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none),
+          SizedBox(height: 20.h),
+          TextFormField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+              hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+              labelText: LocaleData.password.getString(context),
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return LocaleData.passwordRequired.getString(context);
+              }
+              return null;
+            },
           ),
-        ),
-        const SizedBox(height: 40),
-        ElevatedButton(
-          onPressed: _login,
-          style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              backgroundColor: Colors.black),
-          child: const Text('Log In',
-              style: TextStyle(fontSize: 18, color: Colors.white)),
-        ),
-      ],
+          const SizedBox(height: 40),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                _isLoggingIn ? null : login();
+              }
+            },
+            style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50), backgroundColor: Colors.black),
+            child: _isLoggingIn
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(LocaleData.login.getString(context), style: appTextStyle19(AppColors.whiteColor)),
+          ),
+        ],
+      ),
     );
   }
+}
+
+bool validateEmail(String email) {
+  String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$';
+  RegExp regex = RegExp(pattern);
+  return regex.hasMatch(email);
 }

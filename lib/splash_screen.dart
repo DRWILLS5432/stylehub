@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'welcome_screen.dart';
-import 'login_page.dart';
-import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -17,32 +15,37 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkFirstLaunch() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+//
 
-    // Задержка в 3 секунды перед переходом на следующую страницу
+    // Delay for 3 seconds to simulate a splash screen
     Future.delayed(const Duration(seconds: 3), () {
-      if (!isFirstLaunch) {
-        //ПОМЕНЯТЬ ПОСЛЕ ДЕБАГА
-        // Переход на страницу приветствия
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => OnboardingScreen()),
-        );
-      } else {
-        // Переход на главную страницу
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
-        );
-      }
+      Navigator.pushNamed(context, '/onboarding_screen');
+
+      // if (isFirstLaunch) {
+      //   // If it's the first launch, navigate to the OnboardingScreen
+      //   Navigator.pushReplacement(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => OnboardingScreen()),
+      //   );
+
+      //   // Set isFirstLaunch to false for future launches
+      //   prefs.setBool('isFirstLaunch', true);
+      // } else {
+      //   // If it's not the first launch, navigate to the LoginPage
+      //   Navigator.pushReplacement(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => LoginPage()),
+      //   );
+      // }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFD7D1BE),
+      backgroundColor: const Color(0xFFD7D1BE),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

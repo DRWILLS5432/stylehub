@@ -1,11 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
 class CustomerPage extends StatefulWidget {
+  const CustomerPage({super.key});
+
   @override
   _CustomerPageState createState() => _CustomerPageState();
 }
@@ -23,25 +26,34 @@ class _CustomerPageState extends State<CustomerPage> {
   Future<void> _fetchUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
       if (userDoc.exists) {
-        setState(() {
-          userName = userDoc.get('firstName');
-          String? base64Image = userDoc.get('profileImage');
-          if (base64Image != null) {
-            _imageBytes = base64Decode(base64Image);
-          }
-        });
+        // Use the data() method to access the document's data as a Map
+        Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+        if (userData != null) {
+          setState(() {
+            // Safely access the 'firstName' field
+            userName = userData['firstName'] as String?;
+
+            // Safely access the 'profileImage' field
+            String? base64Image = userData['profileImage'] as String?;
+            if (base64Image != null) {
+              try {
+                _imageBytes = base64Decode(base64Image);
+              } catch (e) {
+                // print("Error decoding base64 image: $e");
+              }
+            }
+          });
+        }
       }
     }
   }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       Uint8List imageBytes = await pickedFile.readAsBytes();
       String base64Image = base64Encode(imageBytes);
@@ -90,13 +102,8 @@ class _CustomerPageState extends State<CustomerPage> {
                         child: CircleAvatar(
                           radius: 40,
                           backgroundColor: Colors.grey[200],
-                          backgroundImage: _imageBytes != null
-                              ? MemoryImage(_imageBytes!)
-                              : null,
-                          child: _imageBytes == null
-                              ? Icon(Icons.add_a_photo,
-                                  size: 60, color: Colors.grey[600])
-                              : null,
+                          backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
+                          child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 60, color: Colors.grey[600]) : null,
                         ),
                       ),
                       Container(
@@ -107,8 +114,7 @@ class _CustomerPageState extends State<CustomerPage> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             'Welcome Back ${userName ?? ''}',
-                            style: TextStyle(
-                                fontSize: 18, fontFamily: "InstrumentSans"),
+                            style: TextStyle(fontSize: 18, fontFamily: "InstrumentSans"),
                           ),
                         ),
                       ),
@@ -132,25 +138,16 @@ class _CustomerPageState extends State<CustomerPage> {
                     children: [
                       Text(
                         'Categories',
-                        style: TextStyle(
-                            fontSize: 18, fontFamily: 'InstrumentSans'),
+                        style: TextStyle(fontSize: 18, fontFamily: 'InstrumentSans'),
                       ),
                       SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Expanded(
-                              child: _buildCategoryIcon(
-                                  'Haircut', 'assets/haircut_icon.png')),
-                          Expanded(
-                              child: _buildCategoryIcon(
-                                  'Shave', 'assets/shave_icon.png')),
-                          Expanded(
-                              child: _buildCategoryIcon(
-                                  'Facials', 'assets/facials_icon.png')),
-                          Expanded(
-                              child: _buildCategoryIcon(
-                                  'Manicure', 'assets/manicure_icon.png')),
+                          Expanded(child: _buildCategoryIcon('Haircut', 'assets/haircut_icon.png')),
+                          Expanded(child: _buildCategoryIcon('Shave', 'assets/shave_icon.png')),
+                          Expanded(child: _buildCategoryIcon('Facials', 'assets/facials_icon.png')),
+                          Expanded(child: _buildCategoryIcon('Manicure', 'assets/manicure_icon.png')),
                         ],
                       ),
                     ],
@@ -176,8 +173,7 @@ class _CustomerPageState extends State<CustomerPage> {
                           Expanded(
                             child: Text(
                               'Find beauty professionals near you',
-                              style: TextStyle(
-                                  fontSize: 16, fontFamily: 'InstrumentSans'),
+                              style: TextStyle(fontSize: 16, fontFamily: 'InstrumentSans'),
                               overflow: TextOverflow.visible,
                               softWrap: true,
                             ),
@@ -269,24 +265,17 @@ Widget _buildProfessionalCard(String name, String profession, double rating) {
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundImage: AssetImage(
-                'assets/manicure_icon.png'), // Replace with actual image path
+            backgroundImage: AssetImage('assets/manicure_icon.png'), // Replace with actual image path
           ),
           SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: const Color.fromARGB(255, 255, 255, 255))),
+                Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 255, 255, 255))),
                 Text(
                   profession,
-                  style: TextStyle(
-                      fontSize: 14,
-                      color: const Color.fromARGB(255, 255, 255, 255)),
+                  style: TextStyle(fontSize: 14, color: const Color.fromARGB(255, 255, 255, 255)),
                 ),
                 SizedBox(height: 8),
                 Row(
@@ -305,9 +294,7 @@ Widget _buildProfessionalCard(String name, String profession, double rating) {
             onPressed: () {},
             child: Text(
               "View",
-              style: TextStyle(
-                  fontSize: 14,
-                  color: const Color.fromARGB(255, 255, 255, 255)),
+              style: TextStyle(fontSize: 14, color: const Color.fromARGB(255, 255, 255, 255)),
             ),
           ),
         ],

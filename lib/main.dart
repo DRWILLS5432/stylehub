@@ -1,26 +1,63 @@
-import 'package:flutter/material.dart';
-import 'splash_screen.dart';
-import 'login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/routes/app_routes.dart';
 
-void main() async {
+import 'firebase_options.dart';
+import 'splash_screen.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await FlutterLocalization.instance.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({
+    super.key,
+  });
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final FlutterLocalization localization = FlutterLocalization.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    configureLocalization();
+  }
+
+  void configureLocalization() {
+    localization.init(mapLocales: LOCALES, initLanguageCode: 'en');
+    localization.onTranslatedLanguage = onTranslatedLanguage;
+  }
+
+  void onTranslatedLanguage(Locale? locale) {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'My App',
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
-      home: SplashScreen(),
-    );
+    return ScreenUtilInit(
+        designSize: Size(375, 812),
+        builder: (context, child) => MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'My App',
+              theme: ThemeData(primarySwatch: Colors.deepPurple),
+              supportedLocales: localization.supportedLocales,
+              localizationsDelegates: localization.localizationsDelegates,
+              home: SplashScreen(),
+              onGenerateRoute: onGenerateRoute,
+            ));
   }
 }
 

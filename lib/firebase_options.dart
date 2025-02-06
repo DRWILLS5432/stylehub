@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBeXfyB445b4h7rzOKF2pT6qAjN-msOssU',
-    appId: '1:1093872308638:android:0d0b42bee3d9431f29868f',
+    appId: '1:1093872308638:android:e9ceed395432bbdc29868f',
     messagingSenderId: '1093872308638',
     projectId: 'stylehub-1cfee',
     storageBucket: 'stylehub-1cfee.firebasestorage.app',
@@ -83,4 +83,5 @@ class DefaultFirebaseOptions {
     authDomain: 'stylehub-1cfee.firebaseapp.com',
     storageBucket: 'stylehub-1cfee.firebasestorage.app',
   );
+
 }
