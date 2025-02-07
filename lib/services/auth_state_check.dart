@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:stylehub/auth_screens/splash_screen.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
-import 'package:stylehub/screens/specialist_pages/specialist_dashboard.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_home_page.dart';
 import 'package:stylehub/services/firebase_auth.dart';
 
