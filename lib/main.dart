@@ -2,18 +2,18 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:stylehub/constants/app/app_providers.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/routes/app_routes.dart';
+import 'package:stylehub/services/auth_state_check.dart';
 
 import 'firebase_options.dart';
-import 'splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FlutterLocalization.instance.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(MyApp());
 }
@@ -47,17 +47,20 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-        designSize: Size(375, 812),
-        builder: (context, child) => MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: 'My App',
-              theme: ThemeData(primarySwatch: Colors.deepPurple),
-              supportedLocales: localization.supportedLocales,
-              localizationsDelegates: localization.localizationsDelegates,
-              home: SplashScreen(),
-              onGenerateRoute: onGenerateRoute,
-            ));
+    return MultiProvider(
+      providers: changeNotifierProvider,
+      child: ScreenUtilInit(
+          designSize: Size(375, 812),
+          builder: (context, child) => MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'My App',
+                theme: ThemeData(primarySwatch: Colors.deepPurple),
+                supportedLocales: localization.supportedLocales,
+                localizationsDelegates: localization.localizationsDelegates,
+                home: AuthWrapper(),
+                onGenerateRoute: onGenerateRoute,
+              )),
+    );
   }
 }
 

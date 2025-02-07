@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,30 +16,23 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkFirstLaunch() async {
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
-//
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
 
     // Delay for 3 seconds to simulate a splash screen
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushNamed(context, '/onboarding_screen');
 
-      // if (isFirstLaunch) {
-      //   // If it's the first launch, navigate to the OnboardingScreen
-      //   Navigator.pushReplacement(
-      //     context,
-      //     MaterialPageRoute(builder: (context) => OnboardingScreen()),
-      //   );
+      if (isFirstLaunch) {
+        // If it's the first launch, navigate to the OnboardingScreen
+        Navigator.pushNamed(context, '/onboarding_screen');
 
-      //   // Set isFirstLaunch to false for future launches
-      //   prefs.setBool('isFirstLaunch', true);
-      // } else {
-      //   // If it's not the first launch, navigate to the LoginPage
-      //   Navigator.pushReplacement(
-      //     context,
-      //     MaterialPageRoute(builder: (context) => LoginPage()),
-      //   );
-      // }
+        // Set isFirstLaunch to false for future launches
+        prefs.setBool('isFirstLaunch', true);
+      } else {
+        // If it's not the first launch, navigate to the LoginPage
+        Navigator.pushNamed(context, '/login_screen');
+      }
     });
   }
 

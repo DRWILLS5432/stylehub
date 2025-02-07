@@ -14,7 +14,7 @@ class OnboardingPageTwo extends StatefulWidget {
 class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
   late String _currentLocale;
   late FlutterLocalization _flutterLocalization;
-  List<String> availableLanguages = ['en', 'ar', 'ru']; // Correct language codes
+  List<String> availableLanguages = ['en', 'uk', 'ru']; // Correct language codes
 
   @override
   void initState() {
@@ -63,8 +63,8 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
       case 'ru':
         _flutterLocalization.translate('ru');
         break;
-      case 'ar':
-        _flutterLocalization.translate('ar');
+      case 'uk':
+        _flutterLocalization.translate('uk');
         break;
       default:
         return;
@@ -92,7 +92,7 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           borderRadius: BorderRadius.circular(12.dg),
-         
+
           isExpanded: true, // Added to take available space
           padding: EdgeInsets.zero,
           value: value,
@@ -119,8 +119,8 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
     switch (languageCode) {
       case 'en':
         return 'English';
-      case 'ar':
-        return 'Arabic';
+      case 'uk':
+        return 'Ukrainian';
       case 'ru':
         return 'Russian';
       default:

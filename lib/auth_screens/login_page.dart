@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
+import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
-import 'package:stylehub/constants/textstyle.dart';
+import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
+import 'package:stylehub/screens/specialist_pages/specialist_home_page.dart';
 import 'package:stylehub/services/firebase_auth.dart';
-
-import 'customer_page.dart';
-import 'specialist_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,10 +20,26 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   late TabController _tabController;
   String? selectedRole;
   final FirebaseService _firebaseService = FirebaseService(); // Create an instance of FirebaseService
+  // Text Editing Controllers (Moved to State)
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController loginEmailController = TextEditingController();
+  final TextEditingController loginPasswordController = TextEditingController();
 
   // Loading states
   bool _isRegistering = false;
   bool _isLoggingIn = false;
+  bool _isPasswordHidden = true;
+
+  final FocusNode _passwordFocusNode = FocusNode();
+
+  void togglePassword() {
+    setState(() {
+      _isPasswordHidden = !_isPasswordHidden;
+    });
+  }
 
   @override
   void initState() {
@@ -35,6 +50,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   @override
   void dispose() {
     _tabController.dispose();
+    _passwordFocusNode.dispose();
+    firstNameController.dispose(); // Dispose controllers
+    lastNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
@@ -90,10 +110,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Widget _buildCreateAccountTab() {
-    final TextEditingController firstNameController = TextEditingController();
-    final TextEditingController lastNameController = TextEditingController();
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
+    // final TextEditingController firstNameController = TextEditingController();
+    // final TextEditingController lastNameController = TextEditingController();
+    // final TextEditingController emailController = TextEditingController();
+    // final TextEditingController passwordController = TextEditingController();
 
     Future<void> register() async {
       if (selectedRole == null) {
@@ -102,10 +122,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         );
         return;
       }
-
-      setState(() {
-        _isRegistering = true; // Start loading
-      });
+      // Start loading
+      setState(() => _isRegistering = true);
 
       try {
         User? user = await _firebaseService.registerUser(
@@ -118,15 +136,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
         if (user != null) {
           if (selectedRole == 'Customer') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => CustomerPage()),
-            );
+            Navigator.pushNamed(context, '/customer_page');
           } else if (selectedRole == 'Stylist') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => SpecialistPage()),
-            );
+            Navigator.pushNamed(context, '/specialist_page');
           }
         }
       } catch (e) {
@@ -134,9 +146,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           SnackBar(content: Text(e.toString())),
         );
       } finally {
-        setState(() {
-          _isRegistering = false; // Stop loading
-        });
+        setState(() => _isRegistering = false);
       }
     }
 
@@ -157,9 +167,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 15.h),
               ),
               onChanged: (String? newValue) {
-                setState(() {
-                  selectedRole = newValue;
-                });
+                setState(() => selectedRole = newValue);
               },
               items: <String>[
                 LocaleData.customer.getString(context),
@@ -236,15 +244,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             SizedBox(height: 20.h),
             TextFormField(
               controller: passwordController,
-              obscureText: true,
+              obscureText: _isPasswordHidden,
+              // focusNode: _passwordFocusNode,
               decoration: InputDecoration(
-                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                labelText: LocaleData.password.getString(context),
-                fillColor: Colors.white,
-                filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
-              ),
+                  labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                  hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                  labelText: LocaleData.password.getString(context),
+                  fillColor: Colors.white,
+                  filled: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
+                  suffixIcon: IconButton(
+                      onPressed: togglePassword,
+                      icon: Icon(
+                        _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.black,
+                      ))),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return LocaleData.passwordRequired.getString(context);
@@ -294,18 +308,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Widget _buildLoginTab() {
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-
     Future<void> login() async {
-      setState(() {
-        _isLoggingIn = true; // Start loading
-      });
+      setState(() => _isLoggingIn = true);
 
       try {
         User? user = await _firebaseService.loginUser(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
+          email: loginEmailController.text.trim(),
+          password: loginPasswordController.text.trim(),
         );
 
         if (user != null) {
@@ -327,9 +336,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           SnackBar(content: Text(e.toString())),
         );
       } finally {
-        setState(() {
-          _isLoggingIn = false; // Stop loading
-        });
+        setState(() => _isLoggingIn = false);
       }
     }
 
@@ -340,7 +347,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           Text(LocaleData.welcomeBack.getString(context), style: appTextStyle23(AppColors.mainBlackTextColor)),
           SizedBox(height: 40.h),
           TextFormField(
-            controller: emailController,
+            controller: loginEmailController,
             decoration: InputDecoration(
               labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
               hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
@@ -361,9 +368,22 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             },
           ),
           SizedBox(height: 20.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/send_otp_screen'),
+                child: Text(
+                  LocaleData.forgotPassword.getString(context),
+                  style: appTextStyle16(AppColors.mainBlackTextColor),
+                ),
+              )
+            ],
+          ),
+          // SizedBox(height: 10.h),
           TextFormField(
-            controller: passwordController,
-            obscureText: true,
+            controller: loginPasswordController,
+            obscureText: _isPasswordHidden,
             decoration: InputDecoration(
               labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
               hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
@@ -371,6 +391,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               fillColor: Colors.white,
               filled: true,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              suffixIcon: IconButton(
+                  onPressed: togglePassword,
+                  icon: Icon(
+                    _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.black,
+                  )),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {

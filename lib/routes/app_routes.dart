@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:stylehub/login_page.dart';
+import 'package:stylehub/auth_screens/login_page.dart';
+import 'package:stylehub/auth_screens/send_otp_screen.dart';
+import 'package:stylehub/auth_screens/splash_screen.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
-import 'package:stylehub/splash_screen.dart';
+import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
+import 'package:stylehub/screens/specialist_pages/profile_screen.dart';
+import 'package:stylehub/screens/specialist_pages/specialist_home_page.dart';
 
 Route<dynamic> onGenerateRoute(RouteSettings settings) {
   // To Extract the route name from settings
@@ -12,6 +16,10 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
     '/': (context) => SplashScreen(),
     '/onboarding_screen': (context) => OnboardingScreen(),
     '/login_screen': (context) => LoginPage(),
+    '/send_otp_screen': (context) => SendOtpScreen(),
+    '/customer_page': (context) => CustomerPage(),
+    '/specialist_page': (context) => SpecialistPage(),
+    '/specialist_profile': (context) => SpecialistProfileScreen(),
   };
 
   // Check if the requested route is in the routes map

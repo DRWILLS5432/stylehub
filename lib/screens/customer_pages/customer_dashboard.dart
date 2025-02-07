@@ -6,14 +6,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class CustomerPage extends StatefulWidget {
-  const CustomerPage({super.key});
+class CustomerDashboard extends StatefulWidget {
+  const CustomerDashboard({super.key});
 
   @override
-  _CustomerPageState createState() => _CustomerPageState();
+  State <CustomerDashboard> createState() => _CustomerDashboardState();
 }
 
-class _CustomerPageState extends State<CustomerPage> {
+class _CustomerDashboardState extends State<CustomerDashboard> {
   String? userName;
   Uint8List? _imageBytes;
 
