@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
-import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
+import 'package:stylehub/constants/localization/locales.dart';
 
 class OnboardingPageOne extends StatelessWidget {
   const OnboardingPageOne({super.key});
@@ -46,10 +46,7 @@ class OnboardingPageOne extends StatelessWidget {
             ),
           ),
         if (isImageFirst) SizedBox(width: 30.w),
-        Text(
-          text,
-          style: appTextStyle19(AppColors.appGrayTextColor),
-        ),
+        Text(text, style: bigTextStyle()),
         if (!isImageFirst) SizedBox(width: 30.w),
         if (!isImageFirst)
           Container(

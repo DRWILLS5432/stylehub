@@ -110,12 +110,16 @@ TextStyle mediumTextStyle700(Color? color) {
   );
 }
 
-TextStyle bigTextStyle() {
+TextStyle mediumTextStyle25(Color? color) {
   return TextStyle(
-    fontWeight: FontWeight.w700,
-    fontSize: 33.sp,
-    color: AppColors.mainBlackTextColor,
+    fontSize: 25.sp,
+    fontWeight: FontWeight.w400,
+    color: color,
   );
+}
+
+TextStyle bigTextStyle() {
+  return TextStyle(fontWeight: FontWeight.w400, fontSize: 30.sp, color: AppColors.appGrayTextColor);
 }
 
 TextStyle bigTextStyle47() {

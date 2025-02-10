@@ -52,6 +52,8 @@ mixin LocaleData {
   static const String settings = 'Settings';
   static const String updateSettings = 'Update your settings';
 
+  static const String changePhoneLanguage = 'Change your system language';
+
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
     changeLanguage: 'Choose your language ',
@@ -98,6 +100,7 @@ mixin LocaleData {
     updateServiceDetail: 'Update services you render',
     settings: 'Settings',
     updateSettings: 'Update your settings',
+    changePhoneLanguage: 'Change your system language',
   };
 
   static const Map<String, dynamic> UK = {
@@ -145,6 +148,7 @@ mixin LocaleData {
     updateServiceDetail: 'Оновити послуги, які ви робите',
     settings: 'Налаштування',
     updateSettings: 'Оновити налаштування',
+    changePhoneLanguage: 'Змінити мову телефону',
   };
 
   // FOR RUSSIAN
@@ -193,5 +197,6 @@ mixin LocaleData {
     updateServiceDetail: 'Обновить услуги, которые вы предоставляете',
     settings: 'Настройки',
     updateSettings: 'Обновить настройки',
+    changePhoneLanguage: 'Изменить язык телефона',
   };
 }

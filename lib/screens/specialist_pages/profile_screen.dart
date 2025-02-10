@@ -12,6 +12,8 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/settings_widget.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/update_service_widget.dart';
 
 class SpecialistProfileScreen extends StatefulWidget {
   const SpecialistProfileScreen({super.key});
@@ -105,18 +107,32 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                 // crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(height: 20),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      padding: EdgeInsets.all(3.dg),
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
-                      child: CircleAvatar(
-                        radius: 65.dg,
-                        backgroundColor: Colors.grey[200],
-                        backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
-                        child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                  Stack(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(3.dg),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
+                        child: CircleAvatar(
+                          radius: 65.dg,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
+                          child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                        ),
                       ),
-                    ),
+                      Positioned(
+                          bottom: 0,
+                          right: 5.w,
+                          child: GestureDetector(
+                            onTap: _pickImage,
+                            child: CircleAvatar(
+                                backgroundColor: AppColors.appBGColor,
+                                child: Icon(
+                                  Icons.add_a_photo,
+                                  size: 24.h,
+                                  color: AppColors.mainBlackTextColor,
+                                )),
+                          ))
+                    ],
                   ),
                   SizedBox(
                     height: 10.h,
@@ -137,15 +153,18 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                     child: Column(
                       children: [
                         ProfileTiles(
+                          onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
                           title: LocaleData.editProfile.getString(context),
                           subtitle: LocaleData.editProfileDetail.getString(context),
                         ),
                         ProfileTiles(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
                           title: LocaleData.updateService.getString(context),
                           subtitle: LocaleData.updateServiceDetail.getString(context),
                           icon: Icons.update,
                         ),
                         ProfileTiles(
+                          onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
                           title: LocaleData.settings.getString(context),
                           subtitle: LocaleData.updateSettings.getString(context),
                           icon: Icons.settings,
@@ -154,6 +173,8 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 40.h),
+
+                  /// Here is the logout button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: _isLoading ? AppColors.grayColor : AppColors.mainBlackTextColor,

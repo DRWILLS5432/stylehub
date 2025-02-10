@@ -110,11 +110,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Widget _buildCreateAccountTab() {
-    // final TextEditingController firstNameController = TextEditingController();
-    // final TextEditingController lastNameController = TextEditingController();
-    // final TextEditingController emailController = TextEditingController();
-    // final TextEditingController passwordController = TextEditingController();
-
     Future<void> register() async {
       if (selectedRole == null) {
         ScaffoldMessenger.of(context).showSnackBar(

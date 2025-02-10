@@ -1,7 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
+import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 
 class OnboardingPageTwo extends StatefulWidget {
@@ -14,13 +16,15 @@ class OnboardingPageTwo extends StatefulWidget {
 class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
   late String _currentLocale;
   late FlutterLocalization _flutterLocalization;
-  List<String> availableLanguages = ['en', 'uk', 'ru']; // Correct language codes
+  List<String> availableLanguages = ['en', 'uk', 'ru'];
+  bool _isLanguagePopupVisible = false;
+  final LayerLink _layerLink = LayerLink();
 
   @override
   void initState() {
     super.initState();
     _flutterLocalization = FlutterLocalization.instance;
-    _currentLocale = _flutterLocalization.currentLocale?.languageCode ?? 'en'; // Default to 'en'
+    _currentLocale = _flutterLocalization.currentLocale?.languageCode ?? 'en';
   }
 
   @override
@@ -29,24 +33,96 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.language,
-            size: 100,
-            color: AppColors.whiteColor,
+          Image.asset(
+            'assets/images/planet.png',
+            height: 153.h,
+            width: 194.w,
           ),
           const SizedBox(height: 20),
-          Text(
-            LocaleData.changeLanguage.getString(context), // Use LocaleData
-            style: TextStyle(fontSize: 19.sp, color: AppColors.appGrayTextColor),
+          SizedBox(
+            width: 200.w,
+            child: Text(
+              LocaleData.changeLanguage.getString(context),
+              style: bigTextStyle(),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 20),
-          _buildDropdown(
-            value: _currentLocale,
-            onChanged: (String? newValue) {
-              _setLocale(newValue);
-            },
-            items: availableLanguages,
+          CompositedTransformTarget(
+            link: _layerLink,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isLanguagePopupVisible = !_isLanguagePopupVisible;
+                });
+              },
+              child: Container(
+                width: 150.w,
+                height: 31.h,
+                padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 0),
+                decoration: BoxDecoration(
+                  color: AppColors.whiteColor,
+                  borderRadius: BorderRadius.circular(50.dg),
+                  border: Border.all(color: AppColors.appGrayTextColor),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      getLanguageName(_currentLocale),
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                    const Icon(Icons.arrow_drop_down, color: Colors.black),
+                  ],
+                ),
+              ),
+            ),
           ),
+          if (_isLanguagePopupVisible)
+            CompositedTransformFollower(
+              link: _layerLink,
+              offset: Offset(0, 40.h),
+              child: Material(
+                // Wrap with Material to provide a surface
+                color: Colors.transparent,
+                child: Container(
+                  width: 150.w,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.appGrayTextColor),
+                    color: AppColors.whiteColor,
+                    borderRadius: BorderRadius.circular(10.dg),
+                  ),
+                  child: Column(
+                    children: availableLanguages.map((languageCode) {
+                      return InkWell(
+                        onTap: () {
+                          _setLocale(languageCode);
+                          setState(() {
+                            _isLanguagePopupVisible = false; // Hide popup after selection
+                          });
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
+                          decoration: BoxDecoration(
+                            color: _currentLocale == languageCode ? AppColors.appBGColor : Colors.transparent, //Active State
+                            borderRadius: BorderRadius.vertical(
+                              top: languageCode == availableLanguages.first ? Radius.circular(10.dg) : Radius.zero,
+                              bottom: languageCode == availableLanguages.last ? Radius.circular(10.dg) : Radius.zero,
+                            ),
+                          ),
+                          child: Text(
+                            getLanguageName(languageCode),
+                            style: const TextStyle(color: Colors.black),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -73,45 +149,6 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
     setState(() {
       _currentLocale = value;
     });
-  }
-
-  Widget _buildDropdown({
-    required String value,
-    required ValueChanged<String?> onChanged,
-    required List<String> items,
-  }) {
-    return Container(
-      width: 150.w,
-      height: 40.h,
-      padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 0),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(50.dg),
-        border: Border.all(color: AppColors.appGrayTextColor),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          borderRadius: BorderRadius.circular(12.dg),
-
-          isExpanded: true, // Added to take available space
-          padding: EdgeInsets.zero,
-          value: value,
-          onChanged: onChanged,
-          items: items.map<DropdownMenuItem<String>>((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(
-                getLanguageName(item), // Added to get name for each language code
-                style: const TextStyle(color: Colors.black),
-              ),
-            );
-          }).toList(),
-          dropdownColor: AppColors.whiteColor,
-          style: const TextStyle(color: Colors.black),
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
-        ),
-      ),
-    );
   }
 
   // Helper function to get language name from language code

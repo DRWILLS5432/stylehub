@@ -67,11 +67,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: ReusableButton(
+                bgColor: _currentPage == _pages.length - 1 ? AppColors.whiteColor : AppColors.appBGColor,
                 color: _currentPage == _pages.length - 1 ? AppColors.mainBlackTextColor : AppColors.whiteColor,
                 text: _currentPage == _pages.length - 1 ? LocaleData.getStarted.getString(context) : LocaleData.next.getString(context),
                 onPressed: _navigateToNextPage,
               ),
             ),
+            SizedBox(height: 40.h),
           ],
         ),
       ),
@@ -83,9 +85,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     for (int i = 0; i < _pages.length; i++) {
       indicators.add(
         Container(
-          width: _currentPage == i ? 70.w : 40.w,
-          height: 6.h,
-          margin: EdgeInsets.symmetric(horizontal: 1.w),
+          width: _currentPage == i ? 75.w : 42.w,
+          height: 5.h,
+          margin: EdgeInsets.symmetric(horizontal: 4.w),
           decoration: BoxDecoration(
             // shape: BoxShape.circle,
             borderRadius: BorderRadius.circular(5.dg),
@@ -148,36 +150,31 @@ class ReusableButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final Color? color;
+  final Color? bgColor;
 
   const ReusableButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.color,
+    this.bgColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 40.h),
-      padding: EdgeInsets.all(3.dg),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30.dg),
-        color: color ?? AppColors.mainBlackTextColor,
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bgColor ?? AppColors.appBGColor,
+        minimumSize: Size(212.w, 45.w),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: color ?? AppColors.mainBlackTextColor, width: 2.w),
+          borderRadius: BorderRadius.circular(15.dg),
+        ),
       ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.appBGColor,
-          minimumSize: Size(double.infinity, 50.w),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30.dg),
-          ),
-        ),
-        child: Text(
-          text,
-          style: appTextStyle16(AppColors.mainBlackTextColor),
-        ),
+      child: Text(
+        text,
+        style: mediumTextStyle25(AppColors.mainBlackTextColor),
       ),
     );
   }

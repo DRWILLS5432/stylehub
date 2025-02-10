@@ -149,6 +149,47 @@ class FirebaseService {
     }
   }
 
+// Add service data to Firestore
+  Future<void> addServiceData({
+    required String userId,
+    required String services,
+    required String bio,
+    required String phone,
+    required List<String> images,
+  }) async {
+    try {
+      // Add data to Firestore
+      await _firestore.collection('services').add({
+        'userId': userId, // Associate data with the logged-in user
+        'services': services,
+        'bio': bio,
+        'phone': phone,
+        'images': images,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Return success message
+      return;
+    } on FirebaseException catch (e) {
+      // Handle Firebase-specific errors
+      String errorMessage;
+      switch (e.code) {
+        case 'permission-denied':
+          errorMessage = 'You do not have permission to post service data.';
+          break;
+        case 'unavailable':
+          errorMessage = 'Firestore is currently unavailable. Please try again later.';
+          break;
+        default:
+          errorMessage = 'Failed to post service data: ${e.message}';
+      }
+      throw errorMessage;
+    } on Exception catch (e) {
+      // Handle generic exceptions
+      throw 'An unexpected error occurred: $e';
+    }
+  }
+
   // Method to logout
   Future<void> logout() async {
     await _auth.signOut();
