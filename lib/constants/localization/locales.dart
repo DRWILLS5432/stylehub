@@ -51,8 +51,21 @@ mixin LocaleData {
   static const String updateServiceDetail = 'Update services you render';
   static const String settings = 'Settings';
   static const String updateSettings = 'Update your settings';
-
   static const String changePhoneLanguage = 'Change your system language';
+  static const String category = 'Categories';
+  static const String findProfessional = 'Find beauty professionals near you';
+  static const String likes = 'Likes';
+  static const String appointments = 'Appointments';
+  static const String view = 'view';
+  static const String ok = 'OK';
+  static const String cancel = 'Cancel';
+  static const String wantToCancelAppointment = 'Are you sure you want to cancel your appointment?';
+  static const String yes = 'Yes';
+  static const String no = 'No';
+  static const String changeProfilePics = 'Change profile picture';
+  static const String personalDetails = 'Personal Details';
+  static const String specialistDetails = 'Specialist Details';
+  static const String appSettings = 'App Settings';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -101,6 +114,20 @@ mixin LocaleData {
     settings: 'Settings',
     updateSettings: 'Update your settings',
     changePhoneLanguage: 'Change your system language',
+    category: 'Categories',
+    findProfessional: 'Find beauty professionals near you',
+    likes: 'Likes',
+    appointments: 'Appointments',
+    view: 'view',
+    ok: 'OK',
+    cancel: 'Cancel',
+    wantToCancelAppointment: 'Are you sure you want to cancel your appointment?',
+    yes: 'Yes',
+    no: 'No',
+    changeProfilePics: 'Change profile picture',
+    personalDetails: 'Personal Details',
+    specialistDetails: 'Specialist Details',
+    appSettings: 'App Settings',
   };
 
   static const Map<String, dynamic> UK = {
@@ -149,6 +176,20 @@ mixin LocaleData {
     settings: 'Налаштування',
     updateSettings: 'Оновити налаштування',
     changePhoneLanguage: 'Змінити мову телефону',
+    category: 'Категорії',
+    findProfessional: 'Знайти професіоналів бізнесу',
+    likes: 'Лайки',
+    appointments: 'Записи',
+    view: 'переглянути',
+    ok: 'OK',
+    cancel: 'Скасувати',
+    wantToCancelAppointment: 'Ви впевнені, що хочете скасувати запис?',
+    yes: 'Так',
+    no: 'Ні',
+    changeProfilePics: 'Змінити фото профілю',
+    personalDetails: 'Персональні деталі',
+    specialistDetails: 'Деталі спеціаліста',
+    appSettings: 'Налаштування програми',
   };
 
   // FOR RUSSIAN
@@ -198,5 +239,19 @@ mixin LocaleData {
     settings: 'Настройки',
     updateSettings: 'Обновить настройки',
     changePhoneLanguage: 'Изменить язык телефона',
+    category: 'Категории',
+    findProfessional: 'Найти профессионалов бизнеса',
+    likes: 'Лайки',
+    appointments: 'Записи',
+    view: 'посмотреть',
+    ok: 'OK',
+    cancel: 'Отменить',
+    wantToCancelAppointment: 'Вы уверены, что хотите отменить запись?',
+    yes: 'Да',
+    no: 'Нет',
+    changeProfilePics: 'Изменить фото профиля',
+    personalDetails: 'Персональные данные',
+    specialistDetails: 'Детали специалиста',
+    appSettings: 'Настройки приложения',
   };
 }

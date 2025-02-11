@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_home_page.dart';
 import 'package:stylehub/services/firebase_auth.dart';
@@ -34,6 +35,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   bool _isPasswordHidden = true;
 
   final FocusNode _passwordFocusNode = FocusNode();
+  // LayerLink and Popup Visibility
+  final LayerLink _roleLayerLink = LayerLink();
+  bool _isRolePopupVisible = false;
 
   void togglePassword() {
     setState(() {
@@ -82,6 +86,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 ),
                 //  SizedBox(height: 20.h),
                 TabBar(
+                  dividerColor: Colors.transparent,
                   controller: _tabController,
                   indicatorColor: Colors.black,
                   labelColor: Colors.black,
@@ -151,62 +156,164 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DropdownButtonFormField<String>(
-              borderRadius: BorderRadius.circular(14.dg),
-              value: selectedRole,
-              hint: Text(LocaleData.selectRole.getString(context), style: appTextStyle12K(AppColors.appGrayTextColor)),
-              decoration: InputDecoration(
-                fillColor: Colors.white,
-                filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 15.h),
+            CompositedTransformTarget(
+              link: _roleLayerLink,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isRolePopupVisible = !_isRolePopupVisible;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10.dg),
+                    border: Border.all(color: Colors.grey.shade400),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 15.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        selectedRole ?? LocaleData.selectRole.getString(context),
+                        style: selectedRole == null ? appTextStyle12K(AppColors.appGrayTextColor) : const TextStyle(color: Colors.black),
+                      ),
+                      const Icon(Icons.arrow_drop_down, color: Colors.black),
+                    ],
+                  ),
+                ),
               ),
-              onChanged: (String? newValue) {
-                setState(() => selectedRole = newValue);
-              },
-              items: <String>[
-                LocaleData.customer.getString(context),
-                LocaleData.stylist.getString(context),
-              ].map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              isExpanded: true,
-              style: const TextStyle(color: Colors.black),
-              dropdownColor: Colors.white,
-              icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+            ),
+            if (_isRolePopupVisible)
+              CompositedTransformFollower(
+                link: _roleLayerLink,
+                offset: Offset(0, 65.h), //Adjust offset to move popup below the button
+                child: Material(
+                  color: Colors.transparent,
+                  child: SizedBox(
+                    width: double.infinity,
+                    // decoration: BoxDecoration(
+                    //   color: Colors.white,
+                    //   borderRadius: BorderRadius.circular(14.dg),
+                    //   border: Border.all(color: Colors.black),
+                    // ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedRole = LocaleData.customer.getString(context);
+                              _isRolePopupVisible = false;
+                            });
+                          },
+                          child: Container(
+                            height: 48.h,
+                            margin: EdgeInsets.only(bottom: 5.h),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.dg), border: Border.all(color: Colors.black), color: Colors.white),
+                            // alignment: Alignment.center,
+                            child: Padding(
+                              padding: EdgeInsets.all(10.dg),
+                              child: Text(
+                                LocaleData.customer.getString(context),
+                                style: const TextStyle(color: Colors.black),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Divider(height: 1.h, color: Colors.grey),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedRole = LocaleData.stylist.getString(context);
+                              _isRolePopupVisible = false;
+                            });
+                          },
+                          child: Container(
+                            height: 48.h,
+                            margin: EdgeInsets.only(bottom: 5.h),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.dg), border: Border.all(color: Colors.black), color: Colors.white),
+                            // alignment: Alignment.center,
+                            child: Padding(
+                              padding: EdgeInsets.all(10.dg),
+                              child: Text(
+                                LocaleData.stylist.getString(context),
+                                style: const TextStyle(color: Colors.black),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            // DropdownButtonFormField<String>(
+            //   borderRadius: BorderRadius.circular(14.dg),
+            //   value: selectedRole,
+            //   hint: Text(LocaleData.selectRole.getString(context), style: appTextStyle12K(AppColors.appGrayTextColor)),
+            //   decoration: InputDecoration(
+            //     fillColor: Colors.white,
+            //     filled: true,
+            //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
+            //     contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 15.h),
+            //   ),
+            //   onChanged: (String? newValue) {
+            //     setState(() => selectedRole = newValue);
+            //   },
+            //   items: <String>[
+            //     LocaleData.customer.getString(context),
+            //     LocaleData.stylist.getString(context),
+            //   ].map<DropdownMenuItem<String>>((String value) {
+            //     return DropdownMenuItem<String>(
+            //       value: value,
+            //       child: Container(
+            //           width: double.maxFinite,
+            //           height: 40.h,
+            //           decoration: BoxDecoration(
+            //             borderRadius: BorderRadius.circular(14.dg),
+            //             border: Border.all(color: Colors.black),
+            //             color: Colors.white,
+            //           ),
+            //           child: Center(child: Text(value))),
+            //     );
+            //   }).toList(),
+            //   isExpanded: true,
+            //   style: const TextStyle(color: Colors.black),
+            //   dropdownColor: Colors.white,
+            //   icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+            // ),
+            SizedBox(height: 20.h),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(LocaleData.firstName.getString(context), style: appTextStyle15(AppColors.appGrayTextColor)),
+                TextFormField(
+                  controller: firstNameController,
+                  decoration: InputDecoration(
+                    hintText: LocaleData.firstName.getString(context),
+                    labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                    hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                    fillColor: Colors.white,
+                    filled: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return LocaleData.firstNameRequired.getString(context);
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
             SizedBox(height: 20.h),
-            TextFormField(
-              controller: firstNameController,
-              decoration: InputDecoration(
-                labelText: LocaleData.firstName.getString(context),
-                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                fillColor: Colors.white,
-                filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return LocaleData.firstNameRequired.getString(context);
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 20.h),
-            TextFormField(
-              controller: lastNameController,
-              decoration: InputDecoration(
-                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                labelText: LocaleData.lastName.getString(context),
-                fillColor: Colors.white,
-                filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
-              ),
+            CustomeTextField(
+              context: context,
+              lastNameController: lastNameController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return LocaleData.lastNameRequired.getString(context);
@@ -215,87 +322,106 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               },
             ),
             SizedBox(height: 20.h),
-            TextFormField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                labelText: LocaleData.email.getString(context),
-                fillColor: Colors.white,
-                filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.h), borderSide: BorderSide.none),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return LocaleData.emailRequired.getString(context);
-                }
-                if (!validateEmail(value)) {
-                  // Use one of the validation methods above
-                  return LocaleData.emailInvalid.getString(context);
-                }
-                return null;
-              },
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(LocaleData.email.getString(context), style: appTextStyle15(AppColors.appGrayTextColor)),
+                TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                    hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                    hintText: LocaleData.email.getString(context),
+                    fillColor: Colors.white,
+                    filled: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.h), borderSide: BorderSide.none),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return LocaleData.emailRequired.getString(context);
+                    }
+                    if (!validateEmail(value)) {
+                      // Use one of the validation methods above
+                      return LocaleData.emailInvalid.getString(context);
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
             SizedBox(height: 20.h),
-            TextFormField(
-              controller: passwordController,
-              obscureText: _isPasswordHidden,
-              // focusNode: _passwordFocusNode,
-              decoration: InputDecoration(
-                  labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                  hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                  labelText: LocaleData.password.getString(context),
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
-                  suffixIcon: IconButton(
-                      onPressed: togglePassword,
-                      icon: Icon(
-                        _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.black,
-                      ))),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return LocaleData.passwordRequired.getString(context);
-                } else if (value.length < 6) {
-                  return LocaleData.passwordInvalid.getString(context);
-                }
-                return null;
-              },
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(LocaleData.password.getString(context), style: appTextStyle15(AppColors.appGrayTextColor)),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: _isPasswordHidden,
+                  // focusNode: _passwordFocusNode,
+                  decoration: InputDecoration(
+                      labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                      hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                      hintText: LocaleData.password.getString(context),
+                      fillColor: Colors.white,
+                      filled: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
+                      suffixIcon: IconButton(
+                          onPressed: togglePassword,
+                          icon: Icon(
+                            _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.black,
+                          ))),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return LocaleData.passwordRequired.getString(context);
+                    } else if (value.length < 6) {
+                      return LocaleData.passwordInvalid.getString(context);
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
             SizedBox(height: 40.h),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  if (selectedRole != null) {
-                    // Form is valid AND a role is selected
-                    if (!_isRegistering) {
-                      // Check if not already registering
-                      register(); // Call the register function
+            SizedBox(
+              width: 212.w,
+              height: 45.h,
+              child: ReusableButton(
+                text: _isRegistering
+                    ? SizedBox(
+                        height: 20.h,
+                        width: 20.w,
+                        child: CircularProgressIndicator(
+                          color: AppColors.appGrayTextColor,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(LocaleData.register.getString(context), style: mediumTextStyle25(AppColors.mainBlackTextColor)),
+                // text: LocaleData.register.getString(context),
+                color: Colors.black,
+                bgColor: AppColors.whiteColor,
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    if (selectedRole != null) {
+                      // Form is valid AND a role is selected
+                      if (!_isRegistering) {
+                        // Check if not already registering
+                        register();
+                      }
+                    } else {
+                      // Form is valid BUT NO role is selected
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(LocaleData.roleRequired.getString(context))),
+                      );
                     }
-                  } else {
-                    // Form is valid BUT NO role is selected
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(LocaleData.roleRequired.getString(context))),
-                    );
                   }
-                }
-              },
-              style: ElevatedButton.styleFrom(minimumSize: Size.fromHeight(50.h), backgroundColor: Colors.black),
-              child: _isRegistering
-                  ? SizedBox(
-                      height: 20.h,
-                      width: 20.w,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(LocaleData.register.getString(context), style: appTextStyle19(AppColors.whiteColor)),
+                },
+              ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             Text(LocaleData.termsAndConditions.getString(context), style: appTextStyle12K(AppColors.appGrayTextColor)),
             Text('StyleHub 2024', style: appTextStyle12K(AppColors.appGrayTextColor)),
+            SizedBox(height: 40.h),
           ],
         ),
       ),
@@ -339,30 +465,70 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(LocaleData.welcomeBack.getString(context), style: appTextStyle23(AppColors.mainBlackTextColor)),
+          Text(LocaleData.welcomeBack.getString(context), style: bigTextStyle2()),
           SizedBox(height: 40.h),
-          TextFormField(
-            controller: loginEmailController,
-            decoration: InputDecoration(
-              labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-              hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-              labelText: LocaleData.email.getString(context),
-              fillColor: Colors.white,
-              filled: true,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return LocaleData.emailRequired.getString(context);
-              }
-              if (!validateEmail(value)) {
-                // Use one of the validation methods above
-                return LocaleData.emailInvalid.getString(context);
-              }
-              return null;
-            },
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(LocaleData.email.getString(context), style: appTextStyle15(AppColors.appGrayTextColor)),
+              TextFormField(
+                controller: loginEmailController,
+                decoration: InputDecoration(
+                  labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                  hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                  hintText: LocaleData.email.getString(context),
+                  // hintText: LocaleData.email.getString(context),
+                  fillColor: Colors.white,
+                  filled: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return LocaleData.emailRequired.getString(context);
+                  }
+                  if (!validateEmail(value)) {
+                    // Use one of the validation methods above
+                    return LocaleData.emailInvalid.getString(context);
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
           SizedBox(height: 20.h),
+
+          // SizedBox(height: 10.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(LocaleData.password.getString(context), style: appTextStyle15(AppColors.appGrayTextColor)),
+              TextFormField(
+                controller: loginPasswordController,
+                obscureText: _isPasswordHidden,
+                decoration: InputDecoration(
+                  labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                  hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                  hintText: LocaleData.password.getString(context),
+                  // hintText: LocaleData.password.getString(context),
+                  fillColor: Colors.white,
+                  filled: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                  suffixIcon: IconButton(
+                      onPressed: togglePassword,
+                      icon: Icon(
+                        _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.black,
+                      )),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return LocaleData.passwordRequired.getString(context);
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -375,52 +541,74 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               )
             ],
           ),
-          // SizedBox(height: 10.h),
-          TextFormField(
-            controller: loginPasswordController,
-            obscureText: _isPasswordHidden,
-            decoration: InputDecoration(
-              labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-              hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-              labelText: LocaleData.password.getString(context),
-              fillColor: Colors.white,
-              filled: true,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-              suffixIcon: IconButton(
-                  onPressed: togglePassword,
-                  icon: Icon(
-                    _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.black,
-                  )),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return LocaleData.passwordRequired.getString(context);
-              }
-              return null;
-            },
-          ),
           const SizedBox(height: 40),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                _isLoggingIn ? null : login();
-              }
-            },
-            style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50), backgroundColor: Colors.black),
-            child: _isLoggingIn
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(LocaleData.login.getString(context), style: appTextStyle19(AppColors.whiteColor)),
+          SizedBox(
+            width: 212.w,
+            height: 45.h,
+            child: ReusableButton(
+              text: _isLoggingIn
+                  ? SizedBox(
+                      height: 20.h,
+                      width: 20.w,
+                      child: CircularProgressIndicator(
+                        color: AppColors.appGrayTextColor,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(LocaleData.login.getString(context), style: mediumTextStyle25(AppColors.mainBlackTextColor)),
+              // text: LocaleData.register.getString(context),
+              color: Colors.black,
+              bgColor: AppColors.whiteColor,
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  _isLoggingIn ? null : login();
+                }
+              },
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class CustomeTextField extends StatelessWidget {
+  const CustomeTextField({
+    super.key,
+    required this.context,
+    required this.lastNameController,
+    this.validator,
+  });
+
+  final BuildContext context;
+  final TextEditingController lastNameController;
+  final String? Function(String?)? validator;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(LocaleData.lastName.getString(context), style: appTextStyle15(AppColors.appGrayTextColor)),
+        TextFormField(
+            controller: lastNameController,
+            decoration: InputDecoration(
+              labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+              hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
+              hintText: LocaleData.lastName.getString(context),
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
+            ),
+            validator: validator
+            //  (value) {
+            //   if (value == null || value.isEmpty) {
+            //     return LocaleData.lastNameRequired.getString(context);
+            //   }
+            //   return null;
+            // },
+            ),
+      ],
     );
   }
 }

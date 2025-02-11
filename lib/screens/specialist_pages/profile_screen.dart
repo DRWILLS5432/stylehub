@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/settings_widget.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/update_service_widget.dart';
@@ -109,99 +110,81 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                   Container(height: 20),
                   Stack(
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(3.dg),
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
-                        child: CircleAvatar(
-                          radius: 65.dg,
-                          backgroundColor: Colors.grey[200],
-                          backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
-                          child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                      Hero(
+                        tag: '1',
+                        child: Container(
+                          padding: EdgeInsets.all(3.dg),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
+                          child: CircleAvatar(
+                            radius: 65.dg,
+                            backgroundColor: Colors.grey[200],
+                            backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
+                            child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                          ),
                         ),
                       ),
-                      Positioned(
-                          bottom: 0,
-                          right: 5.w,
-                          child: GestureDetector(
-                            onTap: _pickImage,
-                            child: CircleAvatar(
-                                backgroundColor: AppColors.appBGColor,
-                                child: Icon(
-                                  Icons.add_a_photo,
-                                  size: 24.h,
-                                  color: AppColors.mainBlackTextColor,
-                                )),
-                          ))
                     ],
                   ),
+
+                  TextButton(onPressed: _pickImage, child: Text(LocaleData.changeProfilePics.getString(context), style: appTextStyle14(AppColors.appGrayTextColor))),
+                  // Align(
+                  //   alignment: Alignment.center,
+                  //   child: Text(fullName, style: appTextStyle23800(AppColors.mainBlackTextColor)),
+                  // ),
+                  // Align(
+                  //   alignment: Alignment.center,
+                  //   child: Text(userData.email, style: appTextStyle14(AppColors.mainBlackTextColor)),
+                  // ),
+                  SizedBox(height: 20),
+                  Column(
+                    children: [
+                      ProfileTiles(
+                        onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
+                        title: LocaleData.personalDetails.getString(context),
+                        subtitle: LocaleData.editProfileDetail.getString(context),
+                      ),
+                      ProfileTiles(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
+                        title: LocaleData.specialistDetails.getString(context),
+                        subtitle: LocaleData.updateServiceDetail.getString(context),
+                        icon: Icons.update,
+                      ),
+                      ProfileTiles(
+                        onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
+                        title: LocaleData.appSettings.getString(context),
+                        subtitle: LocaleData.updateSettings.getString(context),
+                        icon: Icons.settings,
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 51.h),
                   SizedBox(
-                    height: 10.h,
-                  ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(fullName, style: appTextStyle23800(AppColors.mainBlackTextColor)),
-                  ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(userData.email, style: appTextStyle14(AppColors.mainBlackTextColor)),
+                    width: 212.w,
+                    height: 45.h,
+                    child: ReusableButton(
+                        bgColor: AppColors.whiteColor,
+                        width: 212.w,
+                        height: 45.h,
+                        text: _isLoading
+                            ? SizedBox(
+                                height: 20.h,
+                                width: 20.w,
+                                child: CircularProgressIndicator.adaptive(
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.whiteColor),
+                                  strokeWidth: 3.dg,
+                                ),
+                              )
+                            : Text(LocaleData.logout.getString(context), style: mediumTextStyle25(AppColors.mainBlackTextColor)),
+                        onPressed: () {
+                          setState(() => _isLoading = true);
+
+                          FirebaseAuth.instance.signOut();
+                          setState(() => _isLoading = false);
+                        }),
                   ),
                   SizedBox(height: 20),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
-                    width: double.infinity,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.dg), color: AppColors.appBGColor),
-                    child: Column(
-                      children: [
-                        ProfileTiles(
-                          onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
-                          title: LocaleData.editProfile.getString(context),
-                          subtitle: LocaleData.editProfileDetail.getString(context),
-                        ),
-                        ProfileTiles(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
-                          title: LocaleData.updateService.getString(context),
-                          subtitle: LocaleData.updateServiceDetail.getString(context),
-                          icon: Icons.update,
-                        ),
-                        ProfileTiles(
-                          onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
-                          title: LocaleData.settings.getString(context),
-                          subtitle: LocaleData.updateSettings.getString(context),
-                          icon: Icons.settings,
-                        )
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 40.h),
 
                   /// Here is the logout button
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: _isLoading ? AppColors.grayColor : AppColors.mainBlackTextColor,
-                        minimumSize: Size(
-                          double.infinity,
-                          50.h,
-                        )),
-                    child: _isLoading
-                        ? SizedBox(
-                            height: 20.h,
-                            width: 20.w,
-                            child: CircularProgressIndicator.adaptive(
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.whiteColor),
-                              strokeWidth: 3.dg,
-                            ),
-                          )
-                        : Text(
-                            LocaleData.logout.getString(context),
-                            style: appTextStyle16(AppColors.whiteColor),
-                          ),
-                    onPressed: () {
-                      setState(() => _isLoading = true);
-
-                      FirebaseAuth.instance.signOut();
-                      setState(() => _isLoading = false);
-                    },
-                  ),
                 ],
               ),
             ),
@@ -224,20 +207,50 @@ class ProfileTiles extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(right: 10.w, left: 10.h, top: 10.h),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.dg), color: AppColors.whiteColor),
-        child: ListTile(
-            leading: CircleAvatar(backgroundColor: AppColors.grayColor, child: Icon(icon ?? Icons.person, color: AppColors.mainBlackTextColor)),
-            title: Text(
-              title,
-              style: appTextStyle16(AppColors.mainBlackTextColor),
+        margin: EdgeInsets.only(bottom: 22.h, left: 30.w, right: 30.w),
+        padding: EdgeInsets.only(
+          right: 10.w,
+          left: 25.w,
+          top: 25.h,
+        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.dg), color: AppColors.appBGColor),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(backgroundColor: AppColors.grayColor, child: Icon(icon ?? Icons.person, color: AppColors.mainBlackTextColor)),
+                SizedBox(width: 5.w),
+                Text(
+                  title,
+                  style: appTextStyle205(AppColors.newThirdGrayColor),
+                ),
+              ],
             ),
-            subtitle: Text(subtitle, style: appTextStyle10(AppColors.mainBlackTextColor)),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.mainBlackTextColor,
-              size: 16.h,
-            )),
+
+            // subtitle: Text(subtitle, style: appTextStyle10(AppColors.mainBlackTextColor)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  // padding: EdgeInsets.all(5.dg),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(50.dg), border: Border.all(color: AppColors.mainBlackTextColor)),
+                  child: CircleAvatar(
+                    backgroundColor: AppColors.appBGColor,
+                    radius: 12.dg,
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.mainBlackTextColor,
+                      size: 16.h,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 12.h,
+            )
+          ],
+        ),
       ),
     );
   }

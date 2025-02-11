@@ -30,4 +30,6 @@ class AppColors {
   static const greenColor = Color(0xFF0FAA72);
   static const secondaryBlackColor = Color(0xFFD1D1D1);
   static const appGrayTextColor = Color.fromRGBO(89, 88, 88, 0.988);
+  static const newGrayColor = Color.fromRGBO(0, 0, 0, 0.41);
+  static const newThirdGrayColor = Color.fromRGBO(0, 0, 0, 0.53);
 }

@@ -26,6 +26,10 @@ TextStyle appTextStyle14(Color color) {
   return TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w400, color: color);
 }
 
+TextStyle appTextStyle15(Color color) {
+  return TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w400, color: color);
+}
+
 TextStyle appTextStyle14500(Color color) {
   return TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: color);
 }
@@ -70,6 +74,14 @@ TextStyle appTextStyle16400(Color? color) {
   );
 }
 
+TextStyle appTextStyle18(Color? color) {
+  return TextStyle(
+    fontSize: 18.sp,
+    fontWeight: FontWeight.w400,
+    color: color,
+  );
+}
+
 TextStyle appTextStyle19(Color? color) {
   return TextStyle(
     fontSize: 19.sp,
@@ -82,6 +94,14 @@ TextStyle appTextStyle23(Color? color) {
   return TextStyle(
     fontSize: 23.sp,
     fontWeight: FontWeight.w300,
+    color: color,
+  );
+}
+
+TextStyle appTextStyle24(Color? color) {
+  return TextStyle(
+    fontSize: 24.sp,
+    fontWeight: FontWeight.w400,
     color: color,
   );
 }
@@ -102,6 +122,20 @@ TextStyle appTextStyle22500(Color? color) {
   );
 }
 
+TextStyle appTextStyle20(Color? color) {
+  return TextStyle(
+    fontSize: 20.sp,
+    fontWeight: FontWeight.w400,
+    color: color,
+  );
+}
+TextStyle appTextStyle205(Color? color) {
+  return TextStyle(
+    fontSize: 20.sp,
+    fontWeight: FontWeight.w500,
+    color: color,
+  );
+}
 TextStyle mediumTextStyle700(Color? color) {
   return TextStyle(
     fontSize: 22.sp,

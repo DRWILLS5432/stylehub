@@ -60,138 +60,165 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.appBGColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 255, 255, 255),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(12.0),
-                    bottomRight: Radius.circular(12.0),
+      backgroundColor: AppColors.whiteColor,
+      body: SingleChildScrollView(
+        child: SafeArea(
+          child: Container(
+            color: AppColors.appBGColor,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 255, 255, 255),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(12.0),
+                      bottomRight: Radius.circular(12.0),
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/specialist_profile'),
-                      child: Container(
-                        padding: EdgeInsets.all(3.dg),
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(50.dg), color: AppColors.appBGColor),
-                        child: CircleAvatar(
-                          radius: 26.dg,
-                          backgroundColor: Colors.grey[200],
-                          backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
-                          child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/specialist_profile'),
+                        child: Hero(
+                          tag: '1',
+                          child: Container(
+                            padding: EdgeInsets.all(4.dg),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
+                            child: CircleAvatar(
+                              radius: 50.dg,
+                              backgroundColor: Colors.grey[200],
+                              backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
+                              child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.03,
-                    ),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.03,
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 10.h),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(LocaleData.welcomeBack.getString(context),
+                                    style: mediumTextStyle25(
+                                      AppColors.newGrayColor,
+                                    )),
+                                Text(userName ?? '', style: appTextStyle20(AppColors.newGrayColor)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 30.h),
+                        child: IconButton(
+                          icon: Icon(Icons.notifications_active),
+                          onPressed: () {},
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  height: 150.h,
+                  padding: EdgeInsets.only(
+                    left: 16.w,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFD7D1BE),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 4.h),
+                      Text(
+                        LocaleData.category.getString(context),
+                        style: appTextStyle18(AppColors.newThirdGrayColor),
+                        // style: TextStyle(fontSize: 18, fontFamily: 'InstrumentSans'),
+                      ),
+                      SizedBox(height: 10),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Text(LocaleData.welcomeBack.getString(context),
-                                style: appTextStyle14(
-                                  AppColors.mainBlackTextColor,
-                                )),
-                            Text(userName ?? '',
-                                style: appTextStyle22500(
-                                  AppColors.mainBlackTextColor,
-                                )),
+                            _buildCategoryIcon('Haircut', 'assets/haircut_icon.png'),
+                            _buildCategoryIcon('Shave', 'assets/shave_icon.png'),
+                            _buildCategoryIcon('Facials', 'assets/facials_icon.png'),
+                            _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
+                            _buildCategoryIcon('Chauffeur', 'assets/manicure_icon.png'),
+                            _buildCategoryIcon('Cleaning', 'assets/manicure_icon.png'),
+                            _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
                           ],
                         ),
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.notifications),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                height: 150,
-                padding: EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Color(0xFFD7D1BE),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Categories',
-                      style: TextStyle(fontSize: 18, fontFamily: 'InstrumentSans'),
-                    ),
-                    SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(child: _buildCategoryIcon('Haircut', 'assets/haircut_icon.png')),
-                        Expanded(child: _buildCategoryIcon('Shave', 'assets/shave_icon.png')),
-                        Expanded(child: _buildCategoryIcon('Facials', 'assets/facials_icon.png')),
-                        Expanded(child: _buildCategoryIcon('Manicure', 'assets/manicure_icon.png')),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12.0),
-                    topRight: Radius.circular(12.0),
+                    ],
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Find beauty professionals near you',
-                            style: TextStyle(fontSize: 16, fontFamily: 'InstrumentSans'),
-                            overflow: TextOverflow.visible,
-                            softWrap: true,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            // Ваш код для настроек
-                          },
-                          child: Image.asset(
-                            'assets/categ_settings.png',
-                            width: 24,
-                            height: 24,
-                          ),
-                        ),
-                      ],
+
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12.0),
+                      topRight: Radius.circular(12.0),
                     ),
-                    SizedBox(height: 10),
-                    _buildProfessionalCard('John Doe', 'Barber', 4.5),
-                    _buildProfessionalCard('Jane Smith', 'Hairstylist', 4.8),
-                    SizedBox(height: 70),
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 205.w,
+                            child: Text(
+                              LocaleData.findProfessional.getString(context),
+                              style: appTextStyle16400(AppColors.newThirdGrayColor),
+                              overflow: TextOverflow.visible,
+                              softWrap: true,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              // Ваш код для настроек
+                            },
+                            child: Image.asset(
+                              'assets/categ_settings.png',
+                              width: 24,
+                              height: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      buildProfessionalCard(
+                        context,
+                        'John Doe',
+                        'Barber',
+                        4.5,
+                      ),
+                      buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8),
+                      SizedBox(height: 70),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -201,57 +228,87 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
 
 Widget _buildCategoryIcon(String label, String assetPath) {
   return GestureDetector(
-    child: Column(
-      children: [
-        Image.asset(assetPath, width: 50, height: 50),
-        SizedBox(height: 8),
-        Text(label),
-      ],
+    child: Padding(
+      padding: EdgeInsets.only(right: 20.w),
+      child: Column(
+        children: [
+          Image.asset(assetPath, width: 70.w, height: 70.h),
+          SizedBox(height: 8.h),
+          Text(
+            label, style: appTextStyle15(AppColors.newThirdGrayColor),
+            //  TextStyle(fontSize: 16, fontFamily: 'InstrumentSans'),
+          ),
+        ],
+      ),
     ),
   );
 }
 
-Widget _buildProfessionalCard(String name, String profession, double rating) {
+Widget buildProfessionalCard(context, String name, String profession, double rating) {
   return Card(
     margin: EdgeInsets.symmetric(vertical: 10),
     color: Color(0xFFD7D1BE),
     child: Padding(
-      padding: const EdgeInsets.all(25.0),
-      child: Row(
+      padding: EdgeInsets.only(left: 17.w, right: 17.h, top: 29.h, bottom: 12.h),
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundImage: AssetImage('assets/manicure_icon.png'), // Replace with actual image path
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 255, 255, 255))),
-                Text(
-                  profession,
-                  style: TextStyle(fontSize: 14, color: const Color.fromARGB(255, 255, 255, 255)),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(2.dg),
+                decoration: BoxDecoration(
+                  color: AppColors.whiteColor,
+                  borderRadius: BorderRadius.circular(100.dg),
                 ),
-                SizedBox(height: 8),
-                Row(
-                  children: List.generate(
-                    5,
-                    (index) => Icon(
-                      index < rating ? Icons.star : Icons.star_border,
-                      color: const Color.fromARGB(255, 2, 1, 1),
+                child: CircleAvatar(
+                  radius: 60.dg,
+                  backgroundImage: AssetImage('assets/master1.png'),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(name, style: appTextStyle20(AppColors.newThirdGrayColor)),
+                    Text(
+                      profession,
+                      style: appTextStyle15(AppColors.newThirdGrayColor),
                     ),
-                  ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: List.generate(
+                        5,
+                        (index) => Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          color: const Color.fromARGB(255, 2, 1, 1),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {},
-            child: Text(
-              "View",
-              style: TextStyle(fontSize: 14, color: const Color.fromARGB(255, 255, 255, 255)),
-            ),
+          SizedBox(height: 10.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
+                  Text("70m", style: appTextStyle15(AppColors.newThirdGrayColor)),
+                ],
+              ),
+              TextButton(
+                onPressed: () {},
+                child: Text(
+                  LocaleData.view.getString(context),
+                  style: appTextStyle14(AppColors.newThirdGrayColor),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -7,6 +7,7 @@ import 'package:stylehub/auth_screens/login_page.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/services/firebase_auth.dart';
 
 class SendOtpScreen extends StatefulWidget {
@@ -87,8 +88,8 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
           ),
         isResendEnabled
             ? TextSpan(text: LocaleData.resendCode.getString(context), style: appTextStyle16700(AppColors.mainBlackTextColor))
-            : TextSpan(text: ' ${LocaleData.resendCode.getString(context)}', style: appTextStyle16700(AppColors.mainBlackTextColor)),
-        TextSpan(text: 'once timer ends', style: appTextStyle12K(AppColors.mainBlackTextColor)),
+            : TextSpan(text: ' ${LocaleData.resendCode.getString(context)}', style: appTextStyle16400(AppColors.mainBlackTextColor)),
+        TextSpan(text: ' once timer ends', style: appTextStyle12K(AppColors.mainBlackTextColor)),
       ],
     );
   }
@@ -119,14 +120,14 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                 SizedBox(height: 10.h),
                 Text(
                   LocaleData.forgotPassword.getString(context),
-                  style: appTextStyle19(AppColors.mainBlackTextColor),
+                  style: appTextStyle23(AppColors.mainBlackTextColor),
                 ),
                 SizedBox(height: 60.h),
                 Row(
                   children: [
                     Text(
                       LocaleData.enterRegisteredEmail.getString(context),
-                      style: appTextStyle14(AppColors.mainBlackTextColor),
+                      style: appTextStyle15(AppColors.mainBlackTextColor),
                     ),
                   ],
                 ),
@@ -136,7 +137,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                   decoration: InputDecoration(
                     labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
                     hintStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                    labelText: LocaleData.email.getString(context),
+                    hintText: LocaleData.email.getString(context),
                     fillColor: Colors.white,
                     filled: true,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
@@ -164,6 +165,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                     text: _buildResendCodeTextSpan(context, _isResendEnabled, _remainingSeconds),
                   ),
                 ),
+                SizedBox(height: 20.h),
                 Text(
                   LocaleData.checkEmail.getString(context),
                   style: appTextStyle14(AppColors.mainBlackTextColor),
@@ -172,7 +174,20 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                 SizedBox(
                   height: 180.h,
                 ),
-                ElevatedButton(
+                ReusableButton(
+                  text: _isLoading
+                      ? SizedBox(
+                          height: 20.h,
+                          width: 20.w,
+                          child: CircularProgressIndicator(
+                            color: AppColors.appGrayTextColor,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(LocaleData.sendOTP.getString(context), style: mediumTextStyle25(AppColors.mainBlackTextColor)),
+                  // text: LocaleData.register.getString(context),
+                  color: Colors.black,
+                  bgColor: AppColors.whiteColor,
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       if (!_isLoading) {
@@ -180,18 +195,27 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                       }
                     }
                   },
-                  style: ElevatedButton.styleFrom(minimumSize: Size.fromHeight(50.h), backgroundColor: Colors.black),
-                  child: _isLoading
-                      ? SizedBox(
-                          height: 20.h,
-                          width: 20.w,
-                          child: const CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(LocaleData.sendOTP.getString(context), style: appTextStyle19(AppColors.whiteColor)),
                 ),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     if (_formKey.currentState!.validate()) {
+                //       if (!_isLoading) {
+                //         _sendOtp();
+                //       }
+                //     }
+                //   },
+                //   style: ElevatedButton.styleFrom(minimumSize: Size.fromHeight(50.h), backgroundColor: Colors.black),
+                //   child: _isLoading
+                //       ? SizedBox(
+                //           height: 20.h,
+                //           width: 20.w,
+                //           child: const CircularProgressIndicator(
+                //             color: Colors.white,
+                //             strokeWidth: 2,
+                //           ),
+                //         )
+                //       : Text(LocaleData.sendOTP.getString(context), style: appTextStyle19(AppColors.whiteColor)),
+                // ),
                 SizedBox(height: 60.h),
               ],
             ),

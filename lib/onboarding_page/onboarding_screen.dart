@@ -66,11 +66,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
-              child: ReusableButton(
-                bgColor: _currentPage == _pages.length - 1 ? AppColors.whiteColor : AppColors.appBGColor,
-                color: _currentPage == _pages.length - 1 ? AppColors.mainBlackTextColor : AppColors.whiteColor,
-                text: _currentPage == _pages.length - 1 ? LocaleData.getStarted.getString(context) : LocaleData.next.getString(context),
-                onPressed: _navigateToNextPage,
+              child: SizedBox(
+                width: 212.w,
+                height: 45.h,
+                child: ReusableButton(
+                  bgColor: _currentPage == _pages.length - 1 ? AppColors.whiteColor : AppColors.appBGColor,
+                  color: _currentPage == _pages.length - 1 ? AppColors.mainBlackTextColor : AppColors.whiteColor,
+                  text: Text(
+                    _currentPage == _pages.length - 1 ? LocaleData.getStarted.getString(context) : LocaleData.next.getString(context),
+                    style: mediumTextStyle25(AppColors.mainBlackTextColor),
+                  ),
+                  // _currentPage == _pages.length - 1 ? LocaleData.getStarted.getString(context) : LocaleData.next.getString(context),
+                  onPressed: _navigateToNextPage,
+                ),
               ),
             ),
             SizedBox(height: 40.h),
@@ -147,10 +155,12 @@ class OnboardingPage extends StatelessWidget {
 }
 
 class ReusableButton extends StatelessWidget {
-  final String text;
+  final Widget text;
   final VoidCallback onPressed;
   final Color? color;
   final Color? bgColor;
+  final double? width;
+  final double? height;
 
   const ReusableButton({
     super.key,
@@ -158,24 +168,22 @@ class ReusableButton extends StatelessWidget {
     required this.onPressed,
     this.color,
     this.bgColor,
+    this.width,
+    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bgColor ?? AppColors.appBGColor,
-        minimumSize: Size(212.w, 45.w),
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: color ?? AppColors.mainBlackTextColor, width: 2.w),
-          borderRadius: BorderRadius.circular(15.dg),
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor ?? AppColors.appBGColor,
+          minimumSize: Size(width ?? 212.w, height ?? 45.h),
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: color ?? AppColors.mainBlackTextColor, width: 2.w),
+            borderRadius: BorderRadius.circular(15.dg),
+          ),
         ),
-      ),
-      child: Text(
-        text,
-        style: mediumTextStyle25(AppColors.mainBlackTextColor),
-      ),
-    );
+        child: Center(child: text));
   }
 }
