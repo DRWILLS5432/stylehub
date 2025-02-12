@@ -6,6 +6,7 @@ import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
 import 'package:stylehub/screens/specialist_pages/profile_screen.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_home_page.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/personal_detail_screen.dart';
 
 Route<dynamic> onGenerateRoute(RouteSettings settings) {
   // To Extract the route name from settings
@@ -20,6 +21,7 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
     '/customer_page': (context) => CustomerPage(),
     '/specialist_page': (context) => SpecialistPage(),
     '/specialist_profile': (context) => SpecialistProfileScreen(),
+    '/personal_details': (context) => PersonalDetailScreen(),
   };
 
   // Check if the requested route is in the routes map

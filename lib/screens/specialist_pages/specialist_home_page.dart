@@ -45,10 +45,10 @@ class _SpecialistPageState extends State<SpecialistPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildBarItem(0, Icons.home, 'Home'),
-                _buildBarItem(1, Icons.bookmark, 'Appointments'),
-                _buildBarItem(2, Icons.favorite, 'Likes'),
-                _buildBarItem(3, Icons.calendar_month_sharp, 'Schedule'),
+                _buildBarItem(0, 'assets/images/Exterior.png', 'Home'),
+                _buildBarItem(1, 'assets/images/Bookmark.png', 'Appointments'),
+                _buildBarItem(2, 'assets/images/Heart.png', 'Likes'),
+                _buildBarItem(3, 'assets/images/Google_calendar.png', 'Schedule'),
               ],
             ),
           ),
@@ -57,7 +57,7 @@ class _SpecialistPageState extends State<SpecialistPage> {
     );
   }
 
-  Widget _buildBarItem(int index, IconData iconData, String label) {
+  Widget _buildBarItem(int index, String iconData, String label) {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
@@ -68,7 +68,7 @@ class _SpecialistPageState extends State<SpecialistPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          Image.asset(
             iconData,
             color: isSelected ? AppColors.mainBlackTextColor : AppColors.whiteColor,
           ),

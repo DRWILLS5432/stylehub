@@ -119,12 +119,12 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(bottom: 30.h),
-                        child: IconButton(
-                          icon: Icon(Icons.notifications_active),
-                          onPressed: () {},
-                        ),
-                      ),
+                          padding: EdgeInsets.only(bottom: 30.h),
+                          child: Image.asset(
+                            'assets/images/Bell.png',
+                            height: 26.h,
+                            width: 27.w,
+                          )),
                     ],
                   ),
                 ),
@@ -227,7 +227,11 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
 }
 
 Widget _buildCategoryIcon(String label, String assetPath) {
-  return GestureDetector(
+  return InkWell(
+    onTap: () {},
+    splashColor: AppColors.whiteColor,
+    highlightColor: AppColors.newGrayColor,
+    overlayColor: WidgetStateProperty.all(Colors.green),
     child: Padding(
       padding: EdgeInsets.only(right: 20.w),
       child: Column(

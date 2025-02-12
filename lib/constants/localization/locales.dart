@@ -66,6 +66,8 @@ mixin LocaleData {
   static const String personalDetails = 'Personal Details';
   static const String specialistDetails = 'Specialist Details';
   static const String appSettings = 'App Settings';
+  static const String language = 'Language';
+  static const String notifications = 'Notifications';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -128,6 +130,8 @@ mixin LocaleData {
     personalDetails: 'Personal Details',
     specialistDetails: 'Specialist Details',
     appSettings: 'App Settings',
+    language: 'Language',
+    notifications: 'Notifications',
   };
 
   static const Map<String, dynamic> UK = {
@@ -190,6 +194,8 @@ mixin LocaleData {
     personalDetails: 'Персональні деталі',
     specialistDetails: 'Деталі спеціаліста',
     appSettings: 'Налаштування програми',
+    language: 'Мова',
+    notifications: 'Повідомлення',
   };
 
   // FOR RUSSIAN
@@ -253,5 +259,7 @@ mixin LocaleData {
     personalDetails: 'Персональные данные',
     specialistDetails: 'Детали специалиста',
     appSettings: 'Настройки приложения',
+    language: 'Язык',
+    notifications: 'Уведомления',
   };
 }

@@ -96,7 +96,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
       body: SafeArea(
         child: Consumer<SpecialistProvider>(builder: (context, provider, _) {
           final userData = provider.specialistModel;
-          final fullName = "${userData?.firstName} ${userData?.lastName.toString()}";
+          // final fullName = "${userData?.firstName} ${userData?.lastName.toString()}";
 
           if (userData == null) {
             return Center(child: CircularProgressIndicator());
@@ -127,34 +127,50 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                   ),
 
                   TextButton(onPressed: _pickImage, child: Text(LocaleData.changeProfilePics.getString(context), style: appTextStyle14(AppColors.appGrayTextColor))),
-                  // Align(
-                  //   alignment: Alignment.center,
-                  //   child: Text(fullName, style: appTextStyle23800(AppColors.mainBlackTextColor)),
-                  // ),
-                  // Align(
-                  //   alignment: Alignment.center,
-                  //   child: Text(userData.email, style: appTextStyle14(AppColors.mainBlackTextColor)),
-                  // ),
-                  SizedBox(height: 20),
+                  SizedBox(width: 29.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
+                      SizedBox(width: 2.w),
+                      Text(
+                        'enina 36A Entrance 4',
+                        style: appTextStyle12K(AppColors.newThirdGrayColor),
+                      ),
+                      SizedBox(width: 5.w),
+                      Container(
+                        // padding: EdgeInsets.all(5.dg),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(50.dg), border: Border.all(color: AppColors.mainBlackTextColor)),
+                        child: CircleAvatar(
+                          backgroundColor: AppColors.mainBlackTextColor,
+                          radius: 10.dg,
+                          child: Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.whiteColor,
+                            size: 16.h,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 46),
                   Column(
                     children: [
                       ProfileTiles(
-                        onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
-                        title: LocaleData.personalDetails.getString(context),
-                        subtitle: LocaleData.editProfileDetail.getString(context),
-                      ),
+                          onTap: () => Navigator.pushNamed(context, '/personal_details'),
+                          title: LocaleData.personalDetails.getString(context),
+                          subtitle: LocaleData.editProfileDetail.getString(context),
+                          icon: 'assets/images/User.png'),
                       ProfileTiles(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
-                        title: LocaleData.specialistDetails.getString(context),
-                        subtitle: LocaleData.updateServiceDetail.getString(context),
-                        icon: Icons.update,
-                      ),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
+                          title: LocaleData.specialistDetails.getString(context),
+                          subtitle: LocaleData.updateServiceDetail.getString(context),
+                          icon: 'assets/images/Scissors.png'),
                       ProfileTiles(
-                        onTap: () => showModalBottomSheet(context: context, builder: (context) => SettingsWidget()),
-                        title: LocaleData.appSettings.getString(context),
-                        subtitle: LocaleData.updateSettings.getString(context),
-                        icon: Icons.settings,
-                      )
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsWidget())),
+                          title: LocaleData.appSettings.getString(context),
+                          subtitle: LocaleData.updateSettings.getString(context),
+                          icon: 'assets/images/Settings.png')
                     ],
                   ),
                   SizedBox(height: 51.h),
@@ -199,7 +215,7 @@ class ProfileTiles extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
-  final IconData? icon;
+  final String? icon;
   const ProfileTiles({super.key, required this.title, required this.subtitle, this.onTap, this.icon});
 
   @override
@@ -218,11 +234,14 @@ class ProfileTiles extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(backgroundColor: AppColors.grayColor, child: Icon(icon ?? Icons.person, color: AppColors.mainBlackTextColor)),
+                SizedBox(height: 50.h, width: 50.w, child: Image.asset(icon.toString())),
                 SizedBox(width: 5.w),
-                Text(
-                  title,
-                  style: appTextStyle205(AppColors.newThirdGrayColor),
+                SizedBox(
+                  width: 180.w,
+                  child: Text(
+                    title,
+                    style: appTextStyle205(AppColors.newThirdGrayColor),
+                  ),
                 ),
               ],
             ),

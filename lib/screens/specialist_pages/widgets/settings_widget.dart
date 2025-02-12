@@ -26,52 +26,68 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 200.h,
-      margin: EdgeInsets.only(right: 10.w, left: 10.h, top: 10.h),
-      child: Column(
-        children: [
-          SizedBox(height: 10.h),
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppColors.grayColor,
-              child: Icon(Icons.person, color: AppColors.mainBlackTextColor),
+    return Scaffold(
+      backgroundColor: AppColors.whiteColor,
+      appBar: AppBar(
+        backgroundColor: AppColors.whiteColor,
+      ),
+      body: Container(
+        margin: EdgeInsets.only(right: 33.w, left: 33.h, top: 10.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                SizedBox(height: 50.h, width: 50.w, child: Image.asset('assets/images/Settings.png')),
+                SizedBox(width: 5.w),
+                Text(
+                  LocaleData.personalDetails.getString(context),
+                  style: appTextStyle205(AppColors.newThirdGrayColor),
+                ),
+              ],
             ),
-            title: Text(
-              LocaleData.changePassword.getString(context),
-              style: appTextStyle16(AppColors.mainBlackTextColor),
+            SizedBox(height: 44.h),
+            // SizedBox(height: 10.h),
+            Text(
+              LocaleData.language.getString(context),
+              style: appTextStyle15(AppColors.appGrayTextColor),
             ),
-            subtitle: Text(LocaleData.changePassword.getString(context), style: appTextStyle10(AppColors.mainBlackTextColor)),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.mainBlackTextColor,
-              size: 16.h,
-            ),
-          ),
-          Divider(color: AppColors.appBGColor),
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppColors.grayColor,
-              child: Icon(Icons.language, color: AppColors.mainBlackTextColor),
-            ),
-            title: Text(
-              LocaleData.changeLanguage.getString(context),
-              style: appTextStyle16(AppColors.mainBlackTextColor),
-            ),
-            subtitle: Text(LocaleData.changePhoneLanguage.getString(context), style: appTextStyle10(AppColors.mainBlackTextColor)),
-            trailing: _buildDropdown(
+            SizedBox(height: 14.h),
+            _buildDropdown(
               value: _currentLocale,
               onChanged: (String? newValue) {
                 _setLocale(newValue);
               },
               items: availableLanguages,
             ),
-          )
-        ],
+            SizedBox(
+              height: 45.h,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  LocaleData.notifications.getString(context),
+                  style: appTextStyle12K(AppColors.appGrayTextColor),
+                ),
+                Switch(
+                    activeColor: AppColors.whiteColor,
+                    activeTrackColor: AppColors.greenColor,
+                    value: isSwitch,
+                    onChanged: (value) {
+                      setState(() {
+                        isSwitch = value;
+                      });
+                    })
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
 
+  bool isSwitch = false;
   void _setLocale(String? value) {
     if (value == null) return;
 
@@ -103,13 +119,13 @@ Widget _buildDropdown({
   required List<String> items,
 }) {
   return Container(
-    width: 80.w,
-    height: 28.h,
+    // width: 80.w,
+    // height: 28.h,
     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
     decoration: BoxDecoration(
-      color: AppColors.whiteColor,
-      borderRadius: BorderRadius.circular(50.dg),
-      border: Border.all(color: AppColors.appBGColor),
+      color: AppColors.grayColor,
+      borderRadius: BorderRadius.circular(10.dg),
+      border: Border.all(color: AppColors.mainBlackTextColor),
     ),
     child: DropdownButtonHideUnderline(
       child: DropdownButton<String>(
@@ -124,7 +140,7 @@ Widget _buildDropdown({
             value: item,
             child: Text(
               getLanguageName(item), // Added to get name for each language code
-              style: appTextStyle10(AppColors.mainBlackTextColor),
+              style: appTextStyle16400(AppColors.appGrayTextColor),
             ),
           );
         }).toList(),
