@@ -14,7 +14,7 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
   String? _selectedCountry;
   String? _selectedCity;
   Position? _userPosition;
-  final bool _isLoading = false;
+  bool _isLoading = false;
 
   final Map<String, List<String>> _countryCities = {
     'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk'],
@@ -22,45 +22,45 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
     'Kazakhstan': ['Nur-Sultan', 'Almaty', 'Shymkent'],
   };
 
-  // Future<void> _getUserLocation() async {
-  //   setState(() {
-  //     _isLoading = true;
-  //   });
+  Future<void> _getUserLocation() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  //   // Check location permissions
-  //   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  //   if (!serviceEnabled) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Location services are disabled.')),
-  //     );
-  //     return;
-  //   }
+    // Check location permissions
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location services are disabled.')),
+      );
+      return;
+    }
 
-  //   LocationPermission permission = await Geolocator.checkPermission();
-  //   if (permission == LocationPermission.denied) {
-  //     permission = await Geolocator.requestPermission();
-  //     if (permission == LocationPermission.denied) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text('Location permissions are denied.')),
-  //       );
-  //       return;
-  //     }
-  //   }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permissions are denied.')),
+        );
+        return;
+      }
+    }
 
-  //   if (permission == LocationPermission.deniedForever) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Location permissions are permanently denied.')),
-  //     );
-  //     return;
-  //   }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location permissions are permanently denied.')),
+      );
+      return;
+    }
 
-  //   // Fetch the user's location
-  //   Position position = await Geolocator.getCurrentPosition();
-  //   setState(() {
-  //     _userPosition = position;
-  //     _isLoading = false;
-  //   });
-  // }
+    // Fetch the user's location
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _userPosition = position;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,28 +112,28 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
                 items: _selectedCountry != null ? _countryCities[_selectedCountry]! : [],
               ),
               const SizedBox(height: 20),
-              // ElevatedButton(
-              //   onPressed: _getUserLocation,
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: AppColors.whiteColor,
-              //     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-              //     shape: RoundedRectangleBorder(
-              //       borderRadius: BorderRadius.circular(30),
-              //     ),
-              //   ),
-              //   child: _isLoading
-              //       ? const CircularProgressIndicator()
-              //       : const Text(
-              //           'Get My Location',
-              //           style: TextStyle(color: AppColors.mainBlackTextColor, fontSize: 18),
-              //         ),
-              // ),
-              // const SizedBox(height: 20),
-              // if (_userPosition != null)
-              //   Text(
-              //     'Your Location: ${_userPosition!.latitude}, ${_userPosition!.longitude}',
-              //     style: const TextStyle(color: AppColors.whiteColor),
-              //   ),
+              ElevatedButton(
+                onPressed: _getUserLocation,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.whiteColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text(
+                        'Get My Location',
+                        style: TextStyle(color: AppColors.mainBlackTextColor, fontSize: 18),
+                      ),
+              ),
+              const SizedBox(height: 20),
+              if (_userPosition != null)
+                Text(
+                  'Your Location: ${_userPosition!.latitude}, ${_userPosition!.longitude}',
+                  style: const TextStyle(color: AppColors.whiteColor),
+                ),
             ],
           ),
         ),

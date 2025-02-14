@@ -59,165 +59,167 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.whiteColor,
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: Container(
-            color: AppColors.appBGColor,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                  decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 255, 255, 255),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(12.0),
-                      bottomRight: Radius.circular(12.0),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: AppColors.whiteColor,
+        body: SingleChildScrollView(
+          child: SafeArea(
+            child: Container(
+              color: AppColors.appBGColor,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(12.0),
+                        bottomRight: Radius.circular(12.0),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/specialist_profile'),
+                          child: Hero(
+                            tag: '1',
+                            child: Container(
+                              padding: EdgeInsets.all(4.dg),
+                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
+                              child: CircleAvatar(
+                                radius: 50.dg,
+                                backgroundColor: Colors.grey[200],
+                                backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
+                                child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.03,
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 10.h),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(LocaleData.welcomeBack.getString(context),
+                                      style: mediumTextStyle25(
+                                        AppColors.newGrayColor,
+                                      )),
+                                  Text(userName ?? '', style: appTextStyle20(AppColors.newGrayColor)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                            padding: EdgeInsets.only(bottom: 30.h),
+                            child: Image.asset(
+                              'assets/images/Bell.png',
+                              height: 26.h,
+                              width: 27.w,
+                            )),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/specialist_profile'),
-                        child: Hero(
-                          tag: '1',
-                          child: Container(
-                            padding: EdgeInsets.all(4.dg),
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
-                            child: CircleAvatar(
-                              radius: 50.dg,
-                              backgroundColor: Colors.grey[200],
-                              backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
-                              child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
-                            ),
+                  // SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    height: 150.h,
+                    padding: EdgeInsets.only(
+                      left: 16.w,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFD7D1BE),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 4.h),
+                        Text(
+                          LocaleData.category.getString(context),
+                          style: appTextStyle18(AppColors.newThirdGrayColor),
+                          // style: TextStyle(fontSize: 18, fontFamily: 'InstrumentSans'),
+                        ),
+                        SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildCategoryIcon('Haircut', 'assets/haircut_icon.png'),
+                              _buildCategoryIcon('Shave', 'assets/shave_icon.png'),
+                              _buildCategoryIcon('Facials', 'assets/facials_icon.png'),
+                              _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
+                              _buildCategoryIcon('Chauffeur', 'assets/manicure_icon.png'),
+                              _buildCategoryIcon('Cleaning', 'assets/manicure_icon.png'),
+                              _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
+                            ],
                           ),
                         ),
-                      ),
-                      Container(
-                        width: MediaQuery.of(context).size.width * 0.03,
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 10.h),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(LocaleData.welcomeBack.getString(context),
-                                    style: mediumTextStyle25(
-                                      AppColors.newGrayColor,
-                                    )),
-                                Text(userName ?? '', style: appTextStyle20(AppColors.newGrayColor)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.only(bottom: 30.h),
-                          child: Image.asset(
-                            'assets/images/Bell.png',
-                            height: 26.h,
-                            width: 27.w,
-                          )),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                // SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  height: 150.h,
-                  padding: EdgeInsets.only(
-                    left: 16.w,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFD7D1BE),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 4.h),
-                      Text(
-                        LocaleData.category.getString(context),
-                        style: appTextStyle18(AppColors.newThirdGrayColor),
-                        // style: TextStyle(fontSize: 18, fontFamily: 'InstrumentSans'),
+
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12.0),
+                        topRight: Radius.circular(12.0),
                       ),
-                      SizedBox(height: 10),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildCategoryIcon('Haircut', 'assets/haircut_icon.png'),
-                            _buildCategoryIcon('Shave', 'assets/shave_icon.png'),
-                            _buildCategoryIcon('Facials', 'assets/facials_icon.png'),
-                            _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
-                            _buildCategoryIcon('Chauffeur', 'assets/manicure_icon.png'),
-                            _buildCategoryIcon('Cleaning', 'assets/manicure_icon.png'),
-                            _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
+                            SizedBox(
+                              width: 205.w,
+                              child: Text(
+                                LocaleData.findProfessional.getString(context),
+                                style: appTextStyle16400(AppColors.newThirdGrayColor),
+                                overflow: TextOverflow.visible,
+                                softWrap: true,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                // Ваш код для настроек
+                              },
+                              child: Image.asset(
+                                'assets/categ_settings.png',
+                                width: 24,
+                                height: 24,
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12.0),
-                      topRight: Radius.circular(12.0),
+                        SizedBox(height: 10),
+                        buildProfessionalCard(
+                          context,
+                          'John Doe',
+                          'Barber',
+                          4.5,
+                        ),
+                        buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8),
+                        SizedBox(height: 70),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 205.w,
-                            child: Text(
-                              LocaleData.findProfessional.getString(context),
-                              style: appTextStyle16400(AppColors.newThirdGrayColor),
-                              overflow: TextOverflow.visible,
-                              softWrap: true,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              // Ваш код для настроек
-                            },
-                            child: Image.asset(
-                              'assets/categ_settings.png',
-                              width: 24,
-                              height: 24,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      buildProfessionalCard(
-                        context,
-                        'John Doe',
-                        'Barber',
-                        4.5,
-                      ),
-                      buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8),
-                      SizedBox(height: 70),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
