@@ -12,7 +12,9 @@ class LikesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
+        backgroundColor: AppColors.whiteColor,
         centerTitle: false,
         title: Text(
           LocaleData.likes.getString(context),

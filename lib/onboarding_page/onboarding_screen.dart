@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
@@ -24,25 +25,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingPageTwo(),
     OnboardingPageThree(),
   ];
-
-  void _onPageChanged(int index) {
-    setState(() {
-      _currentPage = index;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _checkIfFirstLaunch();
   }
 
-  void _navigateToNextPage() {
+  // Check if this is the first time the app is launched
+  Future<void> _checkIfFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool isFirstLaunch = prefs.getBool('first_launch') ?? true;
+
+    if (!isFirstLaunch) {
+      // If not the first launch, navigate to the login screen
+      Navigator.pushReplacementNamed(context, '/login_screen');
+    }
+  }
+
+  void _onPageChanged(int index) {
+    setState(() => _currentPage = index);
+  }
+
+  void _navigateToNextPage() async {
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
         duration: Duration(milliseconds: 300),
         curve: Curves.easeIn,
       );
-      // Navigate to the home screen or login screen
-      // Navigator.pushNamed(context, '/login_screen');
     } else {
-      // Navigate to the home screen or login screen
-      Navigator.pushNamed(context, '/login_screen');
-      print("Get Started clicked!");
+      // Set the 'first_launch' flag to false
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('first_launch', false);
+
+      // Navigate to the login screen
+      Navigator.pushNamedAndRemoveUntil(context, '/login_screen', (_) => false);
     }
   }
 
@@ -65,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: _buildPageIndicator(),
             ),
             Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding:  EdgeInsets.all(20.dg),
               child: SizedBox(
                 width: 212.w,
                 height: 45.h,

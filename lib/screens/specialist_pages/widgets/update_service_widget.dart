@@ -4,7 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:stylehub/constants/app/app_colors.dart';
+import 'package:stylehub/constants/app/textstyle.dart';
+import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/personal_detail_screen.dart';
 
 class UpdateServiceWidget extends StatefulWidget {
   const UpdateServiceWidget({super.key});
@@ -99,8 +105,9 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
-        title: const Text('Update Services'),
+        backgroundColor: AppColors.whiteColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -108,28 +115,58 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextFormField(
-                  controller: _servicesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Services (comma separated)',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter at least one service';
-                    }
-                    return null;
-                  },
+                Row(
+                  children: [
+                    SizedBox(height: 50.h, width: 50.w, child: Image.asset('assets/images/Scissors.png')),
+                    SizedBox(width: 5.w),
+                    Text(
+                      LocaleData.specialistDetails.getString(context),
+                      style: appTextStyle205(AppColors.newThirdGrayColor),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 44.h),
+                PersonalDetailText(
+                  text: LocaleData.profession.getString(context),
+                ),
+                SizedBox(height: 15.h),
+                PersonalDetailForm(controller: _servicesController, hintText: ''),
+                SizedBox(height: 44.h),
+                PersonalDetailText(
+                  text: LocaleData.yearsOfExperience.getString(context),
+                ),
+                SizedBox(height: 15.h),
+                PersonalDetailForm(controller: _servicesController, hintText: ''),
+                SizedBox(height: 44.h),
+                PersonalDetailText(
+                  text: LocaleData.serviceCategory.getString(context),
+                ),
+                SizedBox(height: 15.h),
+                Row(
+                  children: [
+                    serviceCategories(),
+                    SizedBox(width: 21.w),
+                    serviceCategories(),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                PersonalDetailText(
+                  text: LocaleData.bio.getString(context),
+                ),
+                SizedBox(height: 15.h),
                 TextFormField(
                   controller: _bioController,
-                  decoration: const InputDecoration(
-                    labelText: 'Bio',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                    hintStyle: appTextStyle16400(AppColors.appGrayTextColor),
+                    hintText: '',
+                    fillColor: AppColors.grayColor,
+                    filled: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.h), borderSide: BorderSide.none),
                   ),
-                  maxLines: 3,
+                  maxLines: 4,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a bio';
@@ -137,14 +174,14 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.phone,
+                SizedBox(height: 44.h),
+                PersonalDetailText(
+                  text: LocaleData.phoneNumber.getString(context),
+                ),
+                SizedBox(height: 15.h),
+                PersonalDetailForm(
+                  controller: _servicesController,
+                  hintText: '',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your phone number';
@@ -152,39 +189,87 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _pickImages,
-                  child: const Text('Upload Images'),
+                SizedBox(height: 44.h),
+                PersonalDetailText(
+                  text: LocaleData.previousWork.getString(context),
                 ),
-                const SizedBox(height: 20),
-                _imageFiles.isNotEmpty
-                    ? GridView.builder(
-                        shrinkWrap: true,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 4.0,
-                          mainAxisSpacing: 4.0,
-                        ),
-                        itemCount: _imageFiles.length,
-                        itemBuilder: (context, index) {
-                          return Image.file(
-                            _imageFiles[index],
-                            fit: BoxFit.cover,
-                          );
-                        },
-                      )
-                    : Container(),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _uploadData,
-                  child: const Text('Submit'),
+                SizedBox(height: 20.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.grayColor,
+                      radius: 70.h,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            LocaleData.uploadImages.getString(context),
+                            style: appTextStyle12K(AppColors.mainBlackTextColor),
+                          ),
+                          SizedBox(
+                            width: 5.w,
+                          ),
+                          Icon(
+                            Icons.cloud_upload_outlined,
+                            color: AppColors.mainBlackTextColor,
+                          )
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                        width: 180.w,
+                        child: Text(
+                          LocaleData.note.getString(context),
+                          style: appTextStyle12K(AppColors.mainBlackTextColor),
+                        ))
+                  ],
                 ),
+                // ElevatedButton(
+                //   onPressed: _pickImages,
+                //   child: const Text('Upload Images'),
+                // ),
+                const SizedBox(height: 80),
+                // _imageFiles.isNotEmpty
+                //     ? GridView.builder(
+                //         shrinkWrap: true,
+                //         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                //           crossAxisCount: 3,
+                //           crossAxisSpacing: 4.0,
+                //           mainAxisSpacing: 4.0,
+                //         ),
+                //         itemCount: _imageFiles.length,
+                //         itemBuilder: (context, index) {
+                //           return Image.file(
+                //             _imageFiles[index],
+                //             fit: BoxFit.cover,
+                //           );
+                //         },
+                //       )
+                //     : Container(),
+                // const SizedBox(height: 20),
+                // ElevatedButton(
+                //   onPressed: _uploadData,
+                //   child: const Text('Submit'),
+                // ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Container serviceCategories() {
+    return Container(
+        height: 36.h,
+        width: 106.w,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.dg), color: AppColors.grayColor),
+        child: Center(
+          child: Text(
+            'Haircut',
+            style: appTextStyle15(AppColors.newThirdGrayColor),
+          ),
+        ));
   }
 }

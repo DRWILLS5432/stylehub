@@ -15,6 +15,7 @@ import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/settings_widget.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/update_service_widget.dart';
+import 'package:stylehub/services/firebase_auth.dart';
 
 class SpecialistProfileScreen extends StatefulWidget {
   const SpecialistProfileScreen({super.key});
@@ -27,6 +28,8 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
   String? userName;
   Uint8List? _imageBytes;
   bool _isLoading = false;
+
+  final FirebaseService _firebaseService = FirebaseService();
 
   @override
   void initState() {
@@ -107,7 +110,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
               child: Column(
                 // crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(height: 20),
+                  // Container(height: 20),
                   Stack(
                     children: [
                       Hero(
@@ -116,7 +119,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                           padding: EdgeInsets.all(3.dg),
                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
                           child: CircleAvatar(
-                            radius: 65.dg,
+                            radius: 60.dg,
                             backgroundColor: Colors.grey[200],
                             backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
                             child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
@@ -153,7 +156,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 46),
+                  SizedBox(height: 26),
                   Column(
                     children: [
                       ProfileTiles(
@@ -194,7 +197,8 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                         onPressed: () {
                           setState(() => _isLoading = true);
 
-                          FirebaseAuth.instance.signOut();
+                          // FirebaseAuth.instance.signOut();
+                          _firebaseService.logout(context);
                           setState(() => _isLoading = false);
                         }),
                   ),
@@ -223,11 +227,11 @@ class ProfileTiles extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 22.h, left: 30.w, right: 30.w),
+        margin: EdgeInsets.only(bottom: 14.h, left: 30.w, right: 30.w),
         padding: EdgeInsets.only(
           right: 10.w,
           left: 25.w,
-          top: 25.h,
+          top: 12.h,
         ),
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.dg), color: AppColors.appBGColor),
         child: Column(

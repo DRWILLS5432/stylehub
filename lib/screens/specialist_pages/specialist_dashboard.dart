@@ -195,9 +195,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () {
-                                // Ваш код для настроек
-                              },
+                              onTap: () => Navigator.pushNamed(context, '/filter_screen'),
                               child: Image.asset(
                                 'assets/categ_settings.png',
                                 width: 24,

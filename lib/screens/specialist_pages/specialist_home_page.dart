@@ -30,15 +30,15 @@ class _SpecialistPageState extends State<SpecialistPage> {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: Padding(
-        padding: EdgeInsets.only(bottom: 20.h),
+        padding: EdgeInsets.only(bottom: 10.h),
         child: BottomBar(
-          barColor: AppColors.appBGColor,
-          borderRadius: BorderRadius.circular(20.dg),
+          barColor: AppColors.appSecondaryColor,
+          borderRadius: BorderRadius.circular(50.dg),
           body: (context, scrollController) => _widgetOptions.elementAt(_selectedIndex),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.dg),
-              color: AppColors.appBGColor,
+              borderRadius: BorderRadius.circular(50.dg),
+              color: AppColors.appSecondaryColor,
             ),
             // margin: EdgeInsets.only(bottom: 20.h, right: 10.w, left: 10.w),
             padding: const EdgeInsets.symmetric(vertical: 5),
@@ -61,9 +61,7 @@ class _SpecialistPageState extends State<SpecialistPage> {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
+        setState(() => _selectedIndex = index);
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -84,18 +82,7 @@ class _SpecialistPageState extends State<SpecialistPage> {
   }
 }
 
-// Define placeholder screens
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Dashboard Content', style: appTextStyle14(AppColors.mainBlackTextColor)),
-    );
-  }
-}
-
+// Define placeholder
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 

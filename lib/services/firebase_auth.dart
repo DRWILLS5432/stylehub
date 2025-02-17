@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -191,7 +192,8 @@ class FirebaseService {
   }
 
   // Method to logout
-  Future<void> logout() async {
+  Future<void> logout(context) async {
     await _auth.signOut();
+    Navigator.pushReplacementNamed(context, '/login_screen');
   }
 }

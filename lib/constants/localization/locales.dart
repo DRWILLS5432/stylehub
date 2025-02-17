@@ -68,7 +68,15 @@ mixin LocaleData {
   static const String appSettings = 'App Settings';
   static const String language = 'Language';
   static const String notifications = 'Notifications';
-
+  static const String profession = 'Profession';
+  static const String yearsOfExperience = 'Years of Experience';
+  static const String serviceCategory = 'Service Category';
+  static const String bio = 'Bio';
+  static const String previousWork = 'Previous Work';
+  static const String edit = 'Edit';
+  static const String uploadImages = 'Upload Images';
+  static const String note = 'N:B All photos uploaded must be edited in the format before and After  or else the photos will be rejected by our platform review team.';
+  static const String phoneNumber = 'Phone Number';
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
     changeLanguage: 'Choose your language ',
@@ -132,6 +140,15 @@ mixin LocaleData {
     appSettings: 'App Settings',
     language: 'Language',
     notifications: 'Notifications',
+    profession: 'Profession',
+    yearsOfExperience: 'Years of Experience',
+    serviceCategory: 'Service Category',
+    bio: 'Bio',
+    previousWork: 'Previous Work',
+    edit: 'Edit',
+    uploadImages: 'Upload Images',
+    note: 'N:B All photos uploaded must be edited in the format before and After  or else the photos will be rejected by our platform review team.',
+    phoneNumber: 'Phone Number',
   };
 
   static const Map<String, dynamic> UK = {
@@ -196,6 +213,15 @@ mixin LocaleData {
     appSettings: 'Налаштування програми',
     language: 'Мова',
     notifications: 'Повідомлення',
+    profession: 'Професія',
+    yearsOfExperience: 'Роки досвіду',
+    serviceCategory: 'Категорія послуг',
+    bio: 'Біографія',
+    previousWork: 'Попередні роботи',
+    edit: 'Редагувати',
+    uploadImages: 'Завантажити зображення',
+    note: 'Замітка',
+    phoneNumber: 'Номер телефону',
   };
 
   // FOR RUSSIAN
@@ -261,5 +287,14 @@ mixin LocaleData {
     appSettings: 'Настройки приложения',
     language: 'Язык',
     notifications: 'Уведомления',
+    profession: 'Профессия',
+    yearsOfExperience: 'Лет опыта',
+    serviceCategory: 'Категория услуг',
+    bio: 'Биография',
+    previousWork: 'Предыдущие работы',
+    edit: 'Редактировать',
+    uploadImages: 'Загрузить изображения',
+    note: 'Заметка',
+    phoneNumber: 'Номер телефона',
   };
 }

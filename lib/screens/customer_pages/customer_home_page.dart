@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
+import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/services/firebase_auth.dart';
 
 class CustomerPage extends StatefulWidget {
   const CustomerPage({super.key});
@@ -74,13 +79,27 @@ class _CustomerPageState extends State<CustomerPage> {
 }
 
 // Define placeholder screens
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final FirebaseService _firebaseService = FirebaseService();
+  @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text('Dashboard Content', style: appTextStyle14(AppColors.mainBlackTextColor)),
+      child: ReusableButton(
+          bgColor: AppColors.whiteColor,
+          width: 212.w,
+          height: 45.h,
+          text: Text(LocaleData.logout.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
+          onPressed: () {
+            // FirebaseAuth.instance.signOut();
+            _firebaseService.logout(context);
+          }),
     );
   }
 }

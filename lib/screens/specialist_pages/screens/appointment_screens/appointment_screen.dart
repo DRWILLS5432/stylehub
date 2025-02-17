@@ -12,7 +12,9 @@ class AppointmentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
+        backgroundColor: AppColors.whiteColor,
         centerTitle: false,
         title: Text(
           LocaleData.appointments.getString(context),
@@ -57,87 +59,92 @@ class AppointmentScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    ReusableButton(
-                        width: 103.w,
-                        height: 25.h,
-                        text: Center(
-                          child: Text(
-                            LocaleData.cancel.getString(context),
-                            style: appTextStyle12K(AppColors.mainBlackTextColor),
-                          ),
-                        ),
-                        onPressed: () => showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15.dg),
-                                  ),
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Column(
-                                    children: [
-                                      SizedBox(
-                                        width: 211.w,
-                                        child: Text(
-                                          LocaleData.wantToCancelAppointment,
-                                          style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                          textAlign: TextAlign.center,
-                                        ),
+                    ElevatedButton(
+                      onPressed: () => showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15.dg),
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                title: Column(
+                                  children: [
+                                    SizedBox(
+                                      width: 211.w,
+                                      child: Text(
+                                        LocaleData.wantToCancelAppointment,
+                                        style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                        textAlign: TextAlign.center,
                                       ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'Date',
-                                            style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                          ),
-                                          SizedBox(
-                                            width: 4.w,
-                                          ),
-                                          Text(
-                                            'by',
-                                            style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                          ),
-                                          SizedBox(
-                                            width: 4.w,
-                                          ),
-                                          Text(
-                                            'Time',
-                                            style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
+                                    ),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
+                                        Text(
+                                          'Date',
+                                          style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                        ),
                                         SizedBox(
-                                            height: 25.h,
-                                            width: 104.w,
-                                            child: ReusableButton(
-                                                color: AppColors.appBGColor,
-                                                text: Text(
-                                                  LocaleData.no.getString(context),
-                                                  style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                ),
-                                                onPressed: () {})),
+                                          width: 4.w,
+                                        ),
+                                        Text(
+                                          'by',
+                                          style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                        ),
                                         SizedBox(
-                                            height: 25.h,
-                                            width: 104.w,
-                                            child: ReusableButton(
-                                                color: AppColors.appBGColor,
-                                                text: Text(
-                                                  LocaleData.yes.getString(context),
-                                                  style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                ),
-                                                onPressed: () {})),
+                                          width: 4.w,
+                                        ),
+                                        Text(
+                                          'Time',
+                                          style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                        ),
                                       ],
                                     ),
                                   ],
-                                )),
-                        bgColor: AppColors.whiteColor,
-                        color: AppColors.newGrayColor),
+                                ),
+                                actions: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      SizedBox(
+                                          height: 25.h,
+                                          width: 104.w,
+                                          child: ReusableButton(
+                                              color: AppColors.appBGColor,
+                                              text: Text(
+                                                LocaleData.no.getString(context),
+                                                style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                              ),
+                                              onPressed: () {})),
+                                      SizedBox(
+                                          height: 25.h,
+                                          width: 104.w,
+                                          child: ReusableButton(
+                                              color: AppColors.appBGColor,
+                                              text: Text(
+                                                LocaleData.yes.getString(context),
+                                                style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                              ),
+                                              onPressed: () {})),
+                                    ],
+                                  ),
+                                ],
+                              )),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.whiteColor,
+                        minimumSize: Size(3.w, 25.h),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(color: AppColors.newGrayColor, width: 2.w),
+                          borderRadius: BorderRadius.circular(5.dg),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          LocaleData.cancel.getString(context),
+                          style: appTextStyle12K(AppColors.mainBlackTextColor),
+                        ),
+                      ),
+                    ),
                   ],
                 )
               ],
