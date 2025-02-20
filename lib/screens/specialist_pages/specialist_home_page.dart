@@ -6,6 +6,7 @@ import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/screens/specialist_pages/screens/appointment_screens/appointment_screen.dart';
 import 'package:stylehub/screens/specialist_pages/screens/likes_screens/likes_screen.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_dashboard.dart';
+import 'package:stylehub/screens/specialist_pages/specialist_schedule_appointment_screen.dart';
 
 class SpecialistPage extends StatefulWidget {
   const SpecialistPage({super.key});
@@ -18,12 +19,7 @@ class _SpecialistPageState extends State<SpecialistPage> {
   int _selectedIndex = 0;
 
   // Define your pages here
-  static final List<Widget> _widgetOptions = <Widget>[
-    SpecialistDashboard(),
-    AppointmentScreen(),
-    LikesScreen(),
-    ProfileScreen(),
-  ];
+  static final List<Widget> _widgetOptions = <Widget>[SpecialistDashboard(), AppointmentScreen(), LikesScreen(), AppointmentScheduler()];
 
   @override
   Widget build(BuildContext context) {
@@ -78,18 +74,6 @@ class _SpecialistPageState extends State<SpecialistPage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// Define placeholder
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Profile Content', style: appTextStyle16(AppColors.mainBlackTextColor)),
     );
   }
 }
