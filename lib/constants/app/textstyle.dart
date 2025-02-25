@@ -110,6 +110,14 @@ TextStyle appTextStyle24(Color? color) {
   );
 }
 
+TextStyle appTextStyle24500(Color? color) {
+  return TextStyle(
+    fontSize: 24.sp,
+    fontWeight: FontWeight.w500,
+    color: color,
+  );
+}
+
 TextStyle appTextStyle23800(Color? color) {
   return TextStyle(
     fontSize: 23.sp,

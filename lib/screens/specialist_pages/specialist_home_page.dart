@@ -28,7 +28,7 @@ class _SpecialistPageState extends State<SpecialistPage> {
       body: Padding(
         padding: EdgeInsets.only(bottom: 10.h),
         child: BottomBar(
-          barColor: AppColors.appSecondaryColor,
+          barColor: AppColors.appSecondaryColor.withValues(alpha: 0),
           borderRadius: BorderRadius.circular(50.dg),
           body: (context, scrollController) => _widgetOptions.elementAt(_selectedIndex),
           child: Container(

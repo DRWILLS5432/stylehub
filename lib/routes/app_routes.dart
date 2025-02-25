@@ -5,6 +5,7 @@ import 'package:stylehub/auth_screens/splash_screen.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
 import 'package:stylehub/screens/specialist_pages/filter_screen.dart';
+import 'package:stylehub/screens/specialist_pages/make_appointment_screen.dart';
 import 'package:stylehub/screens/specialist_pages/profile_screen.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_home_page.dart';
@@ -26,6 +27,7 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
     '/personal_details': (context) => PersonalDetailScreen(),
     '/filter_screen': (context) => FilterScreen(),
     '/specialist_detail_screen': (context) => SpecialistDetailScreen(),
+    '/make_appointment_screen': (context) => MakeAppointmentScreen(),
   };
 
   // Check if the requested route is in the routes map

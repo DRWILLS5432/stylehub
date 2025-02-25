@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/app_providers.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/routes/app_routes.dart';
@@ -54,7 +55,11 @@ class _MyAppState extends State<MyApp> {
           builder: (context, child) => MaterialApp(
                 debugShowCheckedModeBanner: false,
                 title: 'My App',
-                theme: ThemeData(primarySwatch: Colors.deepPurple),
+                theme: ThemeData(
+                  primarySwatch: Colors.deepPurple,
+                  appBarTheme: AppBarTheme(color: AppColors.whiteColor),
+                  scaffoldBackgroundColor: AppColors.whiteColor,
+                ),
                 supportedLocales: localization.supportedLocales,
                 localizationsDelegates: localization.localizationsDelegates,
                 home: AuthWrapper(),

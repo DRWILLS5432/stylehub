@@ -169,8 +169,8 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                   child: ReusableButton(
                     bgColor: AppColors.whiteColor,
                     color: AppColors.appBGColor,
-                    text: Text('Make Appointment', style: appTextStyle15(AppColors.appBGColor)),
-                    onPressed: () {},
+                    text: Text('Make Appointment', style: appTextStyle15(AppColors.newThirdGrayColor)),
+                    onPressed: () => Navigator.pushNamed(context, '/make_appointment_screen'),
                   ),
                 ),
               ),
