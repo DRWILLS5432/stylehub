@@ -17,7 +17,9 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        elevation: 0,
+      ),
       body: Stack(
         children: [
           SingleChildScrollView(

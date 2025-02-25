@@ -208,7 +208,9 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                         buildProfessionalCard(context, 'John Doe', 'Barber', 4.5, onTap: () {
                           Navigator.pushNamed(context, '/specialist_detail_screen');
                         }),
-                        buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {}),
+                        buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {
+                          Navigator.pushNamed(context, '/specialist_detail_screen');
+                        }),
                         SizedBox(height: 70),
                       ],
                     ),
