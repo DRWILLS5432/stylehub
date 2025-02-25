@@ -205,13 +205,10 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                           ],
                         ),
                         SizedBox(height: 10),
-                        buildProfessionalCard(
-                          context,
-                          'John Doe',
-                          'Barber',
-                          4.5,
-                        ),
-                        buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8),
+                        buildProfessionalCard(context, 'John Doe', 'Barber', 4.5, onTap: () {
+                          Navigator.pushNamed(context, '/specialist_detail_screen');
+                        }),
+                        buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {}),
                         SizedBox(height: 70),
                       ],
                     ),
@@ -248,73 +245,76 @@ Widget _buildCategoryIcon(String label, String assetPath) {
   );
 }
 
-Widget buildProfessionalCard(context, String name, String profession, double rating) {
-  return Card(
-    margin: EdgeInsets.symmetric(vertical: 10),
-    color: Color(0xFFD7D1BE),
-    child: Padding(
-      padding: EdgeInsets.only(left: 17.w, right: 17.h, top: 29.h, bottom: 12.h),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(2.dg),
-                decoration: BoxDecoration(
-                  color: AppColors.whiteColor,
-                  borderRadius: BorderRadius.circular(100.dg),
+Widget buildProfessionalCard(context, String name, String profession, double rating, {Function()? onTap}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Card(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      color: Color(0xFFD7D1BE),
+      child: Padding(
+        padding: EdgeInsets.only(left: 17.w, right: 17.h, top: 29.h, bottom: 12.h),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(2.dg),
+                  decoration: BoxDecoration(
+                    color: AppColors.whiteColor,
+                    borderRadius: BorderRadius.circular(100.dg),
+                  ),
+                  child: CircleAvatar(
+                    radius: 60.dg,
+                    backgroundImage: AssetImage('assets/master1.png'),
+                  ),
                 ),
-                child: CircleAvatar(
-                  radius: 60.dg,
-                  backgroundImage: AssetImage('assets/master1.png'),
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(name, style: appTextStyle20(AppColors.newThirdGrayColor)),
-                    Text(
-                      profession,
-                      style: appTextStyle15(AppColors.newThirdGrayColor),
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: List.generate(
-                        5,
-                        (index) => Icon(
-                          index < rating ? Icons.star : Icons.star_border,
-                          color: const Color.fromARGB(255, 2, 1, 1),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(name, style: appTextStyle20(AppColors.newThirdGrayColor)),
+                      Text(
+                        profession,
+                        style: appTextStyle15(AppColors.newThirdGrayColor),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: List.generate(
+                          5,
+                          (index) => Icon(
+                            index < rating ? Icons.star : Icons.star_border,
+                            color: const Color.fromARGB(255, 2, 1, 1),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
+                    Text("70m", style: appTextStyle15(AppColors.newThirdGrayColor)),
                   ],
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 10.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
-                  Text("70m", style: appTextStyle15(AppColors.newThirdGrayColor)),
-                ],
-              ),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  LocaleData.view.getString(context),
-                  style: appTextStyle14(AppColors.newThirdGrayColor),
+                TextButton(
+                  onPressed: () {},
+                  child: Text(
+                    LocaleData.view.getString(context),
+                    style: appTextStyle14(AppColors.newThirdGrayColor),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     ),
   );

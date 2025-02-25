@@ -11,11 +11,11 @@ TextStyle appTextStyle10(Color color) {
 }
 
 TextStyle appTextStyle12() {
-  return TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w400, color: AppColors.subTextColor);
+  return TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: AppColors.subTextColor);
 }
 
 TextStyle appTextStyle12500() {
-  return TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w500, color: AppColors.subTextColor);
+  return TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w400, color: AppColors.mainBlackTextColor);
 }
 
 TextStyle appTextStyle12K(Color color) {
@@ -28,6 +28,10 @@ TextStyle appTextStyle14(Color color) {
 
 TextStyle appTextStyle15(Color color) {
   return TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w400, color: color);
+}
+
+TextStyle appTextStyle15600(Color color) {
+  return TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: color);
 }
 
 TextStyle appTextStyle14500(Color color) {
@@ -129,6 +133,7 @@ TextStyle appTextStyle20(Color? color) {
     color: color,
   );
 }
+
 TextStyle appTextStyle205(Color? color) {
   return TextStyle(
     fontSize: 20.sp,
@@ -136,6 +141,7 @@ TextStyle appTextStyle205(Color? color) {
     color: color,
   );
 }
+
 TextStyle mediumTextStyle700(Color? color) {
   return TextStyle(
     fontSize: 22.sp,

@@ -77,6 +77,12 @@ mixin LocaleData {
   static const String uploadImages = 'Upload Images';
   static const String note = 'N:B All photos uploaded must be edited in the format before and After  or else the photos will be rejected by our platform review team.';
   static const String phoneNumber = 'Phone Number';
+  static const String serviceProvide = 'Services I provide';
+  static const String review = 'Review';
+  static const String callMe = 'Call Me';
+  static const String reviews = 'Reviews';
+  static const String leaveA = 'Leave a';
+
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
     changeLanguage: 'Choose your language ',
@@ -149,6 +155,11 @@ mixin LocaleData {
     uploadImages: 'Upload Images',
     note: 'N:B All photos uploaded must be edited in the format before and After  or else the photos will be rejected by our platform review team.',
     phoneNumber: 'Phone Number',
+    serviceProvide: 'Services I provide',
+    review: 'Review',
+    callMe: 'Call Me',
+    reviews: 'Reviews',
+    leaveA: 'Leave a',
   };
 
   static const Map<String, dynamic> UK = {
@@ -222,6 +233,11 @@ mixin LocaleData {
     uploadImages: 'Завантажити зображення',
     note: 'Замітка',
     phoneNumber: 'Номер телефону',
+    serviceProvide: 'Послуги, які ви робите',
+    review: 'Відгук',
+    callMe: 'Зателефонувати мені',
+    reviews: 'Відгуки',
+    leaveA: 'Залишити відгук',
   };
 
   // FOR RUSSIAN
@@ -296,5 +312,10 @@ mixin LocaleData {
     uploadImages: 'Загрузить изображения',
     note: 'Заметка',
     phoneNumber: 'Номер телефона',
+    serviceProvide: 'Услуги, которые вы предоставляете',
+    review: 'Отзывы',
+    callMe: 'Позвоните мне',
+    reviews: 'Отзывы',
+    leaveA: 'Оставьте отзыв',
   };
 }
