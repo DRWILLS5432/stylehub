@@ -10,6 +10,10 @@ TextStyle appTextStyle10(Color color) {
   return TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w400, color: color);
 }
 
+TextStyle appTextStyle11500(Color color) {
+  return TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w500, color: color);
+}
+
 TextStyle appTextStyle12() {
   return TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: AppColors.subTextColor);
 }

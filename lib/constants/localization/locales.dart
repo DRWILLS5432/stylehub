@@ -82,6 +82,9 @@ mixin LocaleData {
   static const String callMe = 'Call Me';
   static const String reviews = 'Reviews';
   static const String leaveA = 'Leave a';
+  static const String howDidItGo = 'How did your Appointment go?';
+  static const String takeAMomentToRate = 'Please take a moment to rate stylists and leave a review';
+  static const String writeYourRevHere = 'Write your Review here';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -160,6 +163,9 @@ mixin LocaleData {
     callMe: 'Call Me',
     reviews: 'Reviews',
     leaveA: 'Leave a',
+    howDidItGo: 'How did your Appointment go?',
+    takeAMomentToRate: 'Please take a moment to rate stylists and leave a review',
+    writeYourRevHere: 'Write your Review here',
   };
 
   static const Map<String, dynamic> UK = {
@@ -238,6 +244,9 @@ mixin LocaleData {
     callMe: 'Зателефонувати мені',
     reviews: 'Відгуки',
     leaveA: 'Залишити відгук',
+    howDidItGo: 'Як це було?',
+    takeAMomentToRate: 'Затримайтеся, щоб оцінити',
+    writeYourRevHere: 'Напишіть свій відгук тут',
   };
 
   // FOR RUSSIAN
@@ -317,5 +326,8 @@ mixin LocaleData {
     callMe: 'Позвоните мне',
     reviews: 'Отзывы',
     leaveA: 'Оставьте отзыв',
+    howDidItGo: 'Как все прошло?',
+    takeAMomentToRate: 'Возьмите момент, чтобы оценить',
+    writeYourRevHere: 'Напишите свой отзыв здесь',
   };
 }

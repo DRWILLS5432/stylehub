@@ -14,6 +14,8 @@ class SpecialistDetailScreen extends StatefulWidget {
 }
 
 class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
+  bool toggleReviewField = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,18 +138,114 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                       child: Text(LocaleData.reviews.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
                     ),
                     SizedBox(height: 20.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: Row(
-                        children: [
-                          Text(LocaleData.leaveA.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
-                          SizedBox(width: 10.w),
-                          Text(LocaleData.review.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
-                        ],
+                    InkWell(
+                      radius: 20.dg,
+                      onTap: () => setState(() {
+                        toggleReviewField = !toggleReviewField;
+                      }),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 15.w),
+                        child: SizedBox(
+                          width: 120.w,
+                          child: Row(
+                            children: [
+                              Text(LocaleData.leaveA.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                              SizedBox(width: 10.w),
+                              Text(LocaleData.review.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
+                    toggleReviewField
+                        ? AnimatedOpacity(
+                            opacity: toggleReviewField ? 1 : 0,
+                            duration: Duration(milliseconds: 900),
+                            child: Container(
+                              margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                              // height: toggleReviewField ? 200.h : 0.h,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                  color: AppColors.whiteColor,
+                                  borderRadius: BorderRadius.circular(10.dg),
+                                  border: Border.all(
+                                    color: AppColors.appBGColor,
+                                    width: 3.h,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withValues(alpha: 0.5),
+                                      spreadRadius: 1,
+                                      blurRadius: 2,
+                                      offset: Offset(0, 3), // changes position of shadow
+                                    ),
+                                  ]),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    LocaleData.howDidItGo.getString(context),
+                                    style: appTextStyle15600(AppColors.newThirdGrayColor),
+                                  ),
+                                  SizedBox(
+                                    height: 8.h,
+                                  ),
+                                  Text(
+                                    LocaleData.takeAMomentToRate.getString(context),
+                                    style: appTextStyle11500(AppColors.newThirdGrayColor),
+                                  ),
+                                  SizedBox(
+                                    height: 20.h,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      5,
+                                      (index) => Icon(
+                                        index < 5 ? Icons.star : Icons.star_border,
+                                        color: const Color.fromARGB(255, 2, 1, 1),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 20.h,
+                                  ),
+                                  TextFormField(
+                                    cursorColor: AppColors.newThirdGrayColor,
+                                    decoration: InputDecoration(
+                                      labelStyle: appTextStyle15(AppColors.newThirdGrayColor),
+                                      suffixIcon: Image.asset(
+                                        'assets/images/PaperPlane.png',
+                                        scale: 0.8,
+                                      ),
+                                      hintText: LocaleData.writeYourRevHere.getString(context),
+                                      hintStyle: appTextStyle15(AppColors.newThirdGrayColor),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10.dg),
+                                        borderSide: BorderSide(
+                                          color: AppColors.appBGColor,
+                                          width: 2.h,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10.dg),
+                                        borderSide: BorderSide(
+                                          color: AppColors.appBGColor,
+                                          width: 2.h,
+                                        ),
+                                      ),
+                                    ),
+                                    maxLines: 1,
+                                  )
+                                ],
+                              ),
+                            ),
+                          )
+                        : Container(),
                     SizedBox(
-                      height: 28.h,
+                      height: 18.h,
                     ),
                     buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {}),
                     SizedBox(
