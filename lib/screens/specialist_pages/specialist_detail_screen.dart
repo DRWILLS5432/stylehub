@@ -21,6 +21,12 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 10.w),
+            child: Icon(Icons.favorite, color: AppColors.newThirdGrayColor),
+          )
+        ],
       ),
       body: Stack(
         children: [
@@ -90,18 +96,13 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                         scrollDirection: Axis.horizontal,
                         itemBuilder: (context, index) => Padding(
                           padding: EdgeInsets.only(left: 15.w),
-                          child: SizedBox(
-                            // width: 150.w,
-                            // height: 190.h,
-                            child: Container(
-                              padding: EdgeInsets.all(2.dg),
-                              height: 110,
-                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
-                              child: CircleAvatar(
-                                radius: 100.dg,
-                                backgroundImage: AssetImage(
-                                  'assets/master1.png',
-                                ),
+                          child: CircleAvatar(
+                            radius: 94.dg,
+                            backgroundColor: AppColors.appBGColor,
+                            child: CircleAvatar(
+                              radius: 90.dg,
+                              backgroundImage: AssetImage(
+                                'assets/master1.png',
                               ),
                             ),
                           ),
@@ -122,15 +123,20 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                     SizedBox(height: 20.h),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: SizedBox(
-                          width: 143.w,
-                          height: 32.h,
-                          child: ReusableButton(
-                            bgColor: AppColors.grayColor,
-                            color: AppColors.appBGColor,
-                            text: Text('Call me', style: appTextStyle15600(AppColors.newThirdGrayColor)),
-                            onPressed: () {},
-                          )),
+                      child: Row(
+                        children: [
+                          Container(
+                              // width: 143.w,
+                              padding: EdgeInsets.symmetric(horizontal: 0.w),
+                              height: 32.h,
+                              child: ReusableButton(
+                                bgColor: AppColors.grayColor,
+                                color: AppColors.appBGColor,
+                                text: Text(LocaleData.callMe.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
+                                onPressed: () {},
+                              )),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 36.h),
                     Padding(
@@ -145,15 +151,12 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                       }),
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 15.w),
-                        child: SizedBox(
-                          width: 120.w,
-                          child: Row(
-                            children: [
-                              Text(LocaleData.leaveA.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
-                              SizedBox(width: 10.w),
-                              Text(LocaleData.review.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
-                            ],
-                          ),
+                        child: Row(
+                          children: [
+                            Text(LocaleData.leaveA.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                            SizedBox(width: 10.w),
+                            Text(LocaleData.review.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
+                          ],
                         ),
                       ),
                     ),
@@ -285,8 +288,9 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
     return InkWell(
       onTap: () {},
       splashColor: AppColors.whiteColor,
-      highlightColor: AppColors.newGrayColor,
-      overlayColor: WidgetStateProperty.all(Colors.green),
+      highlightColor: AppColors.grayColor,
+      radius: 40.dg,
+      // overlayColor: WidgetStateProperty.all(C),
       child: Padding(
         padding: EdgeInsets.only(right: 20.w),
         child: Column(

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -34,7 +33,7 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
-            'assets/images/planet.png',
+            'assets/images/GoogleTranslate.png',
             height: 153.h,
             width: 194.w,
           ),

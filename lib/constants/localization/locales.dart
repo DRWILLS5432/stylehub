@@ -85,6 +85,7 @@ mixin LocaleData {
   static const String howDidItGo = 'How did your Appointment go?';
   static const String takeAMomentToRate = 'Please take a moment to rate stylists and leave a review';
   static const String writeYourRevHere = 'Write your Review here';
+  static const String yourAddress = 'Set your home address in Settings for easier scheduling in the future. Enable Location to show stylists in your city.';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -166,6 +167,7 @@ mixin LocaleData {
     howDidItGo: 'How did your Appointment go?',
     takeAMomentToRate: 'Please take a moment to rate stylists and leave a review',
     writeYourRevHere: 'Write your Review here',
+    yourAddress: 'Set your home address in Settings for easier scheduling in the future. Enable Location to show stylists in your city.',
   };
 
   static const Map<String, dynamic> UK = {
@@ -247,6 +249,7 @@ mixin LocaleData {
     howDidItGo: 'Як це було?',
     takeAMomentToRate: 'Затримайтеся, щоб оцінити',
     writeYourRevHere: 'Напишіть свій відгук тут',
+    yourAddress: "Встановіть свою домашню адресу в Налаштуваннях для зручнішого планування в майбутньому. Увімкніть геолокацію, щоб показати стилістів у вашому місті."
   };
 
   // FOR RUSSIAN
@@ -329,5 +332,6 @@ mixin LocaleData {
     howDidItGo: 'Как все прошло?',
     takeAMomentToRate: 'Возьмите момент, чтобы оценить',
     writeYourRevHere: 'Напишите свой отзыв здесь',
+    yourAddress: "Укажите свой домашний адрес в Настройках для удобного планирования в будущем. Включите геолокацию, чтобы показать стилистов в вашем городе.",
   };
 }

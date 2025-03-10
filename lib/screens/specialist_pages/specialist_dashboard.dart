@@ -307,7 +307,9 @@ Widget buildProfessionalCard(context, String name, String profession, double rat
                   ],
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/specialist_detail_screen');
+                  },
                   child: Text(
                     LocaleData.view.getString(context),
                     style: appTextStyle14(AppColors.newThirdGrayColor),

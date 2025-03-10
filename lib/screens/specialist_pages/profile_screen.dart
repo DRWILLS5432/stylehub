@@ -164,11 +164,12 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                           title: LocaleData.personalDetails.getString(context),
                           subtitle: LocaleData.editProfileDetail.getString(context),
                           icon: 'assets/images/User.png'),
-                      ProfileTiles(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
-                          title: LocaleData.specialistDetails.getString(context),
-                          subtitle: LocaleData.updateServiceDetail.getString(context),
-                          icon: 'assets/images/Scissors.png'),
+                      if (userData.role == 'Specialist')
+                        ProfileTiles(
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
+                            title: LocaleData.specialistDetails.getString(context),
+                            subtitle: LocaleData.updateServiceDetail.getString(context),
+                            icon: 'assets/images/Scissors.png'),
                       ProfileTiles(
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsWidget())),
                           title: LocaleData.appSettings.getString(context),

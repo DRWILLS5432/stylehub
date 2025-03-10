@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
+import 'package:stylehub/constants/app/textstyle.dart';
+import 'package:stylehub/constants/localization/locales.dart';
 
 class OnboardingPageThree extends StatefulWidget {
   const OnboardingPageThree({super.key});
@@ -72,62 +75,64 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.location_on,
-                size: 100,
-                color: AppColors.whiteColor,
+              Image.asset(
+                'assets/images/Address.png',
+                height: 153.h,
+                width: 194.w,
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Select your Country and City',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.whiteColor),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Turn on Location to show stylists in your city',
-                style: TextStyle(fontSize: 18, color: AppColors.whiteColor),
+              Text(
+                LocaleData.yourAddress.getString(context),
+                style: bigTextStyle(),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 10),
+              // const Text(
+              //   'Turn on Location to show stylists in your city',
+              //   style: TextStyle(fontSize: 18, color: AppColors.whiteColor),
+              //   textAlign: TextAlign.center,
+              // ),
+              // const SizedBox(height: 20),
+              // _buildDropdown(
+              //   value: _selectedCountry,
+              //   hint: 'Select Country',
+              //   onChanged: (String? newValue) {
+              //     setState(() {
+              //       _selectedCountry = newValue;
+              //       _selectedCity = null; // Reset city when country changes
+              //     });
+              //   },
+              //   items: _countryCities.keys.toList(),
+              // ),
+              // const SizedBox(height: 20),
+              // _buildDropdown(
+              //   value: _selectedCity,
+              //   hint: 'Select City',
+              //   onChanged: (String? newValue) {
+              //     setState(() {
+              //       _selectedCity = newValue;
+              //     });
+              //   },
+              //   items: _selectedCountry != null ? _countryCities[_selectedCountry]! : [],
+              // ),
               const SizedBox(height: 20),
-              _buildDropdown(
-                value: _selectedCountry,
-                hint: 'Select Country',
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCountry = newValue;
-                    _selectedCity = null; // Reset city when country changes
-                  });
-                },
-                items: _countryCities.keys.toList(),
-              ),
-              const SizedBox(height: 20),
-              _buildDropdown(
-                value: _selectedCity,
-                hint: 'Select City',
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCity = newValue;
-                  });
-                },
-                items: _selectedCountry != null ? _countryCities[_selectedCountry]! : [],
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _getUserLocation,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.whiteColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text(
-                        'Get My Location',
-                        style: TextStyle(color: AppColors.mainBlackTextColor, fontSize: 18),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _getUserLocation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.whiteColor,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 0),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(color: AppColors.mainBlackTextColor),
+                          borderRadius: BorderRadius.circular(50.dg),
+                        ),
                       ),
-              ),
+                      child: Text(
+                        'Get my Location',
+                        style: appTextStyle14(AppColors.mainBlackTextColor),
+                      ),
+                    ),
               const SizedBox(height: 20),
               if (_userPosition != null)
                 Text(

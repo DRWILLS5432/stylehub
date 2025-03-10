@@ -57,7 +57,7 @@ class _MyAppState extends State<MyApp> {
                 title: 'My App',
                 theme: ThemeData(
                   primarySwatch: Colors.deepPurple,
-                  appBarTheme: AppBarTheme(color: AppColors.whiteColor),
+                  appBarTheme: AppBarTheme(color: AppColors.whiteColor, surfaceTintColor: AppColors.whiteColor),
                   scaffoldBackgroundColor: AppColors.whiteColor,
                 ),
                 supportedLocales: localization.supportedLocales,
