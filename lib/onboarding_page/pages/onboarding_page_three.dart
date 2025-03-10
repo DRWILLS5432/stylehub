@@ -14,55 +14,88 @@ class OnboardingPageThree extends StatefulWidget {
 }
 
 class _OnboardingPageThreeState extends State<OnboardingPageThree> {
-  String? _selectedCountry;
-  String? _selectedCity;
-  Position? _userPosition;
   bool _isLoading = false;
-
-  final Map<String, List<String>> _countryCities = {
-    'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk'],
-    'Ukraine': ['Kyiv', 'Kharkiv', 'Odessa'],
-    'Kazakhstan': ['Nur-Sultan', 'Almaty', 'Shymkent'],
-  };
+  Position? _userPosition; // Store user location
 
   Future<void> _getUserLocation() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Check location permissions
+    // Check if location services are enabled
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location services are disabled.')),
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Show AlertDialog prompting the user to enable location
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Location Required'),
+          content: const Text('Please turn on your location services to continue.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await Geolocator.openLocationSettings();
+              },
+              child: const Text('Enable'),
+            ),
+          ],
+        ),
       );
       return;
     }
 
+    // Check and request location permissions
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        setState(() {
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permissions are denied.')),
+          const SnackBar(content: Text('Location permission is required to continue.')),
         );
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location permissions are permanently denied.')),
+        const SnackBar(content: Text('Location permission is permanently denied. Please enable it in settings.')),
       );
       return;
     }
 
     // Fetch the user's location
-    Position position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _userPosition = position;
-      _isLoading = false;
-    });
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        _isLoading = false;
+        _userPosition = position; // Store position
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to get location. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -86,35 +119,6 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
                 style: bigTextStyle(),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10),
-              // const Text(
-              //   'Turn on Location to show stylists in your city',
-              //   style: TextStyle(fontSize: 18, color: AppColors.whiteColor),
-              //   textAlign: TextAlign.center,
-              // ),
-              // const SizedBox(height: 20),
-              // _buildDropdown(
-              //   value: _selectedCountry,
-              //   hint: 'Select Country',
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       _selectedCountry = newValue;
-              //       _selectedCity = null; // Reset city when country changes
-              //     });
-              //   },
-              //   items: _countryCities.keys.toList(),
-              // ),
-              // const SizedBox(height: 20),
-              // _buildDropdown(
-              //   value: _selectedCity,
-              //   hint: 'Select City',
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       _selectedCity = newValue;
-              //     });
-              //   },
-              //   items: _selectedCountry != null ? _countryCities[_selectedCountry]! : [],
-              // ),
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
@@ -134,48 +138,23 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
                       ),
                     ),
               const SizedBox(height: 20),
-              if (_userPosition != null)
-                Text(
-                  'Your Location: ${_userPosition!.latitude}, ${_userPosition!.longitude}',
-                  style: const TextStyle(color: AppColors.whiteColor),
+              if (_userPosition != null) // Show only if location is available
+                Column(
+                  children: [
+                    Text(
+                      'Your Location:',
+                      style: bigTextStyle(),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Latitude: ${_userPosition!.latitude}\nLongitude: ${_userPosition!.longitude}',
+                      textAlign: TextAlign.center,
+                      style: appTextStyle14(AppColors.whiteColor),
+                    ),
+                  ],
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String? value,
-    required String hint,
-    required ValueChanged<String?> onChanged,
-    required List<String> items,
-  }) {
-    return Container(
-      height: 40.h,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          hint: Text(hint),
-          onChanged: onChanged,
-          items: items.map<DropdownMenuItem<String>>((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(
-                item,
-                style: const TextStyle(color: Colors.black),
-              ),
-            );
-          }).toList(),
-          dropdownColor: AppColors.whiteColor,
-          style: const TextStyle(color: Colors.black),
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
         ),
       ),
     );
