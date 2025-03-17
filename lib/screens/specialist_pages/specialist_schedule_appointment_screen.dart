@@ -107,45 +107,71 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
               children: [
                 _buildHeader(),
                 _buildWeekNavigator(),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Column(
-                    children: [
-                      Row(
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.dg),
+                    color: AppColors.appBGColor,
+                  ),
+                  padding: EdgeInsets.only(left: 0.w, right: 0.w, top: 12.h, bottom: 12.h),
+                  child: Container(
+                    margin: EdgeInsets.only(left: 10.w, right: 0.w),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.dg),
+                      color: AppColors.whiteColor,
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Column(
                         children: [
-                          SizedBox(
-                            width: 55.w,
-                          ),
-                          _buildCalendarHeader(weekDates),
-                        ],
-                      ),
-                      SizedBox(
-                        height: _isExpanded ? null : 400.h,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
                             children: [
                               SizedBox(
-                                child: _buildTimeTable(),
+                                width: 55.w,
                               ),
+                              _buildCalendarHeader(weekDates),
                             ],
                           ),
-                        ),
+                          SizedBox(
+                            height: _isExpanded ? null : 240.h,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    child: _buildTimeTable(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
                 SizedBox(
                   child: TextButton(
                     onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                    child: Text(
-                      _isExpanded ? 'Show Less' : 'Expand Slots',
-                      style: appTextStyle18(AppColors.appBGColor),
+                    child: Row(
+                      children: [
+                        Text(
+                          _isExpanded ? 'Show Less' : 'Expand',
+                          style: appTextStyle24500(AppColors.newThirdGrayColor),
+                        ),
+                        SizedBox(width: 8.w),
+                        SizedBox(
+                          height: 18.h,
+                          width: 18.w,
+                          child: Image.asset(
+                            'assets/images/Decompress.png',
+                          ),
+                        )
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 24.h),
+                SizedBox(height: 14.h),
                 Padding(
                   padding: EdgeInsets.only(left: 16.w),
                   child: Text(
@@ -154,6 +180,9 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                   ),
                 ),
                 buildUpcomingAppointments(context),
+                SizedBox(
+                  height: 80.h,
+                )
               ],
             ),
           ),
@@ -264,7 +293,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
 
   Widget _buildTimeTable() {
     return SizedBox(
-      width: 80.w * 8,
+      width: 80.w * 7.5,
       child: ListView.builder(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
@@ -318,7 +347,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                           ),
                           child: Center(
                             child: Text(
-                              isPastDay ? 'Unavailable' : (slot.isOpen ? 'Open' : 'Closed'),
+                              isPastDay ? 'Unavailable' : (slot.isOpen ? 'Opened' : 'Open'),
                               style: TextStyle(
                                 color: isPastDay
                                     ? Colors.grey
@@ -994,62 +1023,45 @@ Widget buildUpcomingAppointments(context) {
                           borderRadius: BorderRadius.circular(15.dg),
                         ),
                         contentPadding: EdgeInsets.zero,
+                        titlePadding: EdgeInsets.zero,
+                        actionsPadding: EdgeInsets.only(top: 10.h, bottom: 20.h),
                         title: Column(
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    icon: Icon(
+                                      Icons.close,
+                                      color: AppColors.appBGColor,
+                                    )),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 6.h,
+                            ),
                             SizedBox(
                               width: 211.w,
                               child: Text(
-                                LocaleData.wantToCancelAppointment,
+                                'Before canceling your booking you have to inform the client first , if you have done this , you can proceed to cancel , if not please inform client first',
                                 style: appTextStyle16400(AppColors.mainBlackTextColor),
                                 textAlign: TextAlign.center,
                               ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Date',
-                                  style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                ),
-                                SizedBox(
-                                  width: 4.w,
-                                ),
-                                Text(
-                                  'by',
-                                  style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                ),
-                                SizedBox(
-                                  width: 4.w,
-                                ),
-                                Text(
-                                  'Time',
-                                  style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                ),
-                              ],
                             ),
                           ],
                         ),
                         actions: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               SizedBox(
-                                  height: 25.h,
-                                  width: 104.w,
+                                  height: 32.h,
+                                  width: 120.w,
                                   child: ReusableButton(
                                       color: AppColors.appBGColor,
                                       text: Text(
-                                        LocaleData.no.getString(context),
-                                        style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                      ),
-                                      onPressed: () {})),
-                              SizedBox(
-                                  height: 25.h,
-                                  width: 104.w,
-                                  child: ReusableButton(
-                                      color: AppColors.appBGColor,
-                                      text: Text(
-                                        LocaleData.yes.getString(context),
+                                        LocaleData.cancel.getString(context),
                                         style: appTextStyle16400(AppColors.mainBlackTextColor),
                                       ),
                                       onPressed: () {})),

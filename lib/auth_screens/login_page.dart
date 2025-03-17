@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:stylehub/constants/Helpers/app_storage.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
@@ -429,6 +430,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Widget _buildLoginTab() {
+
     Future<void> login() async {
       setState(() => _isLoggingIn = true);
 
@@ -439,6 +441,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         );
 
         if (user != null) {
+          // Save the password to SharedPreferences
+          await SharedPreferencesHelper.savePassword(loginPasswordController.text.trim());
+
           String? role = await _firebaseService.getUserRole(user.uid);
           if (role == 'Customer') {
             Navigator.pushReplacement(
@@ -460,6 +465,37 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         setState(() => _isLoggingIn = false);
       }
     }
+    // Future<void> login() async {
+    //   setState(() => _isLoggingIn = true);
+
+    //   try {
+    //     User? user = await _firebaseService.loginUser(
+    //       email: loginEmailController.text.trim(),
+    //       password: loginPasswordController.text.trim(),
+    //     );
+
+    //     if (user != null) {
+    //       String? role = await _firebaseService.getUserRole(user.uid);
+    //       if (role == 'Customer') {
+    //         Navigator.pushReplacement(
+    //           context,
+    //           MaterialPageRoute(builder: (context) => CustomerPage()),
+    //         );
+    //       } else if (role == 'Stylist') {
+    //         Navigator.pushReplacement(
+    //           context,
+    //           MaterialPageRoute(builder: (context) => SpecialistPage()),
+    //         );
+    //       }
+    //     }
+    //   } catch (e) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text(e.toString())),
+    //     );
+    //   } finally {
+    //     setState(() => _isLoggingIn = false);
+    //   }
+    // }
 
     return SingleChildScrollView(
       child: Column(

@@ -15,6 +15,7 @@ class SpecialistDetailScreen extends StatefulWidget {
 
 class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   bool toggleReviewField = false;
+  bool toggleLikeIcon = false;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,16 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 10.w),
-            child: Icon(Icons.favorite, color: AppColors.newThirdGrayColor),
+            child: InkWell(
+                radius: 10.dg,
+                splashColor: AppColors.whiteColor,
+                highlightColor: AppColors.grayColor,
+                onTap: () {
+                  setState(() {
+                    toggleLikeIcon = !toggleLikeIcon;
+                  });
+                },
+                child: Icon(toggleLikeIcon ? Icons.favorite_border : Icons.favorite, color: AppColors.newThirdGrayColor)),
           )
         ],
       ),

@@ -102,58 +102,60 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.appBGColor,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/images/Address.png',
-                height: 153.h,
-                width: 194.w,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                LocaleData.yourAddress.getString(context),
-                style: bigTextStyle(),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _getUserLocation,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.whiteColor,
-                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 0),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(color: AppColors.mainBlackTextColor),
-                          borderRadius: BorderRadius.circular(50.dg),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/Address.png',
+                  height: 153.h,
+                  width: 194.w,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  LocaleData.yourAddress.getString(context),
+                  style: bigTextStyle(),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: _getUserLocation,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.whiteColor,
+                          padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 0),
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(color: AppColors.mainBlackTextColor),
+                            borderRadius: BorderRadius.circular(50.dg),
+                          ),
+                        ),
+                        child: Text(
+                          'Use Location',
+                          style: appTextStyle14(AppColors.mainBlackTextColor),
                         ),
                       ),
-                      child: Text(
-                        'Get my Location',
-                        style: appTextStyle14(AppColors.mainBlackTextColor),
+                const SizedBox(height: 20),
+                if (_userPosition != null) // Show only if location is available
+                  Column(
+                    children: [
+                      Text(
+                        'Your Location:',
+                        style: bigTextStyle(),
                       ),
-                    ),
-              const SizedBox(height: 20),
-              if (_userPosition != null) // Show only if location is available
-                Column(
-                  children: [
-                    Text(
-                      'Your Location:',
-                      style: bigTextStyle(),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Latitude: ${_userPosition!.latitude}\nLongitude: ${_userPosition!.longitude}',
-                      textAlign: TextAlign.center,
-                      style: appTextStyle14(AppColors.whiteColor),
-                    ),
-                  ],
-                ),
-            ],
+                      const SizedBox(height: 5),
+                      Text(
+                        'Latitude: ${_userPosition!.latitude}\nLongitude: ${_userPosition!.longitude}',
+                        textAlign: TextAlign.center,
+                        style: appTextStyle14(AppColors.whiteColor),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
           ),
         ),
       ),

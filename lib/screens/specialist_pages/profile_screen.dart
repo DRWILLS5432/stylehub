@@ -35,14 +35,25 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
   void initState() {
     super.initState();
     _fetchUserData();
+
     Provider.of<SpecialistProvider>(context, listen: false).fetchSpecialistData();
   }
+
+  /// Fetches user data from Firestore for the current authenticated user.
+  ///
+  /// Retrieves the document corresponding to the current user's UID from the
+  /// 'users' collection in Firestore. If the document exists, it extracts the
+  /// user's first name and profile image (encoded in base64). The first name
+  /// is stored in the `userName` field, and the profile image is decoded to
+  /// `Uint8List` and stored in `_imageBytes`. If the image decoding fails,
+  /// an error is caught, and appropriate handling (such as setting a default
+  /// image) should be implemented.
 
   Future<void> _fetchUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-
+      // print(userDoc.data());
       if (userDoc.exists) {
         // Use the data() method to access the document's data as a Map
         Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
@@ -68,6 +79,12 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
     }
   }
 
+  /// Allows the user to pick an image from their device's gallery, and then
+  ///
+  /// 1. Converts the picked image to bytes.
+  /// 2. Encodes the image bytes to a base64 string.
+  /// 3. Updates the `_imageBytes` field with the encoded image bytes.
+  /// 4. Calls the [_saveImageToFirestore] method to store the base64 image in Firestore.
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -80,6 +97,11 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
     }
   }
 
+  /// Stores the given base64-encoded image in Firestore for the current authenticated user.
+  ///
+  /// Updates the 'profileImage' field of the user document in the 'users' collection
+  /// with the given base64 image. If the document doesn't exist, this method will
+  /// create it.
   Future<void> _saveImageToFirestore(String base64Image) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -104,6 +126,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
           if (userData == null) {
             return Center(child: CircularProgressIndicator());
           }
+          // print(userData.role);
           return SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
@@ -164,7 +187,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                           title: LocaleData.personalDetails.getString(context),
                           subtitle: LocaleData.editProfileDetail.getString(context),
                           icon: 'assets/images/User.png'),
-                      if (userData.role == 'Specialist')
+                      if (userData.role == 'Stylist')
                         ProfileTiles(
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
                             title: LocaleData.specialistDetails.getString(context),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:stylehub/constants/Helpers/app_storage.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
@@ -29,7 +30,33 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadPassword();
+  }
+
+  /// Loads the saved password from SharedPreferences and updates the
+  /// `_password` field.
+  ///
+  /// This method is called when the widget is initialized.
+  ///
+  /// If the password is not found in SharedPreferences, the `_password` field
+  /// will be set to null.
+  ///
+  /// This method is asynchronous, as it waits for the SharedPreferences to
+  /// load the password.
+
+  String? _password;
+  Future<void> _loadPassword() async {
+    String? password = await SharedPreferencesHelper.getPassword();
+    setState(() {
+      _password = password;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print(_password.toString());
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
@@ -96,7 +123,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                       PersonalDetailForm(
                         isPassword: isHidePassword,
                         controller: passwordController,
-                        hintText: LocaleData.password.getString(context),
+                        hintText: !isHidePassword ? _password.toString() : LocaleData.password.getString(context),
                         suffixIcon: IconButton(
                             onPressed: togglePassword,
                             icon: Icon(
@@ -137,11 +164,13 @@ class PersonalDetailForm extends StatelessWidget {
     this.validator,
     this.suffixIcon,
     this.isPassword = false,
+    this.initialValue,
   });
   final String? hintText;
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
   final bool isPassword;
+  final String? initialValue;
 
   final TextEditingController controller;
 
@@ -150,6 +179,7 @@ class PersonalDetailForm extends StatelessWidget {
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
+      initialValue: initialValue,
       decoration: InputDecoration(
         labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
         hintStyle: appTextStyle16400(AppColors.appGrayTextColor),
