@@ -97,6 +97,13 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     final weekDates = _getWeekDates();
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(
+          'Schedule & Bookings',
+          style: appTextStyle24(AppColors.newThirdGrayColor),
+        ),
+      ),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Padding(
@@ -105,7 +112,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                _buildHeader(),
+                // _buildHeader(),
                 _buildWeekNavigator(),
                 Container(
                   decoration: BoxDecoration(
@@ -191,15 +198,15 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: EdgeInsets.only(top: 20.h, left: 12.w),
-      child: Text(
-        'Schedule & Bookings',
-        style: appTextStyle24(AppColors.newThirdGrayColor),
-      ),
-    );
-  }
+  // Widget _buildHeader() {
+  //   return Padding(
+  //     padding: EdgeInsets.only(top: 20.h, left: 12.w),
+  //     child: Text(
+  //       'Schedule & Bookings',
+  //       style: appTextStyle24(AppColors.newThirdGrayColor),
+  //     ),
+  //   );
+  // }
 
   Widget _buildWeekNavigator() {
     return Padding(
