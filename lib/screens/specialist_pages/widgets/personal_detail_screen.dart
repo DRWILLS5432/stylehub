@@ -56,7 +56,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print(_password.toString());
+    // print(_password.toString());
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: AppBar(

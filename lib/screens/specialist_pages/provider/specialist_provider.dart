@@ -18,14 +18,14 @@ class SpecialistProvider extends ChangeNotifier {
         if (userDoc.exists) {
           // Convert the document data to a SpecialistModel object using fromFirestore
           _specialistModel = SpecialistModel.fromFirestore(userDoc);
-          print(_specialistModel!.profileImage.toString());
+          // print(_specialistModel!.profileImage.toString());
         } else {
           // Handle the case where the user document doesn't exist
           _specialistModel = null;
         }
       } catch (error) {
         // Handle any errors that occur during data fetching
-        print("Error fetching specialist data: $error");
+        // print("Error fetching specialist data: $error");
         _specialistModel = null;
       }
       notifyListeners(); // Notify listeners after fetching data
@@ -56,5 +56,4 @@ class SpecialistProvider extends ChangeNotifier {
   String? getProfileImage() {
     return _specialistModel?.profileImage;
   }
-  
 }

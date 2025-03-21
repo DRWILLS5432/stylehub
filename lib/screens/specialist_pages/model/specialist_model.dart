@@ -1,17 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpecialistModel {
+  final String userId;
   final String email;
   final String firstName;
   final String lastName;
-  final String profileImage;
+  final String? profileImage;
   final String role;
 
   SpecialistModel({
+    required this.userId,
     required this.email,
     required this.firstName,
     required this.lastName,
-    required this.profileImage,
+    this.profileImage,
     required this.role,
   });
 
@@ -19,6 +21,7 @@ class SpecialistModel {
   factory SpecialistModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return SpecialistModel(
+      userId: doc.id,
       email: data['email'] ?? '',
       firstName: data['firstName'] ?? '',
       lastName: data['lastName'] ?? '',
@@ -27,9 +30,22 @@ class SpecialistModel {
     );
   }
 
+  factory SpecialistModel.fromSnap(DocumentSnapshot snap) {
+    Map<String, dynamic> data = snap.data() as Map<String, dynamic>;
+    return SpecialistModel(
+      userId: snap.id,
+      email: data['email'] ?? '',
+      firstName: data['firstName'] ?? '',
+      lastName: data['lastName'] ?? '',
+      role: data['role'] ?? '',
+      profileImage: data['profileImage'] ?? '',
+    );
+  }
+
   // Convert SpecialistModel to a Map (useful for Firestore updates)
   Map<String, dynamic> toMap() {
     return {
+      'userId': userId,
       'email': email,
       'firstName': firstName,
       'lastName': lastName,
@@ -40,6 +56,7 @@ class SpecialistModel {
 
 // CopyWith method for updating properties easily
   SpecialistModel copyWith({
+    String? userId,
     String? email,
     String? firstName,
     String? lastName,
@@ -47,6 +64,7 @@ class SpecialistModel {
     String? role,
   }) {
     return SpecialistModel(
+      userId: userId.toString(),
       email: email ?? this.email,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,

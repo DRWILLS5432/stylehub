@@ -9,6 +9,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/screens/specialist_pages/model/specialist_model.dart';
+import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
 
 class SpecialistDashboard extends StatefulWidget {
   const SpecialistDashboard({super.key});
@@ -20,6 +22,7 @@ class SpecialistDashboard extends StatefulWidget {
 class _SpecialistDashboardState extends State<SpecialistDashboard> {
   String? userName;
   Uint8List? _imageBytes;
+  String? currentUserId;
 
   @override
   void initState() {
@@ -30,6 +33,10 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   Future<void> _fetchUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
+      setState(
+        () => currentUserId = user.uid,
+      ); // Store the user ID
+
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
       if (userDoc.exists) {
@@ -204,14 +211,52 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 10),
-                        buildProfessionalCard(context, 'John Doe', 'Barber', 4.5, onTap: () {
-                          Navigator.pushNamed(context, '/specialist_detail_screen');
-                        }),
-                        buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {
-                          Navigator.pushNamed(context, '/specialist_detail_screen');
-                        }),
-                        SizedBox(height: 70),
+                        SizedBox(
+                          height: 400.h,
+                          child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist').snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasError) {
+                                  print('Error: ${snapshot.error}');
+                                  return Center(child: Text('Error: ${snapshot.error}'));
+                                }
+
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+
+                                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                                  return Center(child: Text('No stylists found', style: appTextStyle16400(AppColors.newThirdGrayColor)));
+                                }
+
+                                return ListView.builder(
+                                    itemCount: snapshot.data!.docs.length,
+                                    itemBuilder: (context, index) {
+                                      SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
+                                      //       return _StylistCard(user: user);
+                                      return buildProfessionalCard(context, user.firstName, 'Stylist', 4.5, onTap: () {
+                                        // Navigator.pushNamed(context, '/specialist_detail_screen');
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SpecialistDetailScreen(
+                                              userId: user.userId,
+                                            ),
+                                          ),
+                                        );
+                                      });
+                                    });
+                              }),
+                        ),
+
+                        // SizedBox(height: 10),
+                        // buildProfessionalCard(context, 'John Doe', 'Barber', 4.5, onTap: () {
+                        //   Navigator.pushNamed(context, '/specialist_detail_screen');
+                        // }),
+                        // buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {
+                        //   Navigator.pushNamed(context, '/specialist_detail_screen');
+                        // }),
+                        // SizedBox(height: 70),
                       ],
                     ),
                   ),
@@ -322,4 +367,46 @@ Widget buildProfessionalCard(context, String name, String profession, double rat
       ),
     ),
   );
+}
+
+class _StylistCard extends StatelessWidget {
+  final SpecialistModel user;
+
+  const _StylistCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: CircleAvatar(
+          backgroundColor: AppColors.grayColor,
+          child: Text(
+            '${user.firstName[0]}${user.lastName[0]}',
+            style: appTextStyle15(AppColors.mainBlackTextColor),
+          ),
+        ),
+        title: Text(
+          '${user.firstName} ${user.lastName}',
+          style: appTextStyle16400(AppColors.mainBlackTextColor),
+        ),
+        subtitle: Text(
+          user.email,
+          style: appTextStyle12K(AppColors.newThirdGrayColor),
+        ),
+        trailing: Chip(
+          backgroundColor: AppColors.grayColor,
+          label: Text(
+            user.role,
+            style: appTextStyle12K(AppColors.mainBlackTextColor),
+          ),
+        ),
+      ),
+    );
+  }
 }

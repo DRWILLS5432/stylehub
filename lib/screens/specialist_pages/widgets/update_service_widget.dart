@@ -11,6 +11,7 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/personal_detail_screen.dart';
+import 'package:stylehub/storage/fire_store_method.dart';
 
 class UpdateServiceWidget extends StatefulWidget {
   const UpdateServiceWidget({super.key});
@@ -21,9 +22,14 @@ class UpdateServiceWidget extends StatefulWidget {
 
 class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _servicesController = TextEditingController();
+
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _professionController = TextEditingController();
+  final TextEditingController _experienceController = TextEditingController();
+
+  bool isLoading = false;
   List<XFile> _pickedImageFiles = [];
   List<File> _imageFiles = [];
 
@@ -55,51 +61,70 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
   }
 
   Future<void> _uploadData() async {
+    setState(() => isLoading = true);
+
     if (_formKey.currentState!.validate()) {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You must be logged in to update services.')),
-        );
-        return;
-      }
+      if (user == null) return;
 
       try {
-        // Upload images to Firebase Storage
-        final List<String> imageUrls = await _uploadImages(user.uid);
+        // Collect services data
+        List<Map<String, String>> services = [];
+        for (var entry in _services) {
+          if (entry.serviceController.text.isNotEmpty && entry.priceController.text.isNotEmpty) {
+            services.add({
+              'service': entry.serviceController.text,
+              'price': entry.priceController.text,
+            });
+          }
+        }
 
-        // Upload data to Firestore
-        await _firestore.collection('services').add({
-          'userId': user.uid,
-          'services': _servicesController.text,
-          'bio': _bioController.text,
-          'phone': _phoneController.text,
-          'images': imageUrls,
-          'createdAt': Timestamp.now(),
-        });
-
-        print('Data uploaded to Firestore successfully.');
-
-        // Clear form and image data
-        _servicesController.clear();
-        _bioController.clear();
-        _phoneController.clear();
-        setState(() {
-          _imageFiles.clear();
-          _pickedImageFiles.clear();
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Services updated successfully!')),
+        // Upload data using FireStoreMethod
+        final res = await FireStoreMethod().uploadServiceDetails(
+          userId: user.uid,
+          bio: _bioController.text,
+          phone: _phoneController.text,
+          city: _cityController.text,
+          services: services,
         );
-      } catch (e, stackTrace) {
-        print('Error: $e');
-        print('Stack trace: $stackTrace');
+
+        if (res == 'success') {
+          // Clear form
+          _professionController.clear();
+          _experienceController.clear();
+          _bioController.clear();
+          _phoneController.clear();
+          _cityController.clear();
+          setState(() => _services.clear());
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Services updated successfully!')),
+          );
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update services: $e')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }
+    setState(() => isLoading = false);
+  }
+
+  final List<ServiceEntry> _services = [ServiceEntry()];
+
+  void _addService() {
+    setState(() {
+      _services.add(ServiceEntry());
+    });
+  }
+
+  @override
+  void dispose() {
+    for (var entry in _services) {
+      entry.serviceController.dispose();
+      entry.priceController.dispose();
+    }
+    super.dispose();
   }
 
   @override
@@ -132,29 +157,72 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                   text: LocaleData.profession.getString(context),
                 ),
                 SizedBox(height: 15.h),
-                PersonalDetailForm(controller: _servicesController, hintText: ''),
+                PersonalDetailForm(controller: _professionController, hintText: ''),
                 SizedBox(height: 44.h),
                 PersonalDetailText(
                   text: LocaleData.yearsOfExperience.getString(context),
                 ),
                 SizedBox(height: 15.h),
-                PersonalDetailForm(controller: _servicesController, hintText: ''),
+                PersonalDetailForm(controller: _experienceController, hintText: ''),
+                SizedBox(height: 44.h),
+                PersonalDetailText(
+                  text: LocaleData.city.getString(context),
+                ),
+                SizedBox(height: 15.h),
+                PersonalDetailForm(controller: _cityController, hintText: ''),
                 SizedBox(height: 44.h),
                 PersonalDetailText(
                   text: LocaleData.serviceCategory.getString(context),
                 ),
                 SizedBox(height: 15.h),
+
+                ..._services.map((entry) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: PersonalDetailForm(controller: entry.serviceController, hintText: 'Enter Service'),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: PersonalDetailForm(controller: entry.priceController, hintText: 'Price'),
+                          ),
+                        ],
+                      ),
+                    )),
+                // SizedBox(height: 15.h),
+
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    serviceCategories(),
-                    SizedBox(width: 21.w),
-                    serviceCategories(),
+                    ElevatedButton(
+                      onPressed: _addService,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.dg)),
+                        backgroundColor: AppColors.appBGColor,
+                        minimumSize: Size(0.w, 20.h),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add),
+                            // SizedBox(width: 8),
+                            // Text('),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 40),
                 PersonalDetailText(
                   text: LocaleData.bio.getString(context),
                 ),
+
                 SizedBox(height: 15.h),
                 TextFormField(
                   controller: _bioController,
@@ -180,7 +248,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                 ),
                 SizedBox(height: 15.h),
                 PersonalDetailForm(
-                  controller: _servicesController,
+                  controller: _phoneController,
                   hintText: '',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -229,7 +297,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                 //   onPressed: _pickImages,
                 //   child: const Text('Upload Images'),
                 // ),
-                const SizedBox(height: 80),
+                const SizedBox(height: 20),
                 // _imageFiles.isNotEmpty
                 //     ? GridView.builder(
                 //         shrinkWrap: true,
@@ -248,10 +316,18 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                 //       )
                 //     : Container(),
                 // const SizedBox(height: 20),
-                // ElevatedButton(
-                //   onPressed: _uploadData,
-                //   child: const Text('Submit'),
-                // ),
+
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.dg)),
+                    backgroundColor: AppColors.appBGColor,
+                    minimumSize: Size(double.infinity.w, 56.h),
+                  ),
+                  onPressed: _uploadData,
+                  child: isLoading ? CircularProgressIndicator() : Text('Submit'),
+                ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -272,4 +348,13 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
           ),
         ));
   }
+}
+
+class ServiceEntry {
+  final TextEditingController serviceController;
+  final TextEditingController priceController;
+
+  ServiceEntry()
+      : serviceController = TextEditingController(),
+        priceController = TextEditingController();
 }
