@@ -24,11 +24,11 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
   int _selectedRating = 0;
   bool _isLoading = false;
 
-  Future<void> _submitReview() async {
+  Future<void> _submitReview(context) async {
     if (_isLoading) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       if (_selectedRating == 0) {
         throw 'Please select a rating';
@@ -36,9 +36,9 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
       if (_reviewController.text.isEmpty) {
         throw 'Please write a review';
       }
-      
+
       await widget.onSubmit(_selectedRating, _reviewController.text);
-      
+
       _reviewController.clear();
       setState(() => _selectedRating = 0);
     } catch (e) {
@@ -85,14 +85,16 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
             SizedBox(height: 20.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) => GestureDetector(
-                onTap: () => setState(() => _selectedRating = index + 1),
-                child: Icon(
-                  index < _selectedRating ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
-                  size: 30,
-                ),
-              )),
+              children: List.generate(
+                  5,
+                  (index) => GestureDetector(
+                        onTap: () => setState(() => _selectedRating = index + 1),
+                        child: Icon(
+                          index < _selectedRating ? Icons.star : Icons.star_border,
+                          color: Colors.black,
+                          size: 30,
+                        ),
+                      )),
             ),
             SizedBox(height: 20.h),
             TextFormField(
@@ -102,11 +104,16 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
                 suffixIcon: _isLoading
                     ? const Padding(
                         padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2,
+                        ),
                       )
                     : IconButton(
-                        icon: Image.asset('assets/images/PaperPlane.png'),
-                        onPressed: _submitReview,
+                        icon: Image.asset(
+                          'assets/images/PaperPlane.png',
+                          color: AppColors.mainBlackTextColor,
+                        ),
+                        onPressed: () => _submitReview(context),
                       ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.dg),
@@ -115,6 +122,18 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
                     width: 2.h,
                   ),
                 ),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.dg),
+                    borderSide: BorderSide(
+                      color: AppColors.appBGColor,
+                      width: 2.h,
+                    )),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.dg),
+                    borderSide: BorderSide(
+                      color: AppColors.appBGColor,
+                      width: 2.h,
+                    )),
               ),
               maxLines: 3,
               minLines: 1,

@@ -430,7 +430,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Widget _buildLoginTab() {
-
     Future<void> login() async {
       setState(() => _isLoggingIn = true);
 

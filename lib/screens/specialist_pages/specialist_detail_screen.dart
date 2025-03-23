@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,7 +7,9 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/screens/specialist_pages/make_appointment_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/write_review.dart';
+import 'package:stylehub/storage/post_review_method.dart';
 
 class SpecialistDetailScreen extends StatefulWidget {
   final String userId;
@@ -19,8 +20,9 @@ class SpecialistDetailScreen extends StatefulWidget {
 }
 
 class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
-  bool toggleReviewField = true;
+  bool toggleReviewField = false;
   bool toggleLikeIcon = false;
+  final ReviewService _reviewService = ReviewService();
 
   @override
   void initState() {
@@ -38,39 +40,51 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   }
 
   /// Submits a review for a specialist.
-  ///
-  /// This function checks if the user is logged in and submits a review with the
-  /// provided rating and comment for the specified specialist. It adds the review
-  /// to the Firestore database under the specialist's user ID. If successful, it
-  /// hides the review field and displays a success message. If there's an error
-  /// or the user is not logged in, it shows an error message.
-  ///
-  /// Parameters:
-  /// - `rating`: An integer representing the user's rating for the specialist.
-  /// - `comment`: A string containing the user's comments or feedback.
-  ///
-  /// Throws an error message if the user is not logged in or if the review
-  /// submission fails.
+
+  void _submitReview(context, int rating, String comment) async {
+    String result = await _reviewService.submitReview(
+      userId: widget.userId,
+      rating: rating,
+      comment: comment,
+    );
+
+    if (result == 'success') {
+      setState(() => toggleReviewField = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted successfully!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result)),
+      );
+    }
+  }
 
   // void _submitReview(int rating, String comment) async {
   //   try {
   //     final user = FirebaseAuth.instance.currentUser;
-  //     print('Submitting review for user: ${widget.userId}'); // Add this
-  //     print('Current auth user: ${user?.uid}'); //
   //     if (user == null) {
   //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text('You must be logged in')),
+  //         const SnackBar(content: Text('Authentication required')),
   //       );
   //       return;
   //     }
 
-  //     final docRef = await FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('reviews').add({
+  //     // Get reviewer's name from Firestore
+  //     final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+  //     String reviewerName = 'Anonymous';
+  //     if (userDoc.exists) {
+  //       reviewerName = userDoc.data()?['firstName'] ?? 'Anonymous';
+  //     }
+  //     // print(reviewerName);
+  //     await FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('reviews').add({
   //       'rating': rating,
   //       'comment': comment,
   //       'reviewerId': user.uid,
+  //       'reviewerName': reviewerName,
   //       'timestamp': FieldValue.serverTimestamp(),
   //     });
-  //     print('Review written with ID: ${docRef.id}');
   //     setState(() => toggleReviewField = false);
   //     ScaffoldMessenger.of(context).showSnackBar(
   //       const SnackBar(content: Text('Review submitted successfully!')),
@@ -81,42 +95,6 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   //     );
   //   }
   // }
-
-  void _submitReview(int rating, String comment) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Authentication required')),
-        );
-        return;
-      }
-
-      // Get reviewer's name from Firestore
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-
-      String reviewerName = 'Anonymous';
-      if (userDoc.exists) {
-        reviewerName = userDoc.data()?['firstName'] ?? 'Anonymous';
-      }
-      // print(reviewerName);
-      await FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('reviews').add({
-        'rating': rating,
-        'comment': comment,
-        'reviewerId': user.uid,
-        'reviewerName': reviewerName, 
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      setState(() => toggleReviewField = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted successfully!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,8 +120,8 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
         body: StreamBuilder(
             stream: FirebaseFirestore.instance.collection('services').where('userId', isEqualTo: widget.userId).snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+              if (!snapshot.hasData) {
+                return Center(child: const CircularProgressIndicator());
               }
               //  Debug: Print connection state and errors
 
@@ -285,9 +263,9 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             SizedBox(height: 20.h),
                             InkWell(
                               radius: 20.dg,
-                              // onTap: () => setState(() {
-                              //   toggleReviewField = !toggleReviewField;
-                              // }),
+                              onTap: () => setState(() {
+                                toggleReviewField = !toggleReviewField;
+                              }),
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 15.w),
                                 child: Row(
@@ -301,18 +279,18 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             ),
                             if (toggleReviewField)
                               WriteReviewWidget(
-                                toggleReviewField: toggleReviewField,
-                                onSubmit: _submitReview,
-                              ),
-
+                                  toggleReviewField: toggleReviewField,
+                                  onSubmit: (int rating, String review) {
+                                    _submitReview(context, rating, review);
+                                  }),
                             SizedBox(
                               height: 18.h,
                             ),
                             StreamBuilder<QuerySnapshot>(
                               stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('reviews').orderBy('timestamp', descending: true).snapshots(),
                               builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return const CircularProgressIndicator();
+                                if (!snapshot.hasData) {
+                                  return Center(child: const CircularProgressIndicator());
                                 }
 
                                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -335,13 +313,13 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   separatorBuilder: (context, index) => SizedBox(height: 16.h),
                                   itemBuilder: (context, index) {
                                     final review = reviews[index].data() as Map<String, dynamic>;
-                                    return ReviewCard(review: review);
+                                    return buildProfessionalCard(review);
+                                    // ReviewCard(review: review);
                                   },
                                 );
                               },
                             ),
 
-                            buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {}),
                             SizedBox(
                               height: 110.h,
                             )
@@ -355,7 +333,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                     child: Container(
                       height: 100.h,
                       width: double.infinity,
-                      color: Colors.grey.withOpacity(0.5),
+                      color: Colors.grey.withValues(alpha: 0.5),
                       child: Center(
                         child: SizedBox(
                           height: 44.3.h,
@@ -364,7 +342,10 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             bgColor: AppColors.whiteColor,
                             color: AppColors.appBGColor,
                             text: Text('Make Appointment', style: appTextStyle15(AppColors.newThirdGrayColor)),
-                            onPressed: () => Navigator.pushNamed(context, '/make_appointment_screen'),
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => MakeAppointmentScreen(specialistId: widget.userId)));
+                            },
+                            // onPressed: () => Navigator.pushNamed(context, '/make_appointment_screen'),
                           ),
                         ),
                       ),
@@ -398,9 +379,9 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
     );
   }
 
-  Widget buildProfessionalCard(context, String name, String profession, double rating, {Function()? onTap}) {
+  Widget buildProfessionalCard(final Map<String, dynamic> review) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {},
       child: Card(
         margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16.w),
         color: Color(0xFFD7D1BE),
@@ -429,15 +410,21 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(height: 5.h),
-                        Text(name, style: appTextStyle15(AppColors.newThirdGrayColor)),
+                        Row(
+                          children: [
+                            Text(review['reviewerName'] ?? 'Anonymous', style: appTextStyle15(AppColors.newThirdGrayColor)),
+                            SizedBox(width: 5.w),
+                            Text(review['reviewerLastName'] ?? 'Anonymous', style: appTextStyle15(AppColors.newThirdGrayColor)),
+                          ],
+                        ),
                         Row(
                           children: List.generate(
-                            5,
-                            (index) => Icon(
-                              index < rating ? Icons.star : Icons.star_border,
-                              color: const Color.fromARGB(255, 2, 1, 1),
-                            ),
-                          ),
+                              5,
+                              (index) => Icon(
+                                    index < (review['rating'] as int) ? Icons.star : Icons.star_border,
+                                    color: Colors.black,
+                                    size: 20.dg,
+                                  )),
                         ),
                       ],
                     ),
@@ -450,12 +437,21 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      SizedBox(width: 250.w, child: Text("Very Good barber and very patient , i recommend", style: appTextStyle15(AppColors.newThirdGrayColor))),
+                      SizedBox(width: 250.w, child: Text(review['comment'] ?? '', style: appTextStyle15(AppColors.newThirdGrayColor))),
                     ],
                   ),
                 ],
               ),
-              SizedBox(height: 20.h),
+              SizedBox(height: 10.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    formatDate(review['timestamp']?.toDate()),
+                    style: appTextStyle12(),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -513,7 +509,7 @@ class ReviewCard extends StatelessWidget {
                   style: appTextStyle12(),
                 ),
                 Text(
-                  _formatDate(review['timestamp']?.toDate()),
+                  formatDate(review['timestamp']?.toDate()),
                   style: appTextStyle12(),
                 ),
               ],
@@ -523,9 +519,9 @@ class ReviewCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return '';
-    return DateFormat('MMM dd, yyyy').format(date);
-  }
+String formatDate(DateTime? date) {
+  if (date == null) return '';
+  return DateFormat('MMM dd, yyyy').format(date);
 }

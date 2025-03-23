@@ -1,12 +1,15 @@
-import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 
 class AppointmentScheduler extends StatefulWidget {
   const AppointmentScheduler({super.key});
@@ -27,6 +30,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     super.initState();
     _currentWeekStart = _getFirstMonday(DateTime.now());
     _initializeTimeSlots();
+    _loadSavedSlots();
   }
 
   void _initializeTimeSlots() {
@@ -53,6 +57,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     setState(() {
       _currentWeekStart = _currentWeekStart.add(Duration(days: delta * 7));
     });
+    // Load slots for new week
+    _loadSavedSlots();
   }
 
   String _formatHour(int hour) {
@@ -72,23 +78,53 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     return adjustedDay < currentDayOfWeek;
   }
 
-  void _toggleTimeSlot(TimeSlot slot) {
+  void _toggleTimeSlot(TimeSlot slot, String firstName, String lastName) {
     // Prevent toggling if the day is in the past
     if (_isDayInPast(slot.day)) {
       return;
     }
     setState(() => slot.isOpen = !slot.isOpen);
-    _sendToBackend();
+    _sendToBackend(firstName, lastName);
   }
 
-  void _sendToBackend() {
-    final openedSlots = _timeSlots.where((slot) => slot.isOpen).toList();
-    if (kDebugMode) {
-      for (var slot in openedSlots) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Day ${slot.day} @ ${_formatHour(slot.hour)} - ${slot.isOpen}')),
-        );
-      }
+  Future<void> _loadSavedSlots() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final weekKey = _currentWeekStart.toIso8601String();
+    final doc = await FirebaseFirestore.instance.collection('availability').doc(user.uid).collection('weeks').doc(weekKey).get();
+
+    if (doc.exists) {
+      final data = doc.data() as Map<String, dynamic>;
+      final savedSlots = (data['slots'] as List).map((slot) => TimeSlot.fromMap(slot)).toList();
+
+      setState(() {
+        _timeSlots = savedSlots;
+      });
+    }
+  }
+
+  Future<void> _sendToBackend(String firstName, String lastName) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final weekKey = _currentWeekStart.toIso8601String();
+    final slotsData = _timeSlots.map((slot) => slot.toMap()).toList();
+
+    try {
+      await FirebaseFirestore.instance.collection('availability').doc(user.uid).collection('weeks').doc(weekKey).set({
+        'specialistId': user.uid,
+        'specialistAddress': 'Asaba Nnebisi road, Port Harcourt',
+        'specialistFirstName': firstName,
+        'specialistLastName': lastName,
+        'weekStart': _currentWeekStart,
+        'slots': slotsData,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving slots: $e')),
+      );
     }
   }
 
@@ -106,94 +142,93 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       ),
       body: SingleChildScrollView(
         child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                // _buildHeader(),
-                _buildWeekNavigator(),
-                Container(
+            child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              // _buildHeader(),
+              _buildWeekNavigator(),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20.dg),
+                  color: AppColors.appBGColor,
+                ),
+                padding: EdgeInsets.only(left: 0.w, right: 0.w, top: 12.h, bottom: 12.h),
+                child: Container(
+                  margin: EdgeInsets.only(left: 10.w, right: 0.w),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20.dg),
-                    color: AppColors.appBGColor,
+                    color: AppColors.whiteColor,
                   ),
-                  padding: EdgeInsets.only(left: 0.w, right: 0.w, top: 12.h, bottom: 12.h),
-                  child: Container(
-                    margin: EdgeInsets.only(left: 10.w, right: 0.w),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.dg),
-                      color: AppColors.whiteColor,
-                    ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 55.w,
-                              ),
-                              _buildCalendarHeader(weekDates),
-                            ],
-                          ),
-                          SizedBox(
-                            height: _isExpanded ? null : 240.h,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(
-                                    child: _buildTimeTable(),
-                                  ),
-                                ],
-                              ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 55.w,
+                            ),
+                            _buildCalendarHeader(weekDates),
+                          ],
+                        ),
+                        SizedBox(
+                          height: _isExpanded ? null : 240.h,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  child: _buildTimeTable(),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  child: TextButton(
-                    onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                    child: Row(
-                      children: [
-                        Text(
-                          _isExpanded ? 'Show Less' : 'Expand',
-                          style: appTextStyle24500(AppColors.newThirdGrayColor),
                         ),
-                        SizedBox(width: 8.w),
-                        SizedBox(
-                          height: 18.h,
-                          width: 18.w,
-                          child: Image.asset(
-                            'assets/images/Decompress.png',
-                          ),
-                        )
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 14.h),
-                Padding(
-                  padding: EdgeInsets.only(left: 16.w),
-                  child: Text(
-                    'Upcoming',
-                    style: appTextStyle24(AppColors.newThirdGrayColor),
+              ),
+              SizedBox(
+                child: TextButton(
+                  onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                  child: Row(
+                    children: [
+                      Text(
+                        _isExpanded ? 'Show Less' : 'Expand',
+                        style: appTextStyle24500(AppColors.newThirdGrayColor),
+                      ),
+                      SizedBox(width: 8.w),
+                      SizedBox(
+                        height: 18.h,
+                        width: 18.w,
+                        child: Image.asset(
+                          'assets/images/Decompress.png',
+                        ),
+                      )
+                    ],
                   ),
                 ),
-                buildUpcomingAppointments(context),
-                SizedBox(
-                  height: 80.h,
-                )
-              ],
-            ),
+              ),
+              SizedBox(height: 14.h),
+              Padding(
+                padding: EdgeInsets.only(left: 16.w),
+                child: Text(
+                  'Upcoming',
+                  style: appTextStyle24(AppColors.newThirdGrayColor),
+                ),
+              ),
+              buildUpcomingAppointments(context),
+              SizedBox(
+                height: 80.h,
+              )
+            ],
           ),
-        ),
+        )),
       ),
     );
   }
@@ -333,40 +368,48 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                       );
                       final isPastDay = _isDayInPast(dayIndex);
 
-                      return GestureDetector(
-                        onTap: isPastDay ? null : () => _toggleTimeSlot(slot),
-                        child: Container(
-                          margin: EdgeInsets.all(2.w),
-                          decoration: BoxDecoration(
-                            color: isPastDay
-                                ? Colors.grey.shade400
-                                : slot.isOpen
-                                    ? Colors.green.shade100
-                                    : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(4.w),
-                            border: Border.all(
+                      return Consumer<SpecialistProvider>(builder: (context, provider, child) {
+                        return GestureDetector(
+                          onTap: isPastDay
+                              ? null
+                              : () => _toggleTimeSlot(
+                                    slot,
+                                    provider.specialistModel!.firstName,
+                                    provider.specialistModel!.lastName,
+                                  ),
+                          child: Container(
+                            margin: EdgeInsets.all(2.w),
+                            decoration: BoxDecoration(
                               color: isPastDay
-                                  ? Colors.grey
+                                  ? Colors.grey.shade400
                                   : slot.isOpen
-                                      ? Colors.green
-                                      : Colors.grey,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              isPastDay ? 'Unavailable' : (slot.isOpen ? 'Opened' : 'Open'),
-                              style: TextStyle(
+                                      ? Colors.green.shade100
+                                      : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(4.w),
+                              border: Border.all(
                                 color: isPastDay
                                     ? Colors.grey
                                     : slot.isOpen
                                         ? Colors.green
-                                        : Colors.black,
-                                fontSize: 10.sp,
+                                        : Colors.grey,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                isPastDay ? 'Unavailable' : (slot.isOpen ? 'Opened' : 'Open'),
+                                style: TextStyle(
+                                  color: isPastDay
+                                      ? Colors.grey
+                                      : slot.isOpen
+                                          ? Colors.green
+                                          : Colors.black,
+                                  fontSize: 10.sp,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
+                        );
+                      });
                     },
                   ),
                 ),
@@ -389,6 +432,30 @@ class TimeSlot {
     required this.hour,
     required this.isOpen,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'day': day,
+      'hour': hour,
+      'isOpen': isOpen,
+    };
+  }
+
+  factory TimeSlot.fromMap(Map<String, dynamic> map) {
+    return TimeSlot(
+      day: map['day'],
+      hour: map['hour'],
+      isOpen: map['isOpen'],
+    );
+  }
+
+  TimeSlot copyWith({bool? isOpen}) {
+    return TimeSlot(
+      day: day,
+      hour: hour,
+      isOpen: isOpen ?? this.isOpen,
+    );
+  }
 }
 
 // class AppointmentScheduler extends StatefulWidget {
