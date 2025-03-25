@@ -155,6 +155,7 @@ Future<void> registerUser() async {
 
  \\core_variables{Scheduler}
 
+  \begin{verbatim}
   late DateTime _currentWeekStart;
   final bool _is24HourFormat = false;
   List<TimeSlot> _timeSlots = [];
