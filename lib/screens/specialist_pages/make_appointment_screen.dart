@@ -215,6 +215,11 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
 
   // final _auth = FirebaseAuth.instance;
 
+  /// Calculates the first Monday of the week for the given date.
+  ///
+  /// Given a date, the method subtracts days until the weekday of the date is
+  /// Monday (DateTime.monday). The resulting date is the first Monday of the
+  /// week.
   DateTime _getFirstMonday(DateTime date) {
     date = DateTime(date.year, date.month, date.day);
     while (date.weekday != DateTime.monday) {
@@ -223,6 +228,15 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
     return date;
   }
 
+  /// Fetches the availability of the selected specialist for the selected week.
+  ///
+  /// The method first calculates the start of the current week by finding the
+  /// first Monday of the week. It then fetches the Firestore document for the
+  /// selected specialist's availability for the current week. If the document
+  /// does not exist, an empty list is returned.
+  ///
+  /// The method then filters the fetched time slots for the selected date and
+  /// returns a list of time slots that are open on the selected date.
   Future<List<TimeSlot>> _getAvailability() async {
     final weekStart = _getFirstMonday(_selectedDate);
     final doc = await _firestore.collection('availability').doc(widget.specialistId).collection('weeks').doc(weekStart.toIso8601String()).get();
@@ -237,6 +251,22 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
     final selectedWeekday = _selectedDate.weekday - 1; // Monday = 0
     return slots.where((slot) => slot.day == selectedWeekday && slot.isOpen).toList();
   }
+
+  /// Books selected time slots for an appointment with the given client's first and last name.
+  ///
+  /// The method first checks if any time slots have been selected. If no slots are selected,
+  /// a message is shown to the user. It then retrieves the current authenticated user and
+  /// checks if the user is available. If the user is not authenticated, the function exits.
+  ///
+  /// A Firebase Firestore batch operation is initiated to ensure atomic updates. The start
+  /// of the current week is calculated, and the existing availability for the selected
+  /// specialist is fetched from Firestore. The selected time slots are then iterated over,
+  /// creating a new appointment document for each slot and updating the slot's availability
+  /// to closed in the Firestore document.
+  ///
+  /// After updating the Firestore documents, the batch operation is committed, and a success
+  /// message is displayed indicating the number of slots booked. If any error occurs during
+  /// the operation, an error message is displayed to the user.
 
   Future<void> _bookAppointment(String firstName, String lastName) async {
     if (_selectedSlots.isEmpty) {

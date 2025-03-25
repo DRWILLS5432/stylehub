@@ -25,11 +25,23 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   final ReviewService _reviewService = ReviewService();
 
   @override
+  /// Initializes the state of the widget.
+  ///
+  /// Calls the superclass's `initState` method, and then fetches the services
+  /// provided by the given specialist.
   void initState() {
     super.initState();
     fetchServices();
   }
 
+  /// Fetches services provided by the given specialist.
+  ///
+  /// This function retrieves all documents from the 'services' subcollection of the
+  /// specialist document with the given ID. It prints the count of services and
+  /// the service data for each service to the console.
+  ///
+  /// The function is asynchronous and returns a Future that resolves once the
+  /// data has been fetched.
   void fetchServices() async {
     final snapshot = await FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('services').get();
 
@@ -39,8 +51,18 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
     }
   }
 
-  /// Submits a review for a specialist.
 
+
+  /// Submits a review for a specialist.
+  ///
+  /// Submits a review with the given `rating` and `comment` for the specialist
+  /// with the provided `userId`. Shows a success message if the submission is
+  /// successful, and shows an error message if the submission fails.
+  ///
+  /// Parameters:
+  /// - `context`: The BuildContext to use for showing a SnackBar.
+  /// - `rating`: An integer representing the user's rating for the specialist.
+  /// - `comment`: A string containing the user's comments or feedback.
   void _submitReview(context, int rating, String comment) async {
     String result = await _reviewService.submitReview(
       userId: widget.userId,
@@ -60,41 +82,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
     }
   }
 
-  // void _submitReview(int rating, String comment) async {
-  //   try {
-  //     final user = FirebaseAuth.instance.currentUser;
-  //     if (user == null) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text('Authentication required')),
-  //       );
-  //       return;
-  //     }
 
-  //     // Get reviewer's name from Firestore
-  //     final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-
-  //     String reviewerName = 'Anonymous';
-  //     if (userDoc.exists) {
-  //       reviewerName = userDoc.data()?['firstName'] ?? 'Anonymous';
-  //     }
-  //     // print(reviewerName);
-  //     await FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('reviews').add({
-  //       'rating': rating,
-  //       'comment': comment,
-  //       'reviewerId': user.uid,
-  //       'reviewerName': reviewerName,
-  //       'timestamp': FieldValue.serverTimestamp(),
-  //     });
-  //     setState(() => toggleReviewField = false);
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Review submitted successfully!')),
-  //     );
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Error: ${e.toString()}')),
-  //     );
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
