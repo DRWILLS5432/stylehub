@@ -69,13 +69,8 @@ specialistQuery.get().then((snapshot) {
 // *************** AUTHENTICATION MODULE ***************
 \subsection{Authentication}
 /// Signs in a user with the given email address and password.
-///
 /// Throws a [FirebaseAuthException] if the sign-in fails.
 StyleHub uses \textbf{Firebase Authentication} to support:
-\begin{itemize}
-    \item Email/Password login
-
-\end{itemize}
 
 \paragraph{Code Snippet: Email/Password Login}
 \begin{verbatim}
