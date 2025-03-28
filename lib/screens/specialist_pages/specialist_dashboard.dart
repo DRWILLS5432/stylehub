@@ -79,7 +79,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                    decoration: BoxDecoration(
+                    decoration: BoxDecoration( 
                       color: Color.fromARGB(255, 255, 255, 255),
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(12.0),

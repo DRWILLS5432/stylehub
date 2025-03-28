@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/edit_category_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/personal_detail_screen.dart';
 import 'package:stylehub/storage/fire_store_method.dart';
 
@@ -171,8 +172,18 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                 SizedBox(height: 15.h),
                 PersonalDetailForm(controller: _cityController, hintText: ''),
                 SizedBox(height: 44.h),
-                PersonalDetailText(
-                  text: LocaleData.serviceCategory.getString(context),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    PersonalDetailText(
+                      text: LocaleData.serviceCategory.getString(context),
+                    ),
+                    InkWell(
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => ServiceSelectionScreen()));
+                        },
+                        child: Text('Edit')),
+                  ],
                 ),
                 SizedBox(height: 15.h),
 
