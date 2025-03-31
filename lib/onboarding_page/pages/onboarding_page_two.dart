@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
 
 class OnboardingPageTwo extends StatefulWidget {
   const OnboardingPageTwo({super.key});
@@ -13,9 +15,8 @@ class OnboardingPageTwo extends StatefulWidget {
 }
 
 class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
-  late String _currentLocale;
   late FlutterLocalization _flutterLocalization;
-  List<String> availableLanguages = ['en', 'uk', 'ru'];
+  List<String> availableLanguages = ['en', 'ru'];
   bool _isLanguagePopupVisible = false;
   final LayerLink _layerLink = LayerLink();
 
@@ -23,11 +24,13 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
   void initState() {
     super.initState();
     _flutterLocalization = FlutterLocalization.instance;
-    _currentLocale = _flutterLocalization.currentLocale?.languageCode ?? 'en';
   }
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final currentLocale = languageProvider.currentLanguage;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -68,7 +71,7 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      getLanguageName(_currentLocale),
+                      getLanguageName(currentLocale),
                       style: const TextStyle(color: Colors.black),
                     ),
                     const Icon(Icons.arrow_drop_down, color: Colors.black),
@@ -82,7 +85,6 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
               link: _layerLink,
               offset: Offset(0, 40.h),
               child: Material(
-                // Wrap with Material to provide a surface
                 color: Colors.transparent,
                 child: Container(
                   width: 150.w,
@@ -95,16 +97,16 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                     children: availableLanguages.map((languageCode) {
                       return InkWell(
                         onTap: () {
-                          _setLocale(languageCode);
+                          _setLocale(context, languageCode);
                           setState(() {
-                            _isLanguagePopupVisible = false; // Hide popup after selection
+                            _isLanguagePopupVisible = false;
                           });
                         },
                         child: Container(
                           width: double.infinity,
                           padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
                           decoration: BoxDecoration(
-                            color: _currentLocale == languageCode ? AppColors.appBGColor : Colors.transparent, //Active State
+                            color: currentLocale == languageCode ? AppColors.appBGColor : Colors.transparent,
                             borderRadius: BorderRadius.vertical(
                               top: languageCode == availableLanguages.first ? Radius.circular(10.dg) : Radius.zero,
                               bottom: languageCode == availableLanguages.last ? Radius.circular(10.dg) : Radius.zero,
@@ -127,10 +129,9 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
     );
   }
 
-  void _setLocale(String? value) {
-    if (value == null) return;
+  void _setLocale(BuildContext context, String languageCode) {
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
 
-    String languageCode = value;
     switch (languageCode) {
       case 'en':
         _flutterLocalization.translate('en');
@@ -138,25 +139,18 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
       case 'ru':
         _flutterLocalization.translate('ru');
         break;
-      case 'uk':
-        _flutterLocalization.translate('uk');
-        break;
       default:
         return;
     }
 
-    setState(() {
-      _currentLocale = value;
-    });
+    // Update provider
+    languageProvider.setLanguage(languageCode);
   }
 
-  // Helper function to get language name from language code
   String getLanguageName(String languageCode) {
     switch (languageCode) {
       case 'en':
         return 'English';
-      case 'uk':
-        return 'Ukrainian';
       case 'ru':
         return 'Russian';
       default:
