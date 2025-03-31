@@ -7,6 +7,7 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
+import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
 import 'package:stylehub/storage/fire_store_method.dart';
 
 class ServiceSelectionScreen extends StatefulWidget {
@@ -162,36 +163,40 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: provider.availableCategories.map((category) {
-                    final isSelected = provider.selectedCategories.contains(category.id);
-                    return ChoiceChip(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.dg),
-                        side: BorderSide(
-                          color: AppColors.appBGColor,
-                          width: 1,
-                        ),
-                      ),
-                      label: Text(
-                        category.name,
-                        style: appTextStyle12K(AppColors.mainBlackTextColor),
-                      ),
-                      selected: isSelected,
-                      onSelected: (_) => provider.toggleCategory(
-                        category.name,
-                      ),
-                      backgroundColor: Colors.white,
-                      selectedColor: Theme.of(context).primaryColor,
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
-                      ),
+                Consumer<LanguageProvider>(
+                  builder: (context, languageProvider, _) {
+                    return Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: provider.availableCategories.map((category) {
+                        final isSelected = provider.selectedCategories.contains(category.id);
+                        return ChoiceChip(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.dg),
+                            side: BorderSide(
+                              color: AppColors.appBGColor,
+                              width: 1,
+                            ),
+                          ),
+                          label: Text(
+                            languageProvider.currentLanguage == 'en' ? category.name : category.ruName,
+                            style: appTextStyle12K(AppColors.mainBlackTextColor),
+                          ),
+                          selected: isSelected,
+                          onSelected: (_) => provider.toggleCategory(
+                            category.id, // You should probably toggle by ID rather than name
+                          ),
+                          backgroundColor: Colors.white,
+                          selectedColor: Theme.of(context).primaryColor,
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
-                ),
+                  },
+                )
               ],
             ),
           ],

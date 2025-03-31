@@ -97,7 +97,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
               }
 
               final userData = snapshot.data!.data() as Map<String, dynamic>;
-              // final profileImage = userData['profileImage'] ?? '';
+              final profileImage = userData['profileImage'] ?? '';
               final firstName = userData['firstName'] ?? '';
               final lastName = userData['lastName'] ?? '';
               final bio = userData['bio'] ?? 'No bio available';
@@ -194,19 +194,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             ),
 
                             // Widget to display services
-                            // ...servicesList.map((service) {
-                            //   return Padding(
-                            //     padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 15.w),
-                            //     child: Row(
-                            //       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            //       children: [
-                            //         Text(service['service'] ?? 'No service name'),
-                            //         Text('--'),
-                            //         Text('₦${service['price'] ?? '0'}'),
-                            //       ],
-                            //     ),
-                            //   );
-                            // }),
+                           
                             SizedBox(height: 36.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),

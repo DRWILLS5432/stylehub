@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({super.key});
@@ -13,19 +15,19 @@ class SettingsWidget extends StatefulWidget {
 }
 
 class _SettingsWidgetState extends State<SettingsWidget> {
-  late String _currentLocale;
   late FlutterLocalization _flutterLocalization;
-  List<String> availableLanguages = ['en', 'uk', 'ru']; // Correct language codes
+  List<String> availableLanguages = ['en', 'ru'];
 
   @override
   void initState() {
     super.initState();
     _flutterLocalization = FlutterLocalization.instance;
-    _currentLocale = _flutterLocalization.currentLocale?.languageCode ?? 'en'; // Default to 'en'
   }
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
@@ -41,28 +43,25 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 SizedBox(height: 50.h, width: 50.w, child: Image.asset('assets/images/Settings.png')),
                 SizedBox(width: 5.w),
                 Text(
-                  LocaleData.personalDetails.getString(context),
+                  LocaleData.appSettings.getString(context),
                   style: appTextStyle205(AppColors.newThirdGrayColor),
                 ),
               ],
             ),
             SizedBox(height: 44.h),
-            // SizedBox(height: 10.h),
             Text(
               LocaleData.language.getString(context),
               style: appTextStyle15(AppColors.appGrayTextColor),
             ),
             SizedBox(height: 14.h),
             _buildDropdown(
-              value: _currentLocale,
+              value: languageProvider.currentLanguage,
               onChanged: (String? newValue) {
-                _setLocale(newValue);
+                _setLocale(newValue, languageProvider);
               },
               items: availableLanguages,
             ),
-            SizedBox(
-              height: 45.h,
-            ),
+            SizedBox(height: 45.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -88,7 +87,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   }
 
   bool isSwitch = false;
-  void _setLocale(String? value) {
+
+  void _setLocale(String? value, LanguageProvider provider) {
     if (value == null) return;
 
     String languageCode = value;
@@ -99,18 +99,37 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       case 'ru':
         _flutterLocalization.translate('ru');
         break;
-      case 'uk':
-        _flutterLocalization.translate('uk');
-        break;
       default:
         return;
     }
 
-    setState(() {
-      _currentLocale = value;
-      Navigator.pop(context);
-    });
+    // Update the provider
+    provider.setLanguage(value);
+    Navigator.pop(context);
   }
+
+  // bool isSwitch = false;
+  // void _setLocale(String? value) {
+  //   if (value == null) return;
+
+  //   String languageCode = value;
+  //   switch (languageCode) {
+  //     case 'en':
+  //       _flutterLocalization.translate('en');
+  //       break;
+  //     case 'ru':
+  //       _flutterLocalization.translate('ru');
+  //       break;
+
+  //     default:
+  //       return;
+  //   }
+
+  //   setState(() {
+  //     _currentLocale = value;
+  //     Navigator.pop(context);
+  //   });
+  // }
 }
 
 Widget _buildDropdown({
@@ -157,8 +176,6 @@ String getLanguageName(String languageCode) {
   switch (languageCode) {
     case 'en':
       return 'English';
-    case 'uk':
-      return 'Ukrainian';
     case 'ru':
       return 'Russian';
     default:

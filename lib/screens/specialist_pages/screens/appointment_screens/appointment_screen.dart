@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
@@ -8,6 +7,8 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/screens/specialist_pages/model/appointment_model.dart';
+import 'package:stylehub/storage/appointment_repo.dart';
 
 class AppointmentScreen extends StatelessWidget {
   const AppointmentScreen({super.key});
@@ -67,6 +68,28 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
       _appointments = appointments;
       _isLoading = false;
     });
+  }
+
+  Future<void> _cancelAppointment(String appointmentId) async {
+    try {
+      setState(() => _isLoading = true);
+
+      await _repo.deleteAppointment(appointmentId);
+      setState(() {
+        // Remove the appointment from local list immediately
+        _appointments.removeWhere((appt) => appt.appointmentId == appointmentId);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete appointment: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -168,12 +191,13 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                                                                 height: 25.h,
                                                                 width: 104.w,
                                                                 child: ReusableButton(
-                                                                    color: AppColors.appBGColor,
-                                                                    text: Text(
-                                                                      LocaleData.yes.getString(context),
-                                                                      style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                                    ),
-                                                                    onPressed: () {})),
+                                                                  color: AppColors.appBGColor,
+                                                                  text: Text(
+                                                                    LocaleData.yes.getString(context),
+                                                                    style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                                                  ),
+                                                                  onPressed: () => _cancelAppointment(appointment.appointmentId),
+                                                                )),
                                                           ],
                                                         ),
                                                       ],
@@ -215,58 +239,4 @@ String formatDateTime(DateTime dateTime) {
   // Example output: March 23, 2025 - 02:45 PM
   final DateFormat formatter = DateFormat('MMMM dd, yyyy - hh:mm a');
   return formatter.format(dateTime);
-}
-
-class AppointmentModel {
-  final String appointmentId;
-  final String clientFirstName;
-  final String clientLastName;
-  final String specialistId;
-  final String clientId;
-  final String address;
-  final DateTime date;
-  final String status;
-
-  AppointmentModel({
-    required this.appointmentId,
-    required this.clientFirstName,
-    required this.clientLastName,
-    required this.specialistId,
-    required this.clientId,
-    required this.address,
-    required this.date,
-    required this.status,
-  });
-
-  factory AppointmentModel.fromMap(Map<String, dynamic> data) {
-    return AppointmentModel(
-      appointmentId: data['appointmentId'] ?? '',
-      clientFirstName: data['clientFirstName'] ?? '',
-      clientLastName: data['clientLastName'] ?? '',
-      specialistId: data['specialistId'] ?? '',
-      clientId: data['clientId'] ?? '',
-      address: data['address'] ?? '',
-      date: (data['date'] as Timestamp).toDate(),
-      status: data['status'] ?? 'booked',
-    );
-  }
-}
-
-class AppointmentRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Fetch appointments by user role (client or specialist)
-  Future<List<AppointmentModel>> fetchAppointments({
-    required String userId,
-    required bool isSpecialist,
-  }) async {
-    try {
-      QuerySnapshot snapshot = await _firestore.collection('appointments').where(isSpecialist ? 'specialistId' : 'clientId', isEqualTo: userId).orderBy('date', descending: false).get();
-      
-      return snapshot.docs.map((doc) => AppointmentModel.fromMap(doc.data() as Map<String, dynamic>)).toList();
-    } catch (e) {
-      print('Error fetching appointments: $e');
-      return [];
-    }
-  }
 }
