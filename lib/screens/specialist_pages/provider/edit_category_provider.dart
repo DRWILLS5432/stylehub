@@ -53,6 +53,12 @@ class EditCategoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearSelections() {
+    submittedServices.clear();
+    submittedCategories.clear();
+    notifyListeners();
+  }
+
   void clearAll() {
     _submittedServices.clear();
     _submittedCategories.clear();

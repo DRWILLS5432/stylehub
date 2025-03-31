@@ -22,36 +22,18 @@ class SpecialistDetailScreen extends StatefulWidget {
 class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   bool toggleReviewField = false;
   bool toggleLikeIcon = false;
+  String? selectedImage;
   final ReviewService _reviewService = ReviewService();
 
   @override
+
   /// Initializes the state of the widget.
   ///
   /// Calls the superclass's `initState` method, and then fetches the services
   /// provided by the given specialist.
   void initState() {
     super.initState();
-    fetchServices();
   }
-
-  /// Fetches services provided by the given specialist.
-  ///
-  /// This function retrieves all documents from the 'services' subcollection of the
-  /// specialist document with the given ID. It prints the count of services and
-  /// the service data for each service to the console.
-  ///
-  /// The function is asynchronous and returns a Future that resolves once the
-  /// data has been fetched.
-  void fetchServices() async {
-    final snapshot = await FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('services').get();
-
-    print('Manual Fetch - Services count: ${snapshot.docs.length}');
-    for (var doc in snapshot.docs) {
-      print('Service Data: ${doc.data()}');
-    }
-  }
-
-
 
   /// Submits a review for a specialist.
   ///
@@ -82,8 +64,6 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,19 +86,34 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
           ],
         ),
         body: StreamBuilder(
-            stream: FirebaseFirestore.instance.collection('services').where('userId', isEqualTo: widget.userId).snapshots(),
-            builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-              if (!snapshot.hasData) {
-                return Center(child: const CircularProgressIndicator());
+            stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
               }
-              //  Debug: Print connection state and errors
 
-              final docs = snapshot.data!.docs;
-              if (docs.isEmpty) {
-                return const Center(child: Text('No service found'));
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return Center(child: Text('Specialist not found'));
               }
-              final data = docs.first.data();
-              final List<dynamic> servicesList = data['services'] ?? [];
+
+              final userData = snapshot.data!.data() as Map<String, dynamic>;
+              // final profileImage = userData['profileImage'] ?? '';
+              final firstName = userData['firstName'] ?? '';
+              final lastName = userData['lastName'] ?? '';
+              final bio = userData['bio'] ?? 'No bio available';
+              final role = userData['role'] ?? 'Stylist';
+              final experience = userData['experience'] ?? 'No experience info';
+              final city = userData['city'] ?? '';
+              final phone = userData['phone'] ?? '';
+              final email = userData['email'] ?? '';
+              final categories = List<String>.from(userData['categories'] ?? []);
+              final images = List<String>.from(userData['images'] ?? []);
+              final services = List<Map<String, dynamic>>.from(userData['services'] ?? []);
+
+              // Set default top image if it's not set
+              if (selectedImage == null && images.isNotEmpty) {
+                selectedImage = images[0];
+              }
 
               return Stack(
                 children: [
@@ -128,15 +123,24 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // **Big Image at the Top**
                             SizedBox(
                               width: double.maxFinite,
                               height: 304.h,
                               child: ClipRRect(
-                                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(15.dg), bottomRight: Radius.circular(15.dg)),
-                                child: Image.asset(
-                                  'assets/master1.png',
-                                  fit: BoxFit.cover,
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(15.dg),
+                                  bottomRight: Radius.circular(15.dg),
                                 ),
+                                child: selectedImage != null
+                                    ? Image.network(
+                                        selectedImage!,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.asset(
+                                        'assets/master1.png',
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                             SizedBox(height: 10.h),
@@ -166,56 +170,153 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                               child: Text(LocaleData.serviceProvide.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
                             ),
                             SizedBox(height: 20.h),
-                            // Padding(
-                            //   padding: EdgeInsets.symmetric(horizontal: 21.w),
 
-                            // child: Row(
-                            //   children: [
-                            //     _buildCategoryIcon('Haircut', 'assets/haircut_icon.png'),
-                            //     _buildCategoryIcon('Shave', 'assets/shave_icon.png'),
-                            //   ],
-                            // ),
-                            // ),
-                            ...servicesList.map((service) {
-                              return Padding(
-                                padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 15.w),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  children: [
-                                    Text(service['service'] ?? 'No service name'),
-                                    Text('--'),
-                                    Text('₦${service['price'] ?? '0'}'),
-                                  ],
-                                ),
-                              );
-                            }),
+                            // Widget to display list of selected Categories
+                            // Display categories
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w),
+                              child: Wrap(
+                                spacing: 12.0,
+                                children: categories
+                                    .map((category) => Column(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 30.dg,
+                                            ),
+                                            SizedBox(
+                                              height: 6.h,
+                                            ),
+                                            Text(category, style: appTextStyle15(AppColors.newThirdGrayColor)),
+                                          ],
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+
+                            // Widget to display services
+                            // ...servicesList.map((service) {
+                            //   return Padding(
+                            //     padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 15.w),
+                            //     child: Row(
+                            //       mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            //       children: [
+                            //         Text(service['service'] ?? 'No service name'),
+                            //         Text('--'),
+                            //         Text('₦${service['price'] ?? '0'}'),
+                            //       ],
+                            //     ),
+                            //   );
+                            // }),
                             SizedBox(height: 36.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
                               child: Text(LocaleData.previousWork.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
                             ),
                             SizedBox(height: 20.h),
-                            SizedBox(
-                              height: 196.h,
-                              //
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemBuilder: (context, index) => Padding(
-                                  padding: EdgeInsets.only(left: 15.w),
-                                  child: CircleAvatar(
-                                    radius: 94.dg,
-                                    backgroundColor: AppColors.appBGColor,
-                                    child: CircleAvatar(
-                                      radius: 90.dg,
-                                      backgroundImage: AssetImage(
-                                        'assets/master1.png',
-                                      ),
+                            // Display uploaded images
+                            // **Display Uploaded Images (Previous Work)**
+                            images.isNotEmpty
+                                ? SizedBox(
+                                    height: 140,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: images.length,
+                                      itemBuilder: (context, index) {
+                                        return GestureDetector(
+                                          onTap: () {
+                                            // When a user taps an image, update the top image
+                                            setState(() {
+                                              selectedImage = images[index];
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(5.0),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(110.dg),
+                                                color: AppColors.appBGColor,
+                                              ),
+                                              padding: EdgeInsets.all(3.w),
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(100.dg),
+                                                child: Image.network(
+                                                  images[index],
+                                                  width: 120,
+                                                  height: 140,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                                  )
+                                : Text('No images uploaded'),
+
+                            // images.isNotEmpty
+                            //     ? SizedBox(
+                            //         height: 140,
+                            //         child: ListView.builder(
+                            //           scrollDirection: Axis.horizontal,
+                            //           itemCount: images.length,
+                            //           itemBuilder: (context, index) {
+                            //             return Padding(
+                            //               padding: const EdgeInsets.all(5.0),
+                            //               child: Container(
+                            //                   decoration: BoxDecoration(borderRadius: BorderRadius.circular(110.dg), color: AppColors.appBGColor),
+                            //                   padding: EdgeInsets.all(3.w),
+                            //                   child: ClipRRect(borderRadius: BorderRadius.circular(100.dg), child: Image.network(images[index], width: 120, height: 140, fit: BoxFit.cover))),
+                            //             );
+                            //           },
+                            //         ),
+                            //       )
+                            //     : Text('No images uploaded'),
+                            // SizedBox(
+                            //   height: 196.h,
+                            //   //
+                            //   child: ListView.builder(
+                            //     scrollDirection: Axis.horizontal,
+                            //     itemBuilder: (context, index) => Padding(
+                            //       padding: EdgeInsets.only(left: 15.w),
+                            //       child: CircleAvatar(
+                            //         radius: 94.dg,
+                            //         backgroundColor: AppColors.appBGColor,
+                            //         child: CircleAvatar(
+                            //           radius: 90.dg,
+                            //           backgroundImage: AssetImage(
+                            //             'assets/master1.png',
+                            //           ),
+                            //         ),
+                            //       ),
+                            //     ),
+                            //   ),
+                            // ),
                             SizedBox(height: 36.h),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 15.w),
+                              child: Text(LocaleData.services.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
+                            ),
+                            SizedBox(height: 10.h), // Display services
+                            Column(
+                              children: services.map((service) {
+                                return Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                                  child: Row(
+                                    children: [
+                                      Text(service['service'] ?? 'Service'),
+                                      Spacer(),
+                                      Text('-'),
+                                      Spacer(),
+                                      Text('Price: ${service['price']}'),
+                                    ],
+                                    // title: Text(service['service'] ?? 'Service'),
+                                    // subtitle: Text('Price: ${service['price']}'),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            SizedBox(height: 20.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
                               child: Text(LocaleData.bio.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
@@ -223,7 +324,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             SizedBox(height: 10.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
-                              child: Text(data['bio'].toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                              child: Text(bio.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
                             ),
                             SizedBox(height: 20.h),
                             Padding(

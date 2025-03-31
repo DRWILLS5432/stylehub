@@ -90,6 +90,12 @@ mixin LocaleData {
   static const String pickService = 'Pick a service categories to attract clients looking for your services';
   static const String selectedCategory = 'Selected Category';
   static const String selectedService = 'The selected services you have picked will be displayed on your profile page to get clients.';
+  static const String services = 'Services';
+  static const String priceRange = 'Price Range';
+  static const String price = 'Price';
+  static const String accept = 'Accept';
+  static const String serviceName = 'Service Name';
+  static const String goToClient = 'Ready to go to Client';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -176,6 +182,12 @@ mixin LocaleData {
     pickService: 'Pick a service categories to attract clients looking for your services',
     selectedCategory: 'Selected Category',
     selectedService: 'The selected services you have picked will be displayed on your profile page to get clients.',
+    services: 'Services',
+    priceRange: 'Price Range',
+    price: 'Price',
+    accept: 'Accept',
+    serviceName: 'Service Name',
+    goToClient: 'Ready to go to Client',
   };
 
   // static const Map<String, dynamic> UK = {
@@ -345,6 +357,12 @@ mixin LocaleData {
     city: 'Город',
     pickService: 'Выберите категории услуг, чтобы привлечь клиентов, ищущих ваши услуги.',
     selectedCategory: 'Выбранная категория',
-    selectedService: 'Выбранные вами услуги будут отображаться на вашей странице профиля, чтобы привлекать клиентов.'
+    selectedService: 'Выбранные вами услуги будут отображаться на вашей странице профиля, чтобы привлекать клиентов.',
+    services: 'Услуги',
+    priceRange: 'Диапазон цен',
+    price: 'Цена',
+    accept: 'Принять',
+    serviceName: 'Название услуги',
+    goToClient: 'Готов к клиенту',
   };
 }
