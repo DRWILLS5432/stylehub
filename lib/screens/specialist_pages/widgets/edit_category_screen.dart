@@ -76,9 +76,14 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
+      // Get the actual category names from the IDs
+      List<String> categoryNames = provider.selectedCategories.map((categoryId) {
+        return provider.getCategoryName(categoryId, 'en'); // or use current language
+      }).toList();
+
       final res = await FireStoreMethod().updateCategories(
         userId: user.uid,
-        newCategories: provider.submittedCategories,
+        newCategories: categoryNames, // Send names instead of IDs
       );
 
       if (res == 'success') {
@@ -398,11 +403,6 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
               await _updateService();
               await _updateCategory();
               Navigator.pop(context);
-              // context,
-              // MaterialPageRoute(
-              //   builder: (context) => const ResultsScreen(),
-              // ),
-              // );
             },
             child: Text(
               LocaleData.accept.getString(context),

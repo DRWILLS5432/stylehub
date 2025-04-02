@@ -569,21 +569,28 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                 Wrap(
                   spacing: 8,
                   children: provider.submittedCategories.isNotEmpty
-                      ? provider.submittedCategories
-                          .map((category) => Chip(
-                              backgroundColor: AppColors.grayColor,
-                              label: Text(
-                                category,
-                                style: appTextStyle12K(AppColors.mainBlackTextColor),
-                              )))
-                          .toList()
+                      ? provider.submittedCategories.map((categoryId) {
+                          // Convert ID to name using the provider's method
+                          final categoryName = provider.getCategoryName(categoryId, 'en'); // or current language
+                          return Chip(
+                            backgroundColor: AppColors.grayColor,
+                            label: Text(
+                              categoryName, // Display the name instead of ID
+                              style: appTextStyle12K(AppColors.mainBlackTextColor),
+                            ),
+                          );
+                        }).toList()
                       : [
                           Text(
                             'No categories selected',
+                            style: appTextStyle12K(AppColors.mainBlackTextColor),
                           )
                         ],
                 ),
                 const SizedBox(height: 24),
+                PersonalDetailText(
+                  text: LocaleData.services.getString(context),
+                ),
                 ...provider.submittedServices.asMap().entries.map((entry) {
                   // final index = entry.key;
                   final service = entry.value;
@@ -591,9 +598,6 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      PersonalDetailText(
-                        text: LocaleData.services.getString(context),
-                      ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
