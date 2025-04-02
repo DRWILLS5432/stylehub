@@ -565,6 +565,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                   ],
                 ),
                 SizedBox(height: 15.h),
+
                 Wrap(
                   spacing: 8,
                   children: provider.submittedCategories.isNotEmpty

@@ -199,7 +199,6 @@ class FireStoreMethod {
     return res;
   }
 
-
   /// Retrieves the average rating for a user.
   ///
   /// This method fetches all review documents for a specified user from the 'reviews'
@@ -223,5 +222,4 @@ class FireStoreMethod {
 
     return totalRating / querySnapshot.docs.length;
   }
-
 }

@@ -23,7 +23,6 @@ class EditCategoryProvider extends ChangeNotifier {
 
   final FirebaseServices _firebaseService = FirebaseServices();
 
-
   void addService() {
     _services.add(Service());
     notifyListeners();
@@ -81,6 +80,19 @@ class EditCategoryProvider extends ChangeNotifier {
       _selectedCategories.add(categoryId);
     }
     notifyListeners();
+  }
+
+  String getCategoryName(String categoryId, String languageCode) {
+    try {
+      final category = _availableCategories.firstWhere(
+        (cat) => cat.id == categoryId,
+        orElse: () => Category(id: '', name: 'Unknown', ruName: 'Unknown'),
+      );
+      return languageCode == 'ru' ? (category.ruName ?? category.name) : category.name;
+    } catch (e) {
+      debugPrint('Error getting category name: $e');
+      return 'Unknown';
+    }
   }
 }
 

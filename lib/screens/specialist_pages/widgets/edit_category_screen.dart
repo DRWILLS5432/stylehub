@@ -185,10 +185,10 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                           ),
                           selected: isSelected,
                           onSelected: (_) => provider.toggleCategory(
-                            category.id, // You should probably toggle by ID rather than name
+                            category.id,
                           ),
                           backgroundColor: Colors.white,
-                          selectedColor: Theme.of(context).primaryColor,
+                          selectedColor: AppColors.appBGColor,
                           labelStyle: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
                           ),
@@ -223,8 +223,8 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
           maxLines: 2,
         ),
         SizedBox(height: 16.h),
-        Consumer<EditCategoryProvider>(
-          builder: (context, provider, _) {
+        Consumer2<EditCategoryProvider, LanguageProvider>(
+          builder: (context, provider, languageProvider, _) {
             if (provider.selectedCategories.isEmpty) return const SizedBox();
 
             return Column(
@@ -232,7 +232,12 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
               children: [
                 Wrap(
                   spacing: 8,
-                  children: provider.selectedCategories.map((category) {
+                  children: provider.selectedCategories.map((categoryId) {
+                    final categoryName = provider.getCategoryName(
+                      categoryId,
+                      languageProvider.currentLanguage,
+                    );
+
                     return Stack(
                       children: [
                         Container(
@@ -244,26 +249,10 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                                 color: AppColors.appBGColor,
                               )),
                           child: Text(
-                            category,
+                            categoryName,
                             style: appTextStyle12K(AppColors.mainBlackTextColor),
                           ),
                         ),
-                        // Chip(
-                        //   shape: RoundedRectangleBorder(
-                        //     borderRadius: BorderRadius.circular(10.dg),
-                        //     side: BorderSide(
-                        //       color: AppColors.appBGColor,
-                        //       width: 1,
-                        //     ),
-                        //   ),
-                        //   label: Text(
-                        //     category,
-                        //     style: appTextStyle12K(AppColors.mainBlackTextColor),
-                        //   ),
-                        //   backgroundColor: Colors.white,
-                        //   // deleteIconColor: Colors.blue.shade800,
-                        //   // onDeleted: () => provider.toggleCategory(category),
-                        // ),
                         Positioned(
                           bottom: 5,
                           left: -10,
@@ -273,7 +262,7 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                               size: 18.h,
                               color: Colors.red,
                             ),
-                            onPressed: () => provider.toggleCategory(category),
+                            onPressed: () => provider.toggleCategory(categoryId),
                           ),
                         )
                       ],

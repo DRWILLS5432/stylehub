@@ -1,3 +1,480 @@
+// import 'dart:convert';
+// import 'dart:typed_data';
+
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_localization/flutter_localization.dart';
+// import 'package:flutter_screenutil/flutter_screenutil.dart';
+// import 'package:provider/provider.dart';
+// import 'package:stylehub/constants/app/app_colors.dart';
+// import 'package:stylehub/constants/app/textstyle.dart';
+// import 'package:stylehub/constants/localization/locales.dart';
+// import 'package:stylehub/screens/specialist_pages/model/specialist_model.dart';
+// import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
+// import 'package:stylehub/screens/specialist_pages/provider/filter_provider.dart';
+// import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
+// import 'package:stylehub/storage/fire_store_method.dart';
+
+// class SpecialistDashboard extends StatefulWidget {
+//   const SpecialistDashboard({super.key});
+
+//   @override
+//   State<SpecialistDashboard> createState() => _SpecialistDashboardState();
+// }
+
+// class _SpecialistDashboardState extends State<SpecialistDashboard> {
+//   String? userName;
+//   Uint8List? _imageBytes;
+//   String? currentUserId;
+//   String? _selectedCategory; // Track selected category
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _fetchUserData();
+//     fetchCategories();
+//   }
+
+//   void fetchCategories() {
+//     final provider = Provider.of<EditCategoryProvider>(context, listen: false);
+//     provider.loadCategories();
+//   }
+
+//   Future<void> _fetchUserData() async {
+//     User? user = FirebaseAuth.instance.currentUser;
+//     if (user != null) {
+//       setState(() => currentUserId = user.uid);
+
+//       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+//       if (userDoc.exists) {
+//         Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+//         if (userData != null) {
+//           setState(() {
+//             userName = userData['firstName'] as String?;
+//             String? base64Image = userData['profileImage'] as String?;
+//             if (base64Image != null) {
+//               try {
+//                 _imageBytes = base64Decode(base64Image);
+//               } catch (e) {
+//                 // Handle error
+//               }
+//             }
+//           });
+//         }
+//       }
+//     }
+//   }
+
+//   List<String> categoryImages = [
+//     'assets/images/four.png',
+//     'assets/images/three.png',
+//     'assets/images/two.png',
+//     'assets/images/one.png',
+//     'assets/images/four.png',
+//   ];
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return SafeArea(
+//       child: Scaffold(
+//           backgroundColor: AppColors.whiteColor,
+//           body: CustomScrollView(
+//             slivers: [
+//               SliverAppBar(
+//                 toolbarHeight: 180.h,
+//                 backgroundColor: AppColors.appBGColor,
+//                 flexibleSpace: FlexibleSpaceBar(
+//                   background: // Header section remains the same
+//                       Container(
+//                     width: double.infinity,
+//                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+//                     decoration: BoxDecoration(
+//                       color: Color.fromARGB(255, 255, 255, 255),
+//                       borderRadius: BorderRadius.only(
+//                         bottomLeft: Radius.circular(12.0),
+//                         bottomRight: Radius.circular(12.0),
+//                       ),
+//                     ),
+//                     child: Row(
+//                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                       children: [
+//                         GestureDetector(
+//                           onTap: () => Navigator.pushNamed(context, '/specialist_profile'),
+//                           child: Hero(
+//                             tag: '1',
+//                             child: Container(
+//                               padding: EdgeInsets.all(4.dg),
+//                               decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
+//                               child: CircleAvatar(
+//                                 radius: 50.dg,
+//                                 backgroundColor: Colors.grey[200],
+//                                 backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
+//                                 child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                         Container(width: MediaQuery.of(context).size.width * 0.03),
+//                         Expanded(
+//                           child: Padding(
+//                             padding: EdgeInsets.only(bottom: 10.h),
+//                             child: Align(
+//                               alignment: Alignment.centerLeft,
+//                               child: Column(
+//                                 crossAxisAlignment: CrossAxisAlignment.start,
+//                                 children: [
+//                                   Text(LocaleData.welcomeBack.getString(context), style: appTextStyle20(AppColors.newGrayColor)),
+//                                   Text(userName ?? '', style: appTextStyle20(AppColors.newGrayColor)),
+//                                 ],
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                         Padding(
+//                             padding: EdgeInsets.only(bottom: 30.h),
+//                             child: Image.asset(
+//                               'assets/images/Bell.png',
+//                               height: 26.h,
+//                               width: 27.w,
+//                             )),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               SliverAppBar(
+//                 toolbarHeight: 150.h,
+//                 pinned: true,
+//                 flexibleSpace: FlexibleSpaceBar(
+//                   background: // Categories section - updated to be clickable
+//                       Container(
+//                     width: double.infinity,
+//                     height: 150.h,
+//                     padding: EdgeInsets.only(left: 16.w),
+//                     decoration: BoxDecoration(color: Color(0xFFD7D1BE)),
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         SizedBox(height: 4.h),
+//                         Text(
+//                           LocaleData.category.getString(context),
+//                           style: appTextStyle18(AppColors.newThirdGrayColor),
+//                         ),
+//                         SizedBox(height: 10),
+//                         SizedBox(
+//                             height: 100,
+//                             child: // In your categories section
+//                                 Consumer<EditCategoryProvider>(
+//                               builder: (context, categoryProvider, _) {
+//                                 return Consumer<FilterProvider>(
+//                                   builder: (context, filterProvider, _) {
+//                                     return ListView.builder(
+//                                       scrollDirection: Axis.horizontal,
+//                                       itemCount: categoryProvider.availableCategories.length,
+//                                       itemBuilder: (context, index) {
+//                                         if (categoryProvider.availableCategories.isEmpty) {
+//                                           return const Center(child: CircularProgressIndicator());
+//                                         }
+//                                         final category = categoryProvider.availableCategories[index];
+//                                         return GestureDetector(
+//                                           onTap: () {
+//                                             filterProvider.setSelectedCategory(filterProvider.selectedCategory == category.name ? null : category.name);
+//                                             filterProvider.applyFilters();
+//                                           },
+//                                           child: Padding(
+//                                             padding: EdgeInsets.only(right: 10.w),
+//                                             child: Column(
+//                                               children: [
+//                                                 Container(
+//                                                   decoration: BoxDecoration(
+//                                                     shape: BoxShape.circle,
+//                                                     border: Border.all(
+//                                                       color: filterProvider.selectedCategory == category.name ? AppColors.newThirdGrayColor : Colors.transparent,
+//                                                       width: 3,
+//                                                     ),
+//                                                   ),
+//                                                   child: CircleAvatar(
+//                                                     backgroundColor: AppColors.whiteColor,
+//                                                     radius: 35,
+//                                                     backgroundImage: AssetImage(
+//                                                       categoryImages[index % categoryImages.length],
+//                                                     ),
+//                                                   ),
+//                                                 ),
+//                                                 Spacer(),
+//                                                 Text(
+//                                                   category.name,
+//                                                   style: appTextStyle15(
+//                                                     filterProvider.selectedCategory == category.name ? Colors.white : AppColors.newThirdGrayColor,
+//                                                   ),
+//                                                 ),
+//                                                 Spacer()
+//                                               ],
+//                                             ),
+//                                           ),
+//                                         );
+//                                       },
+//                                     );
+//                                   },
+//                                 );
+//                               },
+//                             ))
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               SliverToBoxAdapter(
+//                 child: Padding(
+//                   padding: const EdgeInsets.all(10.0),
+//                   child: Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       SizedBox(
+//                         width: 205.w,
+//                         child: Text(
+//                           LocaleData.findProfessional.getString(context),
+//                           style: appTextStyle16400(AppColors.newThirdGrayColor),
+//                           overflow: TextOverflow.visible,
+//                           softWrap: true,
+//                         ),
+//                       ),
+//                       GestureDetector(
+//                         onTap: () => Navigator.pushNamed(context, '/filter_screen'),
+//                         child: Image.asset(
+//                           'assets/categ_settings.png',
+//                           width: 24,
+//                           height: 24,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//               SliverList(
+//                 delegate: SliverChildBuilderDelegate(childCount: 1, (context, index) {
+//                   return SafeArea(
+//                     child: Container(
+//                       color: AppColors.appBGColor,
+//                       child: Column(
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         children: [
+//                           // Professionals list section
+//                           Container(
+//                             width: double.infinity,
+//                             padding: EdgeInsets.all(16.0),
+//                             decoration: BoxDecoration(
+//                               color: Colors.white,
+//                               borderRadius: BorderRadius.only(
+//                                 topLeft: Radius.circular(12.0),
+//                                 topRight: Radius.circular(12.0),
+//                               ),
+//                             ),
+//                             child: Column(
+//                               crossAxisAlignment: CrossAxisAlignment.start,
+//                               children: [
+//                                 SizedBox(
+//                                   height: 400.h,
+//                                   child: _buildSpecialistsList(),
+//                                 ),
+//                               ],
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//                   );
+//                 }),
+//               )
+//             ],
+//           )),
+//     );
+//   }
+
+//   Widget _buildSpecialistsList() {
+//     final filterProvider = Provider.of<FilterProvider>(context);
+
+//     // Create a base query for all stylists
+//     Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
+
+//     // Apply filters if they've been explicitly applied
+//     if (filterProvider.filtersApplied) {
+//       // Apply city filter if selected
+//       if (filterProvider.selectedCity != null) {
+//         query = query.where('city', isEqualTo: filterProvider.selectedCity);
+//       }
+
+//       // Apply category filter if selected
+//       if (filterProvider.selectedCategory != null) {
+//         query = query.where('categories', arrayContains: filterProvider.selectedCategory);
+//       }
+
+//       // Apply rating filters
+//       if (filterProvider.highestRating) {
+//         query = query.orderBy('averageRating', descending: true);
+//       } else if (filterProvider.mediumRating) {
+//         query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
+//       }
+
+//       // Apply proximity filters (you'll need to implement geolocation for this)
+//       if (filterProvider.nearestSpecialists) {
+//         // This would require geolocation implementation
+//         // query = query.orderBy('distance');
+//       }
+
+//       if (filterProvider.specialistsInCity && filterProvider.selectedCity != null) {
+//         query = query.where('city', isEqualTo: filterProvider.selectedCity);
+//       }
+//     }
+
+//     return StreamBuilder<QuerySnapshot>(
+//       stream: query.snapshots(),
+//       builder: (context, snapshot) {
+//         if (snapshot.hasError) {
+//           print(snapshot.error);
+//           return Center(child: Text('Error: ${snapshot.error}'));
+//         }
+
+//         if (snapshot.connectionState == ConnectionState.waiting) {
+//           return const Center(child: CircularProgressIndicator());
+//         }
+
+//         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+//           return Center(
+//             child: Text(
+//               _selectedCategory != null ? 'No stylists found in this category' : 'No stylists found',
+//               style: appTextStyle16400(AppColors.newThirdGrayColor),
+//             ),
+//           );
+//         }
+
+//         return ListView.builder(
+//           itemCount: snapshot.data!.docs.length,
+//           itemBuilder: (context, index) {
+//             SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
+//             return FutureBuilder<double>(
+//               future: FireStoreMethod().getAverageRating(user.userId),
+//               builder: (context, snapshot) {
+//                 if (snapshot.connectionState == ConnectionState.waiting) {
+//                   return SizedBox.shrink();
+//                 }
+//                 if (snapshot.hasError) {
+//                   return Text("Error loading rating");
+//                 }
+
+//                 double averageRating = snapshot.data ?? 0.0;
+//                 return buildProfessionalCard(context, user, averageRating);
+//               },
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+// }
+
+// // The buildProfessionalCard widget remains the same as in your original code
+
+// Widget buildProfessionalCard(
+//   context,
+//   SpecialistModel? user,
+//   double averageRating,
+// ) {
+//   return GestureDetector(
+//     onTap: () {
+//       Navigator.push(
+//         context,
+//         MaterialPageRoute(
+//           builder: (context) => SpecialistDetailScreen(
+//             userId: user.userId,
+//           ),
+//         ),
+//       );
+//     },
+//     child: Card(
+//       margin: EdgeInsets.symmetric(vertical: 10),
+//       color: Color(0xFFD7D1BE),
+//       child: Padding(
+//         padding: EdgeInsets.only(left: 17.w, right: 17.h, top: 29.h, bottom: 12.h),
+//         child: Column(
+//           children: [
+//             Row(
+//               children: [
+//                 Container(
+//                   padding: EdgeInsets.all(2.dg),
+//                   decoration: BoxDecoration(
+//                     color: AppColors.whiteColor,
+//                     borderRadius: BorderRadius.circular(100.dg),
+//                   ),
+//                   child: CircleAvatar(
+//                     radius: 60.dg,
+//                     backgroundImage: AssetImage('assets/master1.png'),
+//                   ),
+//                 ),
+//                 SizedBox(width: 16),
+//                 Expanded(
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     mainAxisAlignment: MainAxisAlignment.center,
+//                     children: [
+//                       Text(user!.fullName, style: appTextStyle20(AppColors.newThirdGrayColor)),
+//                       Text(
+//                         user.role,
+//                         style: appTextStyle15(AppColors.newThirdGrayColor),
+//                       ),
+//                       SizedBox(height: 8),
+//                       Row(
+//                         children: List.generate(
+//                           5,
+//                           (index) => Icon(
+//                             index < averageRating ? Icons.star : Icons.star_border,
+//                             color: Colors.black, // Star color
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             SizedBox(height: 10.h),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Row(
+//                   children: [
+//                     Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
+//                     Text("70m", style: appTextStyle15(AppColors.newThirdGrayColor)),
+//                   ],
+//                 ),
+//                 TextButton(
+//                   onPressed: () {
+//                     Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (context) => SpecialistDetailScreen(
+//                           userId: user.userId,
+//                         ),
+//                       ),
+//                     );
+//                   },
+//                   child: Text(
+//                     LocaleData.view.getString(context),
+//                     style: appTextStyle14(AppColors.newThirdGrayColor),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     ),
+//   );
+// }
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -28,7 +505,6 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   String? userName;
   Uint8List? _imageBytes;
   String? currentUserId;
-  String? _selectedCategory; // Track selected category
 
   @override
   void initState() {
@@ -60,7 +536,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
               try {
                 _imageBytes = base64Decode(base64Image);
               } catch (e) {
-                // Handle error
+                debugPrint('Error decoding image: $e');
               }
             }
           });
@@ -186,20 +662,19 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                       height: 110.h,
                       child: Consumer<EditCategoryProvider>(
                         builder: (context, categoryProvider, _) {
+                          if (categoryProvider.availableCategories.isEmpty) {
+                            return Center(child: CircularProgressIndicator());
+                          }
                           return Consumer<FilterProvider>(
                             builder: (context, filterProvider, _) {
                               return ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: categoryProvider.availableCategories.length,
                                 itemBuilder: (context, index) {
-                                  if (categoryProvider.availableCategories.isEmpty) {
-                                    return const Center(child: CircularProgressIndicator());
-                                  }
                                   final category = categoryProvider.availableCategories[index];
                                   return GestureDetector(
                                     onTap: () {
                                       filterProvider.setSelectedCategory(filterProvider.selectedCategory == category.name ? null : category.name);
-                                      filterProvider.applyFilters();
                                     },
                                     child: Padding(
                                       padding: EdgeInsets.only(right: 10.w),
@@ -226,7 +701,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                                             return Text(
                                               provider.currentLanguage == 'en' ? category.name : category.ruName,
                                               style: appTextStyle15(
-                                                filterProvider.selectedCategory == category.name ? Colors.white : AppColors.newThirdGrayColor,
+                                                filterProvider.selectedCategory == category.name ? Colors.black : AppColors.newThirdGrayColor,
                                               ),
                                             );
                                           }),
@@ -281,53 +756,57 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
           ),
 
           // Main content with specialists
-          StreamBuilder<QuerySnapshot>(
-            stream: _getSpecialistsStream(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return SliverToBoxAdapter(
-                  child: Center(child: Text('Error: ${snapshot.error}')),
-                );
-              }
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return SliverToBoxAdapter(
-                  child: const Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return SliverToBoxAdapter(
-                  child: Center(
-                    child: Text(
-                      'No specialists found',
-                      style: appTextStyle16400(AppColors.newThirdGrayColor),
-                    ),
-                  ),
-                );
-              }
-
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
-                    return FutureBuilder<double>(
-                      future: FireStoreMethod().getAverageRating(user.userId),
-                      builder: (context, ratingSnapshot) {
-                        if (ratingSnapshot.connectionState == ConnectionState.waiting) {
-                          return SizedBox.shrink();
-                        }
-                        if (ratingSnapshot.hasError) {
-                          return Text("Error loading rating");
-                        }
-
-                        double averageRating = ratingSnapshot.data ?? 0.0;
-                        return buildProfessionalCard(context, user, averageRating);
-                      },
+          Consumer<FilterProvider>(
+            builder: (context, filterProvider, child) {
+              return StreamBuilder<QuerySnapshot>(
+                stream: _getSpecialistsStream(filterProvider),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return SliverToBoxAdapter(
+                      child: Center(child: Text('Error: ${snapshot.error}', style: appTextStyle16400(Colors.red))),
                     );
-                  },
-                  childCount: snapshot.data!.docs.length,
-                ),
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SliverToBoxAdapter(
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: Center(
+                        child: Text(
+                          'No specialists found matching your filters',
+                          style: appTextStyle16400(AppColors.newThirdGrayColor),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
+                        return FutureBuilder<double>(
+                          future: FireStoreMethod().getAverageRating(user.userId),
+                          builder: (context, ratingSnapshot) {
+                            if (ratingSnapshot.connectionState == ConnectionState.waiting) {
+                              return SizedBox.shrink();
+                            }
+                            if (ratingSnapshot.hasError) {
+                              return Text("Error loading rating");
+                            }
+
+                            double averageRating = ratingSnapshot.data ?? 0.0;
+                            return buildProfessionalCard(context, user, averageRating);
+                          },
+                        );
+                      },
+                      childCount: snapshot.data!.docs.length,
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -340,25 +819,24 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     );
   }
 
-  Stream<QuerySnapshot> _getSpecialistsStream() {
-    final filterProvider = Provider.of<FilterProvider>(context, listen: false);
-
+  Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
     Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
 
-    if (filterProvider.filtersApplied) {
-      if (filterProvider.selectedCity != null) {
-        query = query.where('city', isEqualTo: filterProvider.selectedCity);
-      }
+    // Apply city filter if selected
+    if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
+      query = query.where('city', isEqualTo: filterProvider.selectedCity);
+    }
 
-      if (filterProvider.selectedCategory != null) {
-        query = query.where('categories', arrayContains: filterProvider.selectedCategory);
-      }
+    // Apply category filter if selected
+    if (filterProvider.selectedCategory != null && filterProvider.selectedCategory!.isNotEmpty) {
+      query = query.where('categories', arrayContains: filterProvider.selectedCategory);
+    }
 
-      if (filterProvider.highestRating) {
-        query = query.orderBy('averageRating', descending: true);
-      } else if (filterProvider.mediumRating) {
-        query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
-      }
+    // Apply rating filters
+    if (filterProvider.highestRating) {
+      query = query.orderBy('averageRating', descending: true);
+    } else if (filterProvider.mediumRating) {
+      query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
     }
 
     return query.snapshots();
@@ -386,7 +864,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                   ),
                   child: CircleAvatar(
                     radius: 60.dg,
-                    backgroundImage: AssetImage('assets/master1.png'),
+                    backgroundImage: user.profileImage != null ? MemoryImage(base64Decode(user.profileImage!)) : AssetImage('assets/master1.png') as ImageProvider,
                   ),
                 ),
                 SizedBox(width: 16),
@@ -405,8 +883,9 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                         children: List.generate(
                           5,
                           (index) => Icon(
-                            index < averageRating ? Icons.star : Icons.star_border,
+                            index < averageRating.floor() ? Icons.star : Icons.star_border,
                             color: Colors.black,
+                            size: 20,
                           ),
                         ),
                       ),
