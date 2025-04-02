@@ -6,11 +6,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/model/specialist_model.dart';
+import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
+import 'package:stylehub/storage/fire_store_method.dart';
 
 class SpecialistDashboard extends StatefulWidget {
   const SpecialistDashboard({super.key});
@@ -28,6 +31,12 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   void initState() {
     super.initState();
     _fetchUserData();
+    fetchCategories();
+  }
+
+  void fetchCategories() {
+    final provider = Provider.of<EditCategoryProvider>(context, listen: false);
+    provider.loadCategories();
   }
 
   Future<void> _fetchUserData() async {
@@ -64,6 +73,8 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     }
   }
 
+  List<String> categoryImages = ['assets/images/four.png', 'assets/images/three.png', 'assets/images/two.png', 'assets/images/one.png', 'assets/images/four.png'];
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -79,7 +90,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                    decoration: BoxDecoration( 
+                    decoration: BoxDecoration(
                       color: Color.fromARGB(255, 255, 255, 255),
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(12.0),
@@ -156,21 +167,39 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                           // style: TextStyle(fontSize: 18, fontFamily: 'InstrumentSans'),
                         ),
                         SizedBox(height: 10),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildCategoryIcon('Haircut', 'assets/haircut_icon.png'),
-                              _buildCategoryIcon('Shave', 'assets/shave_icon.png'),
-                              _buildCategoryIcon('Facials', 'assets/facials_icon.png'),
-                              _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
-                              _buildCategoryIcon('Chauffeur', 'assets/manicure_icon.png'),
-                              _buildCategoryIcon('Cleaning', 'assets/manicure_icon.png'),
-                              _buildCategoryIcon('Manicure', 'assets/manicure_icon.png'),
-                            ],
-                          ),
-                        ),
+                        SizedBox(
+                          height: 100,
+                          child: Consumer<EditCategoryProvider>(builder: (context, provider, _) {
+                            return ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: provider.availableCategories.length,
+                                itemBuilder: (context, index) {
+                                  if (provider.availableCategories.isEmpty) {
+                                    return const Center(child: CircularProgressIndicator());
+                                  }
+                                  return Padding(
+                                    padding: EdgeInsets.only(right: 10.w),
+                                    child: Column(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: AppColors.whiteColor,
+                                          radius: 35,
+                                          backgroundImage: AssetImage(
+                                            categoryImages[index],
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        Text(
+                                          provider.availableCategories[index].name,
+                                          style: appTextStyle15(AppColors.newThirdGrayColor),
+                                        ),
+                                        Spacer()
+                                      ],
+                                    ),
+                                  );
+                                });
+                          }),
+                        )
                       ],
                     ),
                   ),
@@ -217,7 +246,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                               stream: FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist').snapshots(),
                               builder: (context, snapshot) {
                                 if (snapshot.hasError) {
-                                  print('Error: ${snapshot.error}');
+                                  // print('Error: ${snapshot.error}');
                                   return Center(child: Text('Error: ${snapshot.error}'));
                                 }
 
@@ -234,29 +263,29 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                                     itemBuilder: (context, index) {
                                       SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
                                       //       return _StylistCard(user: user);
-                                      return buildProfessionalCard(context, user.firstName, 'Stylist', 4.5, onTap: () {
-                                        // Navigator.pushNamed(context, '/specialist_detail_screen');
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => SpecialistDetailScreen(
-                                              userId: user.userId,
-                                            ),
-                                          ),
-                                        );
-                                      });
+                                      return FutureBuilder<double>(
+                                        future: FireStoreMethod().getAverageRating(user.userId), // Fetch average rating
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState == ConnectionState.waiting) {
+                                            return SizedBox.shrink();
+                                          }
+                                          if (snapshot.hasError) {
+                                            return Text("Error loading rating");
+                                          }
+
+                                          double averageRating = snapshot.data ?? 0.0;
+
+                                          return buildProfessionalCard(context, user, averageRating);
+                                        },
+                                      );
+
+                                      // buildProfessionalCard(
+                                      //   context,
+                                      //   user,
+                                      // );
                                     });
                               }),
                         ),
-
-                        // SizedBox(height: 10),
-                        // buildProfessionalCard(context, 'John Doe', 'Barber', 4.5, onTap: () {
-                        //   Navigator.pushNamed(context, '/specialist_detail_screen');
-                        // }),
-                        // buildProfessionalCard(context, 'Jane Smith', 'Hairstylist', 4.8, onTap: () {
-                        //   Navigator.pushNamed(context, '/specialist_detail_screen');
-                        // }),
-                        // SizedBox(height: 70),
                       ],
                     ),
                   ),
@@ -270,31 +299,22 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   }
 }
 
-Widget _buildCategoryIcon(String label, String assetPath) {
-  return InkWell(
-    onTap: () {},
-    splashColor: AppColors.whiteColor,
-    highlightColor: AppColors.newGrayColor,
-    overlayColor: WidgetStateProperty.all(Colors.green),
-    child: Padding(
-      padding: EdgeInsets.only(right: 20.w),
-      child: Column(
-        children: [
-          Image.asset(assetPath, width: 70.w, height: 70.h),
-          SizedBox(height: 8.h),
-          Text(
-            label, style: appTextStyle15(AppColors.newThirdGrayColor),
-            //  TextStyle(fontSize: 16, fontFamily: 'InstrumentSans'),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget buildProfessionalCard(context, String name, String profession, double rating, {Function()? onTap}) {
+Widget buildProfessionalCard(
+  context,
+  SpecialistModel? user,
+  double averageRating,
+) {
   return GestureDetector(
-    onTap: onTap,
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SpecialistDetailScreen(
+            userId: user.userId,
+          ),
+        ),
+      );
+    },
     child: Card(
       margin: EdgeInsets.symmetric(vertical: 10),
       color: Color(0xFFD7D1BE),
@@ -321,9 +341,9 @@ Widget buildProfessionalCard(context, String name, String profession, double rat
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(name, style: appTextStyle20(AppColors.newThirdGrayColor)),
+                      Text(user!.fullName, style: appTextStyle20(AppColors.newThirdGrayColor)),
                       Text(
-                        profession,
+                        user.role,
                         style: appTextStyle15(AppColors.newThirdGrayColor),
                       ),
                       SizedBox(height: 8),
@@ -331,8 +351,8 @@ Widget buildProfessionalCard(context, String name, String profession, double rat
                         children: List.generate(
                           5,
                           (index) => Icon(
-                            index < rating ? Icons.star : Icons.star_border,
-                            color: const Color.fromARGB(255, 2, 1, 1),
+                            index < averageRating ? Icons.star : Icons.star_border,
+                            color: Colors.black, // Star color
                           ),
                         ),
                       ),
@@ -353,7 +373,14 @@ Widget buildProfessionalCard(context, String name, String profession, double rat
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/specialist_detail_screen');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SpecialistDetailScreen(
+                          userId: user.userId,
+                        ),
+                      ),
+                    );
                   },
                   child: Text(
                     LocaleData.view.getString(context),
@@ -367,46 +394,4 @@ Widget buildProfessionalCard(context, String name, String profession, double rat
       ),
     ),
   );
-}
-
-class _StylistCard extends StatelessWidget {
-  final SpecialistModel user;
-
-  const _StylistCard({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          backgroundColor: AppColors.grayColor,
-          child: Text(
-            '${user.firstName[0]}${user.lastName[0]}',
-            style: appTextStyle15(AppColors.mainBlackTextColor),
-          ),
-        ),
-        title: Text(
-          '${user.firstName} ${user.lastName}',
-          style: appTextStyle16400(AppColors.mainBlackTextColor),
-        ),
-        subtitle: Text(
-          user.email,
-          style: appTextStyle12K(AppColors.newThirdGrayColor),
-        ),
-        trailing: Chip(
-          backgroundColor: AppColors.grayColor,
-          label: Text(
-            user.role,
-            style: appTextStyle12K(AppColors.mainBlackTextColor),
-          ),
-        ),
-      ),
-    );
-  }
 }

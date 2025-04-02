@@ -198,4 +198,30 @@ class FireStoreMethod {
     }
     return res;
   }
+
+
+  /// Retrieves the average rating for a user.
+  ///
+  /// This method fetches all review documents for a specified user from the 'reviews'
+  /// subcollection in Firestore, calculates the average of the 'rating' fields, and
+  /// returns it. If there are no reviews, it returns 0.0.
+  ///
+  /// Returns a [Future] that resolves to a [double] representing the average rating.
+  ///
+  /// - Parameter userId: The ID of the user whose average rating is to be calculated.
+
+  Future<double> getAverageRating(String userId) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).collection('reviews').get();
+
+    if (querySnapshot.docs.isEmpty) return 0.0;
+
+    double totalRating = 0;
+    for (var doc in querySnapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      totalRating += (data['rating'] ?? 0).toDouble(); // Ensure rating is double
+    }
+
+    return totalRating / querySnapshot.docs.length;
+  }
+
 }

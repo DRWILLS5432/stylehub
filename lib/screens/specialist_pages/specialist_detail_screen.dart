@@ -98,14 +98,14 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
 
               final userData = snapshot.data!.data() as Map<String, dynamic>;
               final profileImage = userData['profileImage'] ?? '';
-              final firstName = userData['firstName'] ?? '';
-              final lastName = userData['lastName'] ?? '';
+              // final firstName = userData['firstName'] ?? '';
+              // final lastName = userData['lastName'] ?? '';
               final bio = userData['bio'] ?? 'No bio available';
-              final role = userData['role'] ?? 'Stylist';
-              final experience = userData['experience'] ?? 'No experience info';
-              final city = userData['city'] ?? '';
-              final phone = userData['phone'] ?? '';
-              final email = userData['email'] ?? '';
+              // final role = userData['role'] ?? 'Stylist';
+              // final experience = userData['experience'] ?? 'No experience info';
+              // final city = userData['city'] ?? '';
+              // final phone = userData['phone'] ?? '';
+              // final email = userData['email'] ?? '';
               final categories = List<String>.from(userData['categories'] ?? []);
               final images = List<String>.from(userData['images'] ?? []);
               final services = List<Map<String, dynamic>>.from(userData['services'] ?? []);
@@ -169,8 +169,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
                               child: Text(LocaleData.serviceProvide.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
                             ),
-                            SizedBox(height: 20.h),
-
+                            SizedBox(height: 20.h),                        
                             // Widget to display list of selected Categories
                             // Display categories
                             Padding(
@@ -192,9 +191,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                     .toList(),
                               ),
                             ),
-
                             // Widget to display services
-                           
                             SizedBox(height: 36.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
@@ -369,12 +366,11 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                 if (!snapshot.hasData) {
                                   return Center(child: const CircularProgressIndicator());
                                 }
-
                                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                                   return Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 15.w),
                                     child: Text(
-                                      'No reviews yet',
+                                      'No reviews yet', 
                                       style: appTextStyle15(AppColors.newThirdGrayColor),
                                     ),
                                   );

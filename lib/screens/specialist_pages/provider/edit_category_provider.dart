@@ -23,14 +23,6 @@ class EditCategoryProvider extends ChangeNotifier {
 
   final FirebaseServices _firebaseService = FirebaseServices();
 
-  // void toggleCategory(String category) {
-  //   if (_selectedCategories.contains(category)) {
-  //     _selectedCategories.remove(category);
-  //   } else {
-  //     _selectedCategories.add(category);
-  //   }
-  //   notifyListeners();
-  // }
 
   void addService() {
     _services.add(Service());
