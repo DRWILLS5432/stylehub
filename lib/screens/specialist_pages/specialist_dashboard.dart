@@ -12,6 +12,8 @@ import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/model/specialist_model.dart';
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
+import 'package:stylehub/screens/specialist_pages/provider/filter_provider.dart';
+import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
 import 'package:stylehub/storage/fire_store_method.dart';
 
@@ -26,6 +28,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   String? userName;
   Uint8List? _imageBytes;
   String? currentUserId;
+  String? _selectedCategory; // Track selected category
 
   @override
   void initState() {
@@ -42,29 +45,22 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   Future<void> _fetchUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      setState(
-        () => currentUserId = user.uid,
-      ); // Store the user ID
+      setState(() => currentUserId = user.uid);
 
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
       if (userDoc.exists) {
-        // Use the data() method to access the document's data as a Map
         Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
 
         if (userData != null) {
           setState(() {
-            // Safely access the 'firstName' field
             userName = userData['firstName'] as String?;
-
-            // Safely access the 'profileImage' field
             String? base64Image = userData['profileImage'] as String?;
             if (base64Image != null) {
               try {
                 _imageBytes = base64Decode(base64Image);
               } catch (e) {
-                // print("Error decoding base64 image: $e");
-                // Handle the error, e.g., set a default image
+                // Handle error
               }
             }
           });
@@ -73,250 +69,308 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     }
   }
 
-  List<String> categoryImages = ['assets/images/four.png', 'assets/images/three.png', 'assets/images/two.png', 'assets/images/one.png', 'assets/images/four.png'];
+  List<String> categoryImages = [
+    'assets/images/four.png',
+    'assets/images/three.png',
+    'assets/images/two.png',
+    'assets/images/one.png',
+    'assets/images/four.png',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: AppColors.whiteColor,
-        body: SingleChildScrollView(
-          child: SafeArea(
-            child: Container(
-              color: AppColors.appBGColor,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 255, 255, 255),
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(12.0),
-                        bottomRight: Radius.circular(12.0),
+    return Scaffold(
+      backgroundColor: AppColors.whiteColor,
+      body: CustomScrollView(
+        slivers: [
+          // First SliverAppBar for the header section
+          SliverAppBar(
+            expandedHeight: 170.h,
+            toolbarHeight: 10.h,
+            pinned: true,
+            backgroundColor: AppColors.appBGColor,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12.0),
+                    bottomRight: Radius.circular(12.0),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Profile avatar
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/specialist_profile'),
+                      child: Hero(
+                        tag: '1',
+                        child: Container(
+                          padding: EdgeInsets.all(4.dg),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100.dg),
+                            color: AppColors.appBGColor,
+                          ),
+                          child: CircleAvatar(
+                            radius: 50.dg,
+                            backgroundColor: Colors.grey[200],
+                            backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
+                            child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                          ),
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, '/specialist_profile'),
-                          child: Hero(
-                            tag: '1',
-                            child: Container(
-                              padding: EdgeInsets.all(4.dg),
-                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(100.dg), color: AppColors.appBGColor),
-                              child: CircleAvatar(
-                                radius: 50.dg,
-                                backgroundColor: Colors.grey[200],
-                                backgroundImage: _imageBytes != null ? MemoryImage(_imageBytes!) : null,
-                                child: _imageBytes == null ? Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]) : null,
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                    // Welcome text
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 0.h),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                LocaleData.welcomeBack.getString(context),
+                                style: appTextStyle20(AppColors.newGrayColor),
                               ),
-                            ),
+                              Text(
+                                userName ?? '',
+                                style: appTextStyle20(AppColors.newGrayColor),
+                              ),
+                            ],
                           ),
                         ),
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.03,
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(bottom: 10.h),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(LocaleData.welcomeBack.getString(context),
-                                      style: mediumTextStyle25(
-                                        AppColors.newGrayColor,
-                                      )),
-                                  Text(userName ?? '', style: appTextStyle20(AppColors.newGrayColor)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                            padding: EdgeInsets.only(bottom: 30.h),
-                            child: Image.asset(
-                              'assets/images/Bell.png',
-                              height: 26.h,
-                              width: 27.w,
-                            )),
-                      ],
+                      ),
                     ),
-                  ),
-                  // SizedBox(height: 20),
-                  Container(
-                    width: double.infinity,
-                    height: 150.h,
-                    padding: EdgeInsets.only(
-                      left: 16.w,
+                    // Notification icon
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 30.h),
+                      child: Image.asset(
+                        'assets/images/Bell.png',
+                        height: 26.h,
+                        width: 27.w,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFD7D1BE),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Second SliverAppBar for the categories (pinned)
+          SliverAppBar(
+            floating: true,
+            pinned: true,
+            toolbarHeight: 130.h,
+            automaticallyImplyLeading: false,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                height: 120.h,
+                color: Color(0xFFD7D1BE),
+                padding: EdgeInsets.only(left: 16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10.h),
+                    Text(
+                      LocaleData.category.getString(context),
+                      style: appTextStyle18(AppColors.newThirdGrayColor),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 4.h),
-                        Text(
-                          LocaleData.category.getString(context),
-                          style: appTextStyle18(AppColors.newThirdGrayColor),
-                          // style: TextStyle(fontSize: 18, fontFamily: 'InstrumentSans'),
-                        ),
-                        SizedBox(height: 10),
-                        SizedBox(
-                          height: 100,
-                          child: Consumer<EditCategoryProvider>(builder: (context, provider, _) {
-                            return ListView.builder(
+                    SizedBox(height: 10),
+                    SizedBox(
+                      height: 110.h,
+                      child: Consumer<EditCategoryProvider>(
+                        builder: (context, categoryProvider, _) {
+                          return Consumer<FilterProvider>(
+                            builder: (context, filterProvider, _) {
+                              return ListView.builder(
                                 scrollDirection: Axis.horizontal,
-                                itemCount: provider.availableCategories.length,
+                                itemCount: categoryProvider.availableCategories.length,
                                 itemBuilder: (context, index) {
-                                  if (provider.availableCategories.isEmpty) {
+                                  if (categoryProvider.availableCategories.isEmpty) {
                                     return const Center(child: CircularProgressIndicator());
                                   }
-                                  return Padding(
-                                    padding: EdgeInsets.only(right: 10.w),
-                                    child: Column(
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundColor: AppColors.whiteColor,
-                                          radius: 35,
-                                          backgroundImage: AssetImage(
-                                            categoryImages[index],
+                                  final category = categoryProvider.availableCategories[index];
+                                  return GestureDetector(
+                                    onTap: () {
+                                      filterProvider.setSelectedCategory(filterProvider.selectedCategory == category.name ? null : category.name);
+                                      filterProvider.applyFilters();
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.only(right: 10.w),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: filterProvider.selectedCategory == category.name ? AppColors.newThirdGrayColor : Colors.transparent,
+                                                width: 3,
+                                              ),
+                                            ),
+                                            child: CircleAvatar(
+                                              backgroundColor: AppColors.whiteColor,
+                                              radius: 35,
+                                              backgroundImage: AssetImage(
+                                                categoryImages[index % categoryImages.length],
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                        Spacer(),
-                                        Text(
-                                          provider.availableCategories[index].name,
-                                          style: appTextStyle15(AppColors.newThirdGrayColor),
-                                        ),
-                                        Spacer()
-                                      ],
+                                          SizedBox(height: 4),
+                                          Consumer<LanguageProvider>(builder: (context, provider, child) {
+                                            return Text(
+                                              provider.currentLanguage == 'en' ? category.name : category.ruName,
+                                              style: appTextStyle15(
+                                                filterProvider.selectedCategory == category.name ? Colors.white : AppColors.newThirdGrayColor,
+                                              ),
+                                            );
+                                          }),
+                                        ],
+                                      ),
                                     ),
                                   );
-                                });
-                          }),
-                        )
-                      ],
-                    ),
-                  ),
-
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12.0),
-                        topRight: Radius.circular(12.0),
+                                },
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 205.w,
-                              child: Text(
-                                LocaleData.findProfessional.getString(context),
-                                style: appTextStyle16400(AppColors.newThirdGrayColor),
-                                overflow: TextOverflow.visible,
-                                softWrap: true,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => Navigator.pushNamed(context, '/filter_screen'),
-                              child: Image.asset(
-                                'assets/categ_settings.png',
-                                width: 24,
-                                height: 24,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 400.h,
-                          child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist').snapshots(),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasError) {
-                                  // print('Error: ${snapshot.error}');
-                                  return Center(child: Text('Error: ${snapshot.error}'));
-                                }
+                  ],
+                ),
+              ),
+            ),
+          ),
 
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return const Center(child: CircularProgressIndicator());
-                                }
-
-                                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                                  return Center(child: Text('No stylists found', style: appTextStyle16400(AppColors.newThirdGrayColor)));
-                                }
-
-                                return ListView.builder(
-                                    itemCount: snapshot.data!.docs.length,
-                                    itemBuilder: (context, index) {
-                                      SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
-                                      //       return _StylistCard(user: user);
-                                      return FutureBuilder<double>(
-                                        future: FireStoreMethod().getAverageRating(user.userId), // Fetch average rating
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState == ConnectionState.waiting) {
-                                            return SizedBox.shrink();
-                                          }
-                                          if (snapshot.hasError) {
-                                            return Text("Error loading rating");
-                                          }
-
-                                          double averageRating = snapshot.data ?? 0.0;
-
-                                          return buildProfessionalCard(context, user, averageRating);
-                                        },
-                                      );
-
-                                      // buildProfessionalCard(
-                                      //   context,
-                                      //   user,
-                                      // );
-                                    });
-                              }),
-                        ),
-                      ],
+          // Title and filter button
+          SliverToBoxAdapter(
+            child: Container(
+              margin: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h, top: 10.h),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.dg),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 205.w,
+                    child: Text(
+                      LocaleData.findProfessional.getString(context),
+                      style: appTextStyle16400(AppColors.newThirdGrayColor),
+                      overflow: TextOverflow.visible,
+                      softWrap: true,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/filter_screen'),
+                    child: Image.asset(
+                      'assets/categ_settings.png',
+                      width: 24,
+                      height: 24,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-        ),
+
+          // Main content with specialists
+          StreamBuilder<QuerySnapshot>(
+            stream: _getSpecialistsStream(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return SliverToBoxAdapter(
+                  child: Center(child: Text('Error: ${snapshot.error}')),
+                );
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return SliverToBoxAdapter(
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return SliverToBoxAdapter(
+                  child: Center(
+                    child: Text(
+                      'No specialists found',
+                      style: appTextStyle16400(AppColors.newThirdGrayColor),
+                    ),
+                  ),
+                );
+              }
+
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
+                    return FutureBuilder<double>(
+                      future: FireStoreMethod().getAverageRating(user.userId),
+                      builder: (context, ratingSnapshot) {
+                        if (ratingSnapshot.connectionState == ConnectionState.waiting) {
+                          return SizedBox.shrink();
+                        }
+                        if (ratingSnapshot.hasError) {
+                          return Text("Error loading rating");
+                        }
+
+                        double averageRating = ratingSnapshot.data ?? 0.0;
+                        return buildProfessionalCard(context, user, averageRating);
+                      },
+                    );
+                  },
+                  childCount: snapshot.data!.docs.length,
+                ),
+              );
+            },
+          ),
+
+          SliverAppBar(
+            toolbarHeight: 40,
+          )
+        ],
       ),
     );
   }
-}
 
-Widget buildProfessionalCard(
-  context,
-  SpecialistModel? user,
-  double averageRating,
-) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SpecialistDetailScreen(
-            userId: user.userId,
-          ),
-        ),
-      );
-    },
-    child: Card(
-      margin: EdgeInsets.symmetric(vertical: 10),
+  Stream<QuerySnapshot> _getSpecialistsStream() {
+    final filterProvider = Provider.of<FilterProvider>(context, listen: false);
+
+    Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
+
+    if (filterProvider.filtersApplied) {
+      if (filterProvider.selectedCity != null) {
+        query = query.where('city', isEqualTo: filterProvider.selectedCity);
+      }
+
+      if (filterProvider.selectedCategory != null) {
+        query = query.where('categories', arrayContains: filterProvider.selectedCategory);
+      }
+
+      if (filterProvider.highestRating) {
+        query = query.orderBy('averageRating', descending: true);
+      } else if (filterProvider.mediumRating) {
+        query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
+      }
+    }
+
+    return query.snapshots();
+  }
+
+  Widget buildProfessionalCard(
+    BuildContext context,
+    SpecialistModel user,
+    double averageRating,
+  ) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       color: Color(0xFFD7D1BE),
       child: Padding(
         padding: EdgeInsets.only(left: 17.w, right: 17.h, top: 29.h, bottom: 12.h),
@@ -341,7 +395,7 @@ Widget buildProfessionalCard(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(user!.fullName, style: appTextStyle20(AppColors.newThirdGrayColor)),
+                      Text(user.fullName, style: appTextStyle20(AppColors.newThirdGrayColor)),
                       Text(
                         user.role,
                         style: appTextStyle15(AppColors.newThirdGrayColor),
@@ -352,7 +406,7 @@ Widget buildProfessionalCard(
                           5,
                           (index) => Icon(
                             index < averageRating ? Icons.star : Icons.star_border,
-                            color: Colors.black, // Star color
+                            color: Colors.black,
                           ),
                         ),
                       ),
@@ -392,6 +446,6 @@ Widget buildProfessionalCard(
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }

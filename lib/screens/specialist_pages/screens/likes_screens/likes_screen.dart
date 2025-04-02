@@ -31,7 +31,7 @@ class LikesScreen extends StatelessWidget {
         padding: EdgeInsets.all(20.dg),
         child: Column(
           children: [
-            buildProfessionalCard(context, null, 3),
+            // buildProfessionalCard(context, null, 3),
           ],
         ),
       ),
