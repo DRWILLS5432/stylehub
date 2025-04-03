@@ -9,6 +9,7 @@ import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/make_appointment_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/write_review.dart';
+import 'package:stylehub/storage/likes_method.dart';
 import 'package:stylehub/storage/post_review_method.dart';
 
 class SpecialistDetailScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   bool toggleLikeIcon = false;
   String? selectedImage;
   final ReviewService _reviewService = ReviewService();
+  final LikeService _likeService = LikeService();
 
   @override
 
@@ -33,6 +35,28 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   /// provided by the given specialist.
   void initState() {
     super.initState();
+    _checkIfLiked();
+  }
+
+  Future<void> _checkIfLiked() async {
+    bool hasLiked = await _likeService.hasLiked(widget.userId);
+    setState(() {
+      toggleLikeIcon = hasLiked;
+    });
+  }
+
+  Future<void> _toggleLike() async {
+    String result = await _likeService.toggleLike(widget.userId);
+    if (result == 'liked' || result == 'unliked') {
+      setState(() {
+        toggleLikeIcon = result == 'liked';
+      });
+    } else {
+      print(result);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result)),
+      );
+    }
   }
 
   /// Submits a review for a specialist.
@@ -73,16 +97,16 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
             Padding(
               padding: EdgeInsets.only(right: 10.w),
               child: InkWell(
-                  radius: 10.dg,
-                  splashColor: AppColors.whiteColor,
-                  highlightColor: AppColors.grayColor,
-                  onTap: () {
-                    setState(() {
-                      toggleLikeIcon = !toggleLikeIcon;
-                    });
-                  },
-                  child: Icon(toggleLikeIcon ? Icons.favorite_border : Icons.favorite, color: AppColors.newThirdGrayColor)),
-            )
+                radius: 10.dg,
+                splashColor: AppColors.whiteColor,
+                highlightColor: AppColors.grayColor,
+                onTap: _toggleLike,
+                child: Icon(
+                  toggleLikeIcon ? Icons.favorite : Icons.favorite_border,
+                  color: toggleLikeIcon ? Colors.red : AppColors.newThirdGrayColor,
+                ),
+              ),
+            ),
           ],
         ),
         body: StreamBuilder(
@@ -155,12 +179,21 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                       Text("70m", style: appTextStyle12()),
                                     ],
                                   ),
-                                  Row(
-                                    children: [
-                                      Text('5.0'.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
-                                      Icon(Icons.star, color: AppColors.mainBlackTextColor, size: 15.dg),
-                                    ],
-                                  ),
+                                  StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('likes').snapshots(),
+                                    builder: (context, snapshot) {
+                                      final likeCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                                      return Row(
+                                        children: [
+                                          Text('5.0'.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                                          Icon(Icons.star, color: AppColors.mainBlackTextColor, size: 15.dg),
+                                          SizedBox(width: 10.w),
+                                          Icon(Icons.favorite, color: Colors.red, size: 15.dg),
+                                          Text(likeCount.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                                        ],
+                                      );
+                                    },
+                                  )
                                 ],
                               ),
                             ),
@@ -169,7 +202,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
                               child: Text(LocaleData.serviceProvide.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
                             ),
-                            SizedBox(height: 20.h),                        
+                            SizedBox(height: 20.h),
                             // Widget to display list of selected Categories
                             // Display categories
                             Padding(
@@ -239,44 +272,6 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   )
                                 : Text('No images uploaded'),
 
-                            // images.isNotEmpty
-                            //     ? SizedBox(
-                            //         height: 140,
-                            //         child: ListView.builder(
-                            //           scrollDirection: Axis.horizontal,
-                            //           itemCount: images.length,
-                            //           itemBuilder: (context, index) {
-                            //             return Padding(
-                            //               padding: const EdgeInsets.all(5.0),
-                            //               child: Container(
-                            //                   decoration: BoxDecoration(borderRadius: BorderRadius.circular(110.dg), color: AppColors.appBGColor),
-                            //                   padding: EdgeInsets.all(3.w),
-                            //                   child: ClipRRect(borderRadius: BorderRadius.circular(100.dg), child: Image.network(images[index], width: 120, height: 140, fit: BoxFit.cover))),
-                            //             );
-                            //           },
-                            //         ),
-                            //       )
-                            //     : Text('No images uploaded'),
-                            // SizedBox(
-                            //   height: 196.h,
-                            //   //
-                            //   child: ListView.builder(
-                            //     scrollDirection: Axis.horizontal,
-                            //     itemBuilder: (context, index) => Padding(
-                            //       padding: EdgeInsets.only(left: 15.w),
-                            //       child: CircleAvatar(
-                            //         radius: 94.dg,
-                            //         backgroundColor: AppColors.appBGColor,
-                            //         child: CircleAvatar(
-                            //           radius: 90.dg,
-                            //           backgroundImage: AssetImage(
-                            //             'assets/master1.png',
-                            //           ),
-                            //         ),
-                            //       ),
-                            //     ),
-                            //   ),
-                            // ),
                             SizedBox(height: 36.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
@@ -370,7 +365,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   return Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 15.w),
                                     child: Text(
-                                      'No reviews yet', 
+                                      'No reviews yet',
                                       style: appTextStyle15(AppColors.newThirdGrayColor),
                                     ),
                                   );
@@ -427,29 +422,6 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                 ],
               );
             }));
-  }
-
-  Widget _buildCategoryIcon(String label, String assetPath) {
-    return InkWell(
-      onTap: () {},
-      splashColor: AppColors.whiteColor,
-      highlightColor: AppColors.grayColor,
-      radius: 40.dg,
-      // overlayColor: WidgetStateProperty.all(C),
-      child: Padding(
-        padding: EdgeInsets.only(right: 20.w),
-        child: Column(
-          children: [
-            ClipRRect(borderRadius: BorderRadius.circular(50.dg), child: Image.asset(assetPath, width: 58.17.w, height: 56.91.h)),
-            SizedBox(height: 8.h),
-            Text(
-              label, style: appTextStyle15(AppColors.newThirdGrayColor),
-              //  TextStyle(fontSize: 16, fontFamily: 'InstrumentSans'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget buildProfessionalCard(final Map<String, dynamic> review) {

@@ -565,7 +565,6 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                   ],
                 ),
                 SizedBox(height: 15.h),
-
                 Wrap(
                   spacing: 8,
                   children: provider.submittedCategories.isNotEmpty
@@ -759,41 +758,8 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                               ))
                         ],
                       ),
-                // ElevatedButton(
-                //   onPressed: _pickImages,
-                //   child: const Text('Upload Images'),
-                // ),
                 const SizedBox(height: 20),
-                // _imageFiles.isNotEmpty
-                //     ? GridView.builder(
-                //         shrinkWrap: true,
-                //         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                //           crossAxisCount: 3,
-                //           crossAxisSpacing: 4.0,
-                //           mainAxisSpacing: 4.0,
-                //         ),
-                //         itemCount: _imageFiles.length,
-                //         itemBuilder: (context, index) {
-                //           return Image.file(
-                //             _imageFiles[index],
-                //             fit: BoxFit.cover,
-                //           );
-                //         },
-                //       )
-                //     : Container(),
                 const SizedBox(height: 20),
-                // ElevatedButton(
-                //   style: ElevatedButton.styleFrom(
-                //     padding: EdgeInsets.zero,
-                //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.dg)),
-                //     backgroundColor: AppColors.appBGColor,
-                //     minimumSize: Size(double.infinity.w, 56.h),
-                //   ),
-                //   onPressed: () async {
-                //     await uploadPreviousWork();
-                //   },
-                //   child: isLoading ? CircularProgressIndicator() : Text('Submit'),
-                // ),
                 const SizedBox(height: 20),
               ],
             ),

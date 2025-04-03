@@ -123,7 +123,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                       PersonalDetailForm(
                         isPassword: isHidePassword,
                         controller: passwordController,
-                        hintText: !isHidePassword ? _password.toString() : LocaleData.password.getString(context),
+                        hintText: !isHidePassword ? _password.toString() : '**********',
                         suffixIcon: IconButton(
                             onPressed: togglePassword,
                             icon: Icon(
