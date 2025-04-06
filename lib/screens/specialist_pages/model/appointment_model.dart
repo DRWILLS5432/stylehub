@@ -9,6 +9,7 @@ class AppointmentModel {
   final String address;
   final DateTime date;
   final String status;
+  String? specialistName;
 
   AppointmentModel({
     required this.appointmentId,
@@ -19,6 +20,7 @@ class AppointmentModel {
     required this.address,
     required this.date,
     required this.status,
+    this.specialistName,
   });
 
   factory AppointmentModel.fromMap(Map<String, dynamic> data) {

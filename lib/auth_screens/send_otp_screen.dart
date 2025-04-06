@@ -58,7 +58,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
     });
   }
 
-  Future<void> _sendOtp() async {
+  Future<void> _sendOtp(context) async {
     setState(() => _isLoading = true);
     try {
       await _firebaseService.sendPasswordResetEmail(_emailController.text.trim());
@@ -157,7 +157,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                   onPressed: _isResendEnabled
                       ? () {
                           if (_formKey.currentState!.validate()) {
-                            _sendOtp();
+                            _sendOtp(context);
                           }
                         }
                       : null,
@@ -191,7 +191,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       if (!_isLoading) {
-                        _sendOtp();
+                        _sendOtp(context);
                       }
                     }
                   },

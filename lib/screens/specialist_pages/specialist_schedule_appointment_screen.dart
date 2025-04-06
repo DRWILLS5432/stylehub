@@ -11,7 +11,6 @@ import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/model/appointment_model.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
-import 'package:stylehub/screens/specialist_pages/screens/appointment_screens/appointment_screen.dart';
 import 'package:stylehub/storage/appointment_repo.dart';
 
 class AppointmentScheduler extends StatefulWidget {
@@ -785,5 +784,11 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                   ),
                 ],
               );
+  }
+
+  String formatDateTime(DateTime date) {
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '${date.day}/${date.month}/${date.year} at $hour:$minute';
   }
 }

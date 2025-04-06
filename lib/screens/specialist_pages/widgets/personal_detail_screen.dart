@@ -165,11 +165,13 @@ class PersonalDetailForm extends StatelessWidget {
     this.suffixIcon,
     this.isPassword = false,
     this.initialValue,
+    this.enabled,
   });
   final String? hintText;
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
   final bool isPassword;
+  final bool? enabled;
   final String? initialValue;
 
   final TextEditingController controller;
@@ -190,6 +192,7 @@ class PersonalDetailForm extends StatelessWidget {
         suffixIcon: suffixIcon,
       ),
       validator: validator,
+      enabled: enabled,
 
       // (value) {
       //   if (value == null || value.isEmpty) {

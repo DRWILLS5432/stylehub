@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_screens/login_page.dart';
 
 class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,6 +26,8 @@ class WelcomeScreen extends StatelessWidget {
 }
 
 class LanguageSelectionScreen extends StatelessWidget {
+  const LanguageSelectionScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +48,8 @@ class LanguageSelectionScreen extends StatelessWidget {
 }
 
 class CountrySelectionScreen extends StatelessWidget {
+  const CountrySelectionScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

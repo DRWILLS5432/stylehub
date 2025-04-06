@@ -19,6 +19,7 @@ class ServiceSelectionScreen extends StatefulWidget {
 
 class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
   bool isLoading = false;
+
   @override
   void initState() {
     fetchCategories();
@@ -228,56 +229,7 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
           maxLines: 2,
         ),
         SizedBox(height: 16.h),
-        Consumer2<EditCategoryProvider, LanguageProvider>(
-          builder: (context, provider, languageProvider, _) {
-            if (provider.selectedCategories.isEmpty) return const SizedBox();
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 8,
-                  children: provider.selectedCategories.map((categoryId) {
-                    final categoryName = provider.getCategoryName(
-                      categoryId,
-                      languageProvider.currentLanguage,
-                    );
-
-                    return Stack(
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(top: 10.h, left: 10.w),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10.dg),
-                              border: Border.all(
-                                color: AppColors.appBGColor,
-                              )),
-                          child: Text(
-                            categoryName,
-                            style: appTextStyle12K(AppColors.mainBlackTextColor),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 5,
-                          left: -10,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.cancel_outlined,
-                              size: 18.h,
-                              color: Colors.red,
-                            ),
-                            onPressed: () => provider.toggleCategory(categoryId),
-                          ),
-                        )
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ],
-            );
-          },
-        ),
+        SelectedCategoryWidget(),
       ],
     );
   }
@@ -411,6 +363,66 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
           ),
         );
       }),
+    );
+  }
+}
+
+class SelectedCategoryWidget extends StatelessWidget {
+  const SelectedCategoryWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<EditCategoryProvider, LanguageProvider>(
+      builder: (context, provider, languageProvider, _) {
+        if (provider.selectedCategories.isEmpty) return const SizedBox();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              children: provider.selectedCategories.map((categoryId) {
+                final categoryName = provider.getCategoryName(
+                  categoryId,
+                  languageProvider.currentLanguage,
+                );
+
+                return Stack(
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(top: 10.h, left: 10.w),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.dg),
+                          border: Border.all(
+                            color: AppColors.appBGColor,
+                          )),
+                      child: Text(
+                        categoryName,
+                        style: appTextStyle12K(AppColors.mainBlackTextColor),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 5,
+                      left: -10,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.cancel_outlined,
+                          size: 18.h,
+                          color: Colors.red,
+                        ),
+                        onPressed: () => provider.toggleCategory(categoryId),
+                      ),
+                    )
+                  ],
+                );
+              }).toList(),
+            ),
+          ],
+        );
+      },
     );
   }
 }

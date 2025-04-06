@@ -28,11 +28,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    _checkIfFirstLaunch();
+    _checkIfFirstLaunch(context);
   }
 
   // Check if this is the first time the app is launched
-  Future<void> _checkIfFirstLaunch() async {
+  Future<void> _checkIfFirstLaunch(context) async {
     final prefs = await SharedPreferences.getInstance();
     bool isFirstLaunch = prefs.getBool('first_launch') ?? true;
 
@@ -81,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: _buildPageIndicator(),
             ),
             Padding(
-              padding:  EdgeInsets.all(20.dg),
+              padding: EdgeInsets.all(20.dg),
               child: SizedBox(
                 width: 212.w,
                 height: 45.h,

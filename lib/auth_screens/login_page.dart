@@ -102,8 +102,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildCreateAccountTab(),
-                      _buildLoginTab(),
+                      _buildCreateAccountTab(context),
+                      _buildLoginTab(context),
                     ],
                   ),
                 ),
@@ -115,7 +115,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildCreateAccountTab() {
+  Widget _buildCreateAccountTab(context) {
     Future<void> register() async {
       if (selectedRole == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -429,7 +429,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildLoginTab() {
+  Widget _buildLoginTab(context) {
     Future<void> login() async {
       setState(() => _isLoggingIn = true);
 

@@ -231,14 +231,11 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   StreamBuilder<QuerySnapshot>(
                                     stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('likes').snapshots(),
                                     builder: (context, snapshot) {
-                                      final likeCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
                                       return Row(
                                         children: [
                                           Text('5.0'.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
                                           Icon(Icons.star, color: AppColors.mainBlackTextColor, size: 15.dg),
                                           SizedBox(width: 10.w),
-                                          Icon(Icons.favorite, color: Colors.red, size: 15.dg),
-                                          Text(likeCount.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
                                         ],
                                       );
                                     },

@@ -11,193 +11,6 @@ import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_schedule_appointment_screen.dart';
 
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:easy_date_timeline/easy_date_timeline.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_screenutil/flutter_screenutil.dart';
-// import 'package:stylehub/constants/app/app_colors.dart';
-// import 'package:stylehub/constants/app/textstyle.dart';
-// import 'package:stylehub/onboarding_page/onboarding_screen.dart';
-// import 'package:stylehub/screens/specialist_pages/specialist_schedule_appointment_screen.dart';
-
-// class MakeAppointmentScreen extends StatefulWidget {
-//   final String specialistId;
-
-//   const MakeAppointmentScreen({super.key, required this.specialistId});
-
-//   @override
-//   State<MakeAppointmentScreen> createState() => _MakeAppointmentScreenState();
-// }
-
-// class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
-//   DateTime _selectedDate = DateTime.now();
-//   TimeSlot? _selectedSlot;
-//   final _firestore = FirebaseFirestore.instance;
-//   final _auth = FirebaseAuth.instance;
-
-//   DateTime _getFirstMonday(DateTime date) {
-//     date = DateTime(date.year, date.month, date.day);
-//     while (date.weekday != DateTime.monday) {
-//       date = date.subtract(const Duration(days: 1));
-//     }
-//     return date;
-//   }
-
-//   Future<List<TimeSlot>> _getAvailability() async {
-//     final weekStart = _getFirstMonday(_selectedDate);
-//     final doc = await _firestore.collection('availability').doc(widget.specialistId).collection('weeks').doc(weekStart.toIso8601String()).get();
-
-//     if (!doc.exists) return [];
-
-//     final slots = (doc.data()!['slots'] as List).map((slot) => TimeSlot.fromMap(slot)).toList();
-
-//     // Filter slots for selected date
-//     final selectedWeekday = _selectedDate.weekday - 1; // Monday = 0
-//     return slots.where((slot) => slot.day == selectedWeekday && slot.isOpen).toList();
-//   }
-
-//   Future<void> _bookAppointment() async {
-//     final user = _auth.currentUser;
-//     if (user == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Please login to book appointments')),
-//       );
-//       return;
-//     }
-
-//     if (_selectedSlot == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Please select a time slot')),
-//       );
-//       return;
-//     }
-
-//     try {
-//       await _firestore.collection('appointments').add({
-//         'specialistId': widget.specialistId,
-//         'clientId': user.uid,
-//         'date': Timestamp.fromDate(_selectedDate),
-//         'time': _selectedSlot!.hour,
-//         'status': 'pending',
-//         'createdAt': FieldValue.serverTimestamp(),
-//         'updatedAt': FieldValue.serverTimestamp(),
-//       });
-
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Appointment booked successfully!')),
-//       );
-//       Navigator.pop(context);
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Booking failed: ${e.toString()}')),
-//       );
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       // ... existing app bar and scaffold code
-//       body: SingleChildScrollView(
-//         padding: EdgeInsets.all(16.dg),
-//         child: Column(
-//           children: [
-//             // ... existing date picker code
-//             EasyDateTimeLine(
-//               initialDate: _selectedDate,
-//               onDateChange: (date) async {
-//                 setState(() {
-//                   _selectedDate = date;
-//                   _selectedSlot = null;
-//                 });
-//               },
-//               // ... other properties
-//             ),
-//             SizedBox(height: 24),
-//             Text(
-//               'Available Time Slots', /*...*/
-//             ),
-//             SizedBox(height: 20.h),
-//             FutureBuilder<List<TimeSlot>>(
-//               future: _getAvailability(),
-//               builder: (context, snapshot) {
-//                 if (snapshot.connectionState == ConnectionState.waiting) {
-//                   return CircularProgressIndicator();
-//                 }
-
-//                 final slots = snapshot.data ?? [];
-
-//                 return Wrap(
-//                   spacing: 8.0,
-//                   runSpacing: 8.0,
-//                   children: slots.map((slot) {
-//                     final time = _formatHour(slot.hour);
-//                     return TimeSlotButton(
-//                       time: time,
-//                       isSelected: _selectedSlot == slot,
-//                       onPressed: () => setState(() => _selectedSlot = slot),
-//                     );
-//                   }).toList(),
-//                 );
-//               },
-//             ),
-//             // ... existing address code
-//             SizedBox(height: 54.h),
-//             Center(
-//               child: SizedBox(
-//                 // ... existing button styling
-//                 child: ReusableButton(
-//                   bgColor: AppColors.whiteColor,
-//                   color: AppColors.appBGColor,
-//                   text: Text(
-//                     'Make Appointment',
-//                     style: appTextStyle15(AppColors.newThirdGrayColor),
-//                   ),
-//                   onPressed: _bookAppointment,
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   String _formatHour(int hour) {
-//     final period = hour >= 12 ? 'PM' : 'AM';
-//     final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-//     return '$displayHour:00 $period';
-//   }
-// }
-
-// class TimeSlotButton extends StatelessWidget {
-//   final String time;
-//   final bool isSelected;
-//   final VoidCallback onPressed;
-
-//   const TimeSlotButton({
-//     super.key,
-//     required this.time,
-//     this.isSelected = false,
-//     required this.onPressed,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return OutlinedButton(
-//       onPressed: onPressed,
-//       style: OutlinedButton.styleFrom(
-//         backgroundColor: isSelected ? Colors.blue[100] : null,
-//         // ... existing styling
-//       ),
-//       child: Text(
-//         time, /*...*/
-//       ),
-//     );
-//   }
-// }
-
 class MakeAppointmentScreen extends StatefulWidget {
   final String specialistId;
 
@@ -241,10 +54,8 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
     final weekStart = _getFirstMonday(_selectedDate);
     final doc = await _firestore.collection('availability').doc(widget.specialistId).collection('weeks').doc(weekStart.toIso8601String()).get();
 
-
-   
     if (!doc.exists) return [];
-    
+
     final slots = (doc.data()!['slots'] as List).map((slot) => TimeSlot.fromMap(slot)).toList();
 
     // Filter slots for selected date
@@ -360,16 +171,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
             SizedBox(
               height: 32.h,
             ),
-            // Dynamic Month and Year Text
-            // Container(
-            //   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-            //   decoration: BoxDecoration(borderRadius: BorderRadius.circular(15.dg), border: Border.all(color: AppColors.appBGColor, width: 2.w)),
-            //   child: Text(
-            //     '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}',
-            //     style: appTextStyle16500(AppColors.newThirdGrayColor),
-            //   ),
-            // ),
-            // SizedBox(height: 16),
+
             EasyDateTimeLine(
               initialDate: _selectedDate,
               onDateChange: (selectedDate) {

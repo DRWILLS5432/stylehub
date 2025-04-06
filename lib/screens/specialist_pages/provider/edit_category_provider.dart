@@ -54,7 +54,8 @@ class EditCategoryProvider extends ChangeNotifier {
       notifyListeners();
     });
   }
-   void updateSubmittedCategories(List<String> categoryNames) {
+
+  void updateSubmittedCategories(List<String> categoryNames) {
     _submittedCategories = categoryNames;
     notifyListeners();
   }
@@ -74,7 +75,7 @@ class EditCategoryProvider extends ChangeNotifier {
         (cat) => cat.id == categoryId,
         orElse: () => Category(id: '', name: 'Unknown', ruName: 'Unknown'),
       );
-      return languageCode == 'ru' ? (category.ruName ?? category.name) : category.name;
+      return languageCode == 'ru' ? (category.ruName) : category.name;
     } catch (e) {
       debugPrint('Error getting category name: $e');
       return 'Unknown';

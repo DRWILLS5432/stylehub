@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
@@ -6,237 +7,334 @@ import 'package:intl/intl.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
-import 'package:stylehub/onboarding_page/onboarding_screen.dart';
-import 'package:stylehub/screens/specialist_pages/model/appointment_model.dart';
-import 'package:stylehub/storage/appointment_repo.dart';
 
-class AppointmentScreen extends StatelessWidget {
+class AppointmentScreen extends StatefulWidget {
   const AppointmentScreen({super.key});
 
   @override
+  State<AppointmentScreen> createState() => _AppointmentScreenState();
+}
+
+class _AppointmentScreenState extends State<AppointmentScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
   Widget build(BuildContext context) {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return const Center(child: Text('Please sign in to view appointments'));
+    }
+
     return Scaffold(
-        backgroundColor: AppColors.whiteColor,
-        appBar: AppBar(
-          backgroundColor: AppColors.whiteColor,
-          centerTitle: false,
-          title: Text(
-            LocaleData.appointments.getString(context),
-            style: appTextStyle24(AppColors.newThirdGrayColor),
-          ),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(
+          LocaleData.appointments.getString(context),
+          style: appTextStyle24(AppColors.newThirdGrayColor),
         ),
-        body: MyAppointmentsScreen(isSpecialist: true));
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _firestore.collection('appointments').where('clientId', isEqualTo: user.uid).orderBy('date', descending: false).snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Text(
+                'No appointments booked yet',
+                style: appTextStyle16(AppColors.newThirdGrayColor),
+              ),
+            );
+          }
+
+          final appointments = snapshot.data!.docs;
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16.w),
+            itemCount: appointments.length,
+            itemBuilder: (context, index) {
+              final appointment = appointments[index].data() as Map<String, dynamic>;
+              final date = (appointment['date'] as Timestamp).toDate();
+              final status = appointment['status'] as String? ?? 'booked';
+
+              return AppointmentCard(
+                specialistId: appointment['specialistId'] as String,
+                date: date,
+                status: status,
+                onCancel: () => _cancelAppointment(context, appointments[index].id),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _cancelAppointment(context, String appointmentId) async {
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).update({
+        'status': 'cancelled',
+        'cancelledAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Appointment cancelled successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to cancel appointment: $e')),
+      );
+    }
   }
 }
 
-class MyAppointmentsScreen extends StatefulWidget {
-  final bool isSpecialist;
-  const MyAppointmentsScreen({super.key, required this.isSpecialist});
+class AppointmentCard extends StatefulWidget {
+  final String specialistId;
+  final DateTime date;
+  final String status;
+  final VoidCallback onCancel;
+
+  const AppointmentCard({
+    super.key,
+    required this.specialistId,
+    required this.date,
+    required this.status,
+    required this.onCancel,
+  });
 
   @override
-  State<MyAppointmentsScreen> createState() => _MyAppointmentsScreenState();
+  State<AppointmentCard> createState() => _AppointmentCardState();
 }
 
-class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
-  final AppointmentRepository _repo = AppointmentRepository();
-  List<AppointmentModel> _appointments = [];
-  bool _isLoading = true;
+class _AppointmentCardState extends State<AppointmentCard> {
+  Map<String, dynamic>? _specialistData;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAppointments();
+    _loadSpecialistData();
   }
 
-  /// Loads appointments for the current user.
-  ///
-  /// Uses the [AppointmentRepository] to fetch the appointments for the current
-  /// user, and updates the [_appointments] list and [_isLoading] flag accordingly.
-  ///
-  /// This method is called in [initState] to load the appointments when the
-  /// widget is first created.
-  ///
-  /// If the user is a specialist, the appointments are loaded for the specialist's
-  /// bookings. Otherwise, the appointments are loaded for the user's bookings.
-  Future<void> _loadAppointments() async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-    final appointments = await _repo.fetchAppointments(
-      userId: userId,
-      isSpecialist: widget.isSpecialist,
-    );
-    setState(() {
-      _appointments = appointments;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _cancelAppointment(String appointmentId) async {
+  Future<void> _loadSpecialistData() async {
+    setState(() => _isLoading = true);
     try {
-      setState(() => _isLoading = true);
+      final doc = await FirebaseFirestore.instance.collection('users').doc(widget.specialistId).get();
 
-      await _repo.deleteAppointment(appointmentId);
-      setState(() {
-        // Remove the appointment from local list immediately
-        _appointments.removeWhere((appt) => appt.appointmentId == appointmentId);
-      });
+      if (doc.exists) {
+        setState(() {
+          _specialistData = doc.data();
+        });
+      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete appointment: $e')),
-        );
-      }
+      // Handle error
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // appBar: AppBar(title: Text(widget.isSpecialist ? 'My Bookings' : 'My Appointments')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _appointments.isEmpty
-              ? Center(child: Text('No appointments found'))
-              : Column(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.86,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 70),
-                        child: ListView.builder(
-                          itemCount: _appointments.length,
-                          itemBuilder: (context, index) {
-                            final appointment = _appointments[index];
-                            return Column(
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  margin: EdgeInsets.only(left: 18.w, right: 18.w, top: 23.h),
-                                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 19.h),
-                                  decoration: BoxDecoration(color: AppColors.appBGColor, borderRadius: BorderRadius.circular(15.dg)),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Align(
-                                        alignment: Alignment.topRight,
-                                        child: Icon(
-                                          Icons.notifications_on_sharp,
-                                        ),
-                                      ),
-                                      Text(
-                                        widget.isSpecialist ? '${appointment.clientFirstName} ${appointment.clientLastName}' : 'Specialist: ${appointment.specialistId}',
-                                        style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                      ),
-                                      Text(
-                                        formatDateTime(appointment.date),
-                                        style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                      ),
-                                      Text(
-                                        appointment.address,
-                                        style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                      ),
-                                      SizedBox(
-                                        height: 10.h,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          ElevatedButton(
-                                            onPressed: () => showDialog(
-                                                context: context,
-                                                builder: (context) => AlertDialog(
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(15.dg),
-                                                      ),
-                                                      contentPadding: EdgeInsets.zero,
-                                                      title: Column(
-                                                        children: [
-                                                          SizedBox(
-                                                            width: 211.w,
-                                                            child: Text(
-                                                              LocaleData.wantToCancelAppointment,
-                                                              style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                              textAlign: TextAlign.center,
-                                                            ),
-                                                          ),
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            children: [
-                                                              Text(
-                                                                'By ${formatDateTime(appointment.date)}',
-                                                                style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      actions: [
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            SizedBox(
-                                                                height: 25.h,
-                                                                width: 104.w,
-                                                                child: ReusableButton(
-                                                                    color: AppColors.appBGColor,
-                                                                    text: Text(
-                                                                      LocaleData.no.getString(context),
-                                                                      style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                                    ),
-                                                                    onPressed: () {})),
-                                                            SizedBox(
-                                                                height: 25.h,
-                                                                width: 104.w,
-                                                                child: ReusableButton(
-                                                                  color: AppColors.appBGColor,
-                                                                  text: Text(
-                                                                    LocaleData.yes.getString(context),
-                                                                    style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                                  ),
-                                                                  onPressed: () => _cancelAppointment(appointment.appointmentId),
-                                                                )),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    )),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppColors.whiteColor,
-                                              minimumSize: Size(3.w, 25.h),
-                                              shape: RoundedRectangleBorder(
-                                                side: BorderSide(color: AppColors.newGrayColor, width: 2.w),
-                                                borderRadius: BorderRadius.circular(5.dg),
-                                              ),
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                LocaleData.cancel.getString(context),
-                                                style: appTextStyle12K(AppColors.mainBlackTextColor),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+    return Card(
+      color: AppColors.appBGColor,
+      margin: EdgeInsets.only(bottom: 16.h),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: AppColors.appBGColor, width: 1.w),
+        borderRadius: BorderRadius.circular(12.dg),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_isLoading) const Center(child: CircularProgressIndicator()) else if (_specialistData != null) _buildSpecialistInfo(),
+            SizedBox(height: 12.h),
+            _buildAppointmentInfo(),
+            SizedBox(height: 16.h),
+            if (widget.status == 'booked') _buildActionButtons(),
+          ],
+        ),
+      ),
     );
   }
-}
 
-// Call this method and pass your DateTime object
-String formatDateTime(DateTime dateTime) {
-  // Example output: March 23, 2025 - 02:45 PM
-  final DateFormat formatter = DateFormat('MMMM dd, yyyy - hh:mm a');
-  return formatter.format(dateTime);
+  Widget _buildSpecialistInfo() {
+    return Row(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${_specialistData?['firstName'] ?? ''} ${_specialistData?['lastName'] ?? ''}',
+              style: appTextStyle16500(AppColors.mainBlackTextColor),
+            ),
+            Text(
+              _specialistData?['profession']?.toString() ?? 'Specialist',
+              style: appTextStyle14(AppColors.newThirdGrayColor),
+            ),
+          ],
+        ),
+        Spacer(),
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: _getStatusColor(),
+                borderRadius: BorderRadius.circular(4.dg),
+              ),
+              child: Text(
+                widget.status.toUpperCase(),
+                style: appTextStyle12K(AppColors.whiteColor),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAppointmentInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Details',
+          style: appTextStyle16500(AppColors.mainBlackTextColor),
+        ),
+        SizedBox(height: 8.h),
+        Row(
+          children: [
+            Icon(Icons.calendar_today, size: 16.dg, color: AppColors.newThirdGrayColor),
+            SizedBox(width: 8.w),
+            Text(
+              DateFormat('EEE, MMM d, y').format(widget.date),
+              style: appTextStyle14(AppColors.newThirdGrayColor),
+            ),
+          ],
+        ),
+        SizedBox(height: 4.h),
+        Row(
+          children: [
+            Icon(Icons.access_time, size: 16.dg, color: AppColors.newThirdGrayColor),
+            SizedBox(width: 8.w),
+            Text(
+              DateFormat('h:mm a').format(widget.date),
+              style: appTextStyle14(AppColors.newThirdGrayColor),
+            ),
+          ],
+        ),
+        SizedBox(height: 4.h),
+        // Row(
+        //   children: [
+        //     Container(
+        //       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+        //       decoration: BoxDecoration(
+        //         color: _getStatusColor(),
+        //         borderRadius: BorderRadius.circular(4.dg),
+        //       ),
+        //       child: Text(
+        //         widget.status.toUpperCase(),
+        //         style: appTextStyle12K(AppColors.whiteColor),
+        //       ),
+        //     ),
+        //   ],
+        // ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        SizedBox(height: 16.h),
+        Spacer(),
+        SizedBox(height: 16.h),
+        Spacer(),
+        Expanded(
+            child: GestureDetector(
+          onTap: () => showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                    backgroundColor: AppColors.whiteColor,
+                    contentPadding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.dg)),
+                    content: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+                      height: 155.h,
+                      child: Column(
+                        children: [
+                          Text(
+                            'Are you sure you want to cancel this appointment on, ${DateFormat('EEE, MMM d, y').format(widget.date)} by ${DateFormat('h:mm a').format(widget.date)}',
+                            style: appTextStyle14(AppColors.mainBlackTextColor),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 16.h),
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 40.w),
+                                  decoration: BoxDecoration(color: AppColors.appBGColor, borderRadius: BorderRadius.circular(12.dg)),
+                                  child: Text('No'),
+                                ),
+                              ),
+                              Spacer(),
+                              InkWell(
+                                onTap: widget.onCancel,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 40.w),
+                                  decoration: BoxDecoration(color: AppColors.appBGColor, borderRadius: BorderRadius.circular(12.dg)),
+                                  child: Text('Yes'),
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  )),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 4.h),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.dg), color: AppColors.whiteColor),
+            child: Center(child: Text(LocaleData.cancel.getString(context), style: appTextStyle12K(AppColors.mainBlackTextColor))),
+          ),
+        )),
+        // SizedBox(width: 16.w),
+        // Expanded(
+        //   child: ElevatedButton(
+        //     onPressed: () {
+        //       // Handle reschedule or other actions
+        //     },
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: AppColors.appBGColor,
+        //       padding: EdgeInsets.symmetric(vertical: 12.h),
+        //     ),
+        //     child: Text(
+        //       'Reschedule',
+        //       style: appTextStyle14(AppColors.whiteColor),
+        //     ),
+        //   ),
+        // ),
+      ],
+    );
+  }
+
+  Color _getStatusColor() {
+    switch (widget.status) {
+      case 'booked':
+        return AppColors.greenColor;
+      case 'cancelled':
+        return AppColors.primaryRedColor;
+      case 'completed':
+        return AppColors.mainColor;
+      default:
+        return AppColors.grayColor;
+    }
+  }
 }
