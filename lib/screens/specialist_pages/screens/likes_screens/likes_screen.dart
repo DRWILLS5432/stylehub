@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,23 +10,18 @@ import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/model/specialist_model.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
 import 'package:stylehub/storage/fire_store_method.dart';
+import 'package:stylehub/storage/likes_method.dart';
 
 class LikesScreen extends StatelessWidget {
   const LikesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return Scaffold(
-        body: Center(child: Text("User not logged in")),
-      );
-    }
-
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
         backgroundColor: AppColors.whiteColor,
+        automaticallyImplyLeading: false,
         centerTitle: false,
         title: Text(
           LocaleData.likes.getString(context),
@@ -41,59 +35,55 @@ class LikesScreen extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc(user.uid).collection('likes').orderBy('timestamp', descending: true).snapshots(),
+        stream: LikeService().getFavorites(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No likes yet'));
+            return Center(child: Text('No favorites yet'));
           }
 
-          final likes = snapshot.data!.docs;
+          final favorites = snapshot.data!.docs;
 
-          return ListView.builder(
-            itemCount: likes.length,
-            itemBuilder: (context, index) {
-              final likeData = likes[index].data() as Map<String, dynamic>?;
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: favorites.length,
+                  itemBuilder: (context, index) {
+                    final favoriteData = favorites[index].data() as Map<String, dynamic>;
 
-              if (likeData == null) {
-                return SizedBox.shrink(); // Skip if data is null
-              }
+                    // Create a simplified specialist model from the favorite data
+                    final specialist = SpecialistModel(
+                      userId: favoriteData['specialistId'],
+                      firstName: favoriteData['specialistName'],
+                      lastName: favoriteData['specialistLastName'],
+                      profileImage: favoriteData['profileImage'],
+                      role: favoriteData['role'], email: '', bio: '', experience: '', city: '', phone: '', categories: [], images: [], services: [],
+                      // Other fields can be added if needed
+                    );
 
-              String userId = likeData['userId'] ?? ''; // Ensure non-null userId
-              if (userId.isEmpty) return SizedBox.shrink(); // Skip invalid entries
+                    return FutureBuilder<double>(
+                      future: FireStoreMethod().getAverageRating(specialist.userId),
+                      builder: (context, ratingSnapshot) {
+                        if (ratingSnapshot.connectionState == ConnectionState.waiting) {
+                          return SizedBox.shrink();
+                        }
 
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
-                builder: (context, userSnapshot) {
-                  if (userSnapshot.connectionState == ConnectionState.waiting) {
-                    return SizedBox.shrink();
-                  }
+                        double averageRating = ratingSnapshot.data ?? 0.0;
 
-                  if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-                    return SizedBox.shrink();
-                  }
-
-                  var userDoc = userSnapshot.data!;
-                  SpecialistModel likedUser = SpecialistModel.fromSnap(userDoc);
-
-                  return FutureBuilder<double>(
-                    future: FireStoreMethod().getAverageRating(likedUser.userId),
-                    builder: (context, ratingSnapshot) {
-                      if (ratingSnapshot.connectionState == ConnectionState.waiting) {
-                        return SizedBox.shrink();
-                      }
-
-                      double averageRating = ratingSnapshot.data ?? 0.0;
-
-                      return buildProfessionalCard(context, likedUser, averageRating);
-                    },
-                  );
-                },
-              );
-            },
+                        return buildProfessionalCard(context, specialist, averageRating);
+                      },
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                height: 70.h,
+              )
+            ],
           );
         },
       ),

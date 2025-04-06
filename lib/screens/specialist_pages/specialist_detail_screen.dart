@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
@@ -35,18 +38,20 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   /// provided by the given specialist.
   void initState() {
     super.initState();
-    _checkIfLiked();
+    _checkIfFavorite();
   }
 
-  Future<void> _checkIfLiked() async {
-    bool hasLiked = await _likeService.hasLiked(widget.userId);
+// In your SpecialistDetailScreen, update the like-related methods:
+
+  Future<void> _checkIfFavorite() async {
+    bool isFav = await _likeService.isFavorite(widget.userId);
     setState(() {
-      toggleLikeIcon = hasLiked;
+      toggleLikeIcon = isFav;
     });
   }
 
-  Future<void> _toggleLike() async {
-    String result = await _likeService.toggleLike(widget.userId);
+  Future<void> _toggleFavorite() async {
+    String result = await _likeService.toggleFavorite(widget.userId);
     if (result == 'liked' || result == 'unliked') {
       setState(() {
         toggleLikeIcon = result == 'liked';
@@ -58,6 +63,12 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
       );
     }
   }
+
+// // Update the like icon in your app bar:
+// Icon(
+//   toggleLikeIcon ? Icons.favorite : Icons.favorite_border,
+//   color: toggleLikeIcon ? Colors.red : AppColors.newThirdGrayColor,
+// ),
 
   /// Submits a review for a specialist.
   ///
@@ -88,6 +99,44 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
     }
   }
 
+  void _showZoomableImage(BuildContext context, String image, {bool isBase64 = false}) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.dg)),
+        child: Container(
+          color: Colors.transparent,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Spacer(),
+              CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  )),
+              SizedBox(
+                height: 30.h,
+              ),
+              SizedBox(
+                width: double.infinity,
+                height: 400.h,
+                child: PhotoView(
+                  imageProvider: isBase64 ? MemoryImage(base64Decode(image)) : NetworkImage(image) as ImageProvider,
+                  minScale: PhotoViewComputedScale.covered,
+                  maxScale: PhotoViewComputedScale.covered * 2,
+                ),
+              ),
+              Spacer(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,7 +149,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                 radius: 10.dg,
                 splashColor: AppColors.whiteColor,
                 highlightColor: AppColors.grayColor,
-                onTap: _toggleLike,
+                onTap: _toggleFavorite,
                 child: Icon(
                   toggleLikeIcon ? Icons.favorite : Icons.favorite_border,
                   color: toggleLikeIcon ? Colors.red : AppColors.newThirdGrayColor,
@@ -122,14 +171,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
 
               final userData = snapshot.data!.data() as Map<String, dynamic>;
               final profileImage = userData['profileImage'] ?? '';
-              // final firstName = userData['firstName'] ?? '';
-              // final lastName = userData['lastName'] ?? '';
               final bio = userData['bio'] ?? 'No bio available';
-              // final role = userData['role'] ?? 'Stylist';
-              // final experience = userData['experience'] ?? 'No experience info';
-              // final city = userData['city'] ?? '';
-              // final phone = userData['phone'] ?? '';
-              // final email = userData['email'] ?? '';
               final categories = List<String>.from(userData['categories'] ?? []);
               final images = List<String>.from(userData['images'] ?? []);
               final services = List<Map<String, dynamic>>.from(userData['services'] ?? []);
@@ -156,15 +198,22 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   bottomLeft: Radius.circular(15.dg),
                                   bottomRight: Radius.circular(15.dg),
                                 ),
-                                child: selectedImage != null
-                                    ? Image.network(
-                                        selectedImage!,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Image.asset(
-                                        'assets/master1.png',
-                                        fit: BoxFit.cover,
-                                      ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (profileImage != null) {
+                                      _showZoomableImage(context, profileImage, isBase64: true);
+                                    }
+                                  },
+                                  child: profileImage != null
+                                      ? Image.memory(
+                                          base64Decode(profileImage),
+                                          fit: BoxFit.fill,
+                                        )
+                                      : Image.asset(
+                                          'assets/master1.png',
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
                               ),
                             ),
                             SizedBox(height: 10.h),
@@ -242,10 +291,8 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                       itemBuilder: (context, index) {
                                         return GestureDetector(
                                           onTap: () {
-                                            // When a user taps an image, update the top image
-                                            setState(() {
-                                              selectedImage = images[index];
-                                            });
+                                            // Show zoomable image
+                                            _showZoomableImage(context, images[index]);
                                           },
                                           child: Padding(
                                             padding: const EdgeInsets.all(5.0),
@@ -259,9 +306,15 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                                 borderRadius: BorderRadius.circular(100.dg),
                                                 child: Image.network(
                                                   images[index],
-                                                  width: 120,
-                                                  height: 140,
+                                                  width: 130.w,
+                                                  height: 140.h,
                                                   fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                                                    'assets/default_work.png', // Add a default work image to your assets
+                                                    width: 120.w,
+                                                    height: 140.h,
+                                                    fit: BoxFit.cover,
+                                                  ),
                                                 ),
                                               ),
                                             ),

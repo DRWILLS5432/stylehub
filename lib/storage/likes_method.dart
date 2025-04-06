@@ -5,41 +5,48 @@ class LikeService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Toggles a like for a specialist
+  /// Toggles a specialist as favorite for the current user
   /// Returns:
-  /// - 'liked' if the like was added
-  /// - 'unliked' if the like was removed
+  /// - 'liked' if the specialist was added to favorites
+  /// - 'unliked' if the specialist was removed from favorites
   /// - Error message if something went wrong
-  Future<String> toggleLike(String specialistId) async {
+  Future<String> toggleFavorite(String specialistId) async {
     final user = _auth.currentUser;
     if (user == null) {
       return 'Authentication required';
     }
 
-    // Prevent users from liking themselves
+    // Prevent users from favoriting themselves
     if (specialistId == user.uid) {
-      return 'Error: You cannot like yourself';
+      return 'Error: You cannot favorite yourself';
     }
 
     try {
-      final likeRef = _firestore.collection('users').doc(specialistId).collection('likes').doc(user.uid);
+      final favoriteRef = _firestore.collection('users').doc(user.uid).collection('favorites').doc(specialistId);
 
-      final likeDoc = await likeRef.get();
+      final favoriteDoc = await favoriteRef.get();
 
-      if (likeDoc.exists) {
-        // Unlike if already liked
-        await likeRef.delete();
-        return 'un_liked';
+      if (favoriteDoc.exists) {
+        // Remove from favorites if already exists
+        await favoriteRef.delete();
+        return 'unliked';
       } else {
-        // Add like if not already liked
-        final userDoc = await _firestore.collection('users').doc(user.uid).get();
-        String userName = userDoc.exists ? (userDoc.data()?['firstName'] ?? 'Anonymous') : 'Anonymous';
-        String userLastName = userDoc.exists ? (userDoc.data()?['lastName'] ?? 'Anonymous') : 'Anonymous';
+        // Add to favorites if not already exists
+        // First get specialist data to store in favorites
+        final specialistDoc = await _firestore.collection('users').doc(specialistId).get();
 
-        await likeRef.set({
-          'userId': user.uid,
-          'userName': userName,
-          'userLastName': userLastName,
+        if (!specialistDoc.exists) {
+          return 'Error: Specialist not found';
+        }
+
+        final specialistData = specialistDoc.data()!;
+
+        await favoriteRef.set({
+          'specialistId': specialistId,
+          'specialistName': specialistData['firstName'] ?? 'Unknown',
+          'specialistLastName': specialistData['lastName'] ?? 'Unknown',
+          'profileImage': specialistData['profileImage'] ?? '',
+          'role': specialistData['role'] ?? 'Specialist',
           'timestamp': FieldValue.serverTimestamp(),
         });
         return 'liked';
@@ -49,18 +56,23 @@ class LikeService {
     }
   }
 
-  /// Checks if the current user has liked the specialist
-  Future<bool> hasLiked(String specialistId) async {
+  /// Checks if the current user has favorited the specialist
+  Future<bool> isFavorite(String specialistId) async {
     final user = _auth.currentUser;
     if (user == null) return false;
 
-    final likeDoc = await _firestore.collection('users').doc(specialistId).collection('likes').doc(user.uid).get();
+    final favoriteDoc = await _firestore.collection('users').doc(user.uid).collection('favorites').doc(specialistId).get();
 
-    return likeDoc.exists;
+    return favoriteDoc.exists;
   }
 
-  /// Gets all users who liked the specialist
-  Stream<QuerySnapshot> getLikes(String specialistId) {
-    return _firestore.collection('users').doc(specialistId).collection('likes').orderBy('timestamp', descending: true).snapshots();
+  /// Gets all specialists favorited by the current user
+  Stream<QuerySnapshot> getFavorites() {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return const Stream.empty();
+    }
+
+    return _firestore.collection('users').doc(user.uid).collection('favorites').orderBy('timestamp', descending: true).snapshots();
   }
 }

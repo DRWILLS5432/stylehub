@@ -53,6 +53,7 @@ dependencies:
   easy_date_timeline: ^2.0.6
   uuid: ^4.5.1
   rxdart: ^0.28.0
+  photo_view: ^0.15.0
 
 dev_dependencies:
   flutter_test:
