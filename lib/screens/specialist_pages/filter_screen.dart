@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
+import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/provider/filter_provider.dart';
 
@@ -148,28 +150,53 @@ class _FilterScreenState extends State<FilterScreen> {
                 ],
               ),
               SizedBox(height: 20.h),
-              Text(
-                'City',
-                style: appTextStyle20(AppColors.mainBlackTextColor),
+              Row(
+                children: [
+                  Text(
+                    LocaleData.city.getString(context),
+                    style: appTextStyle20(AppColors.mainBlackTextColor),
+                  ),
+                  Spacer(),
+                  SizedBox(
+                    width: 190.w,
+                    child: DropdownButtonFormField<String>(
+                      value: filterProvider.selectedCity,
+                      decoration: InputDecoration(
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(50.dg),
+                          borderSide: BorderSide(color: AppColors.mainBlackTextColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(50.dg),
+                          borderSide: BorderSide(color: AppColors.mainBlackTextColor),
+                        ),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppColors.grayColor),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+                      ),
+                      hint: Text(
+                        'Select City',
+                        style: appTextStyle12(),
+                      ),
+                      items: cities.map((String city) {
+                        return DropdownMenuItem<String>(
+                          value: city,
+                          child: Text(
+                            city,
+                            style: appTextStyle12(),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        filterProvider.setSelectedCity(value);
+                      },
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 20.h),
-              DropdownButtonFormField<String>(
-                value: filterProvider.selectedCity,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
-                ),
-                hint: Text('Select City'),
-                items: cities.map((String city) {
-                  return DropdownMenuItem<String>(
-                    value: city,
-                    child: Text(city),
-                  );
-                }).toList(),
-                onChanged: (String? value) {
-                  filterProvider.setSelectedCity(value);
-                },
-              ),
+
               Spacer(),
               Column(
                 children: [

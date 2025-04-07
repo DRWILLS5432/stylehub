@@ -265,7 +265,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.dg)),
                     content: Container(
                       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
-                      height: 155.h,
+                      height: 160.h,
                       child: Column(
                         children: [
                           Text(

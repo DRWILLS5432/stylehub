@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -166,7 +165,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
           SliverAppBar(
             floating: true,
             pinned: true,
-            toolbarHeight: 130.h,
+            toolbarHeight: 140.h,
             automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -291,7 +290,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                     );
                   }
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (!snapshot.hasData) {
                     return SliverToBoxAdapter(
                       child: Center(child: CircularProgressIndicator()),
                     );
@@ -315,7 +314,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                         return FutureBuilder<double>(
                           future: FireStoreMethod().getAverageRating(user.userId),
                           builder: (context, ratingSnapshot) {
-                            if (ratingSnapshot.connectionState == ConnectionState.waiting) {
+                            if (!ratingSnapshot.hasData) {
                               return SizedBox.shrink();
                             }
                             if (ratingSnapshot.hasError) {

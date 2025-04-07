@@ -86,11 +86,27 @@ class AppointmentRepository {
   // }
 
   // Cancel an appointment using the AppointmentRepository class
-  Future<void> deleteAppointment(String appointmentId) async {
+
+  /// Cancel an appointment by its ID.
+  ///
+  /// Sets the status of the appointment to 'cancelled' and adds the current timestamp
+  /// to the 'cancelledAt' field. If the operation fails, throws an [Exception] with the error message.
+  Future<void> cancelAppointment(String appointmentId) async {
     try {
-      await _firestore.collection('appointments').doc(appointmentId).delete();
+      await _firestore.collection('appointments').doc(appointmentId).update({
+        'status': 'cancelled',
+        'cancelledAt': FieldValue.serverTimestamp(),
+      });
     } catch (e) {
-      throw Exception('Failed to delete appointment: $e');
+      throw Exception('Failed to cancel appointment: $e');
     }
+
   }
+  // Future<void> deleteAppointment(String appointmentId) async {
+  //   try {
+  //     await _firestore.collection('appointments').doc(appointmentId).delete();
+  //   } catch (e) {
+  //     throw Exception('Failed to delete appointment: $e');
+  //   }
+  // }
 }

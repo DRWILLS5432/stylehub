@@ -710,23 +710,19 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    service.name,
-                                    style: appTextStyle15(AppColors.mainBlackTextColor),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                Text(
+                                  service.name,
+                                  style: appTextStyle15(AppColors.mainBlackTextColor),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
                                   '-',
                                   style: appTextStyle15(AppColors.mainBlackTextColor),
                                 ),
-                                Expanded(
-                                  child: Text(
-                                    service.price,
-                                    style: appTextStyle15(AppColors.mainBlackTextColor),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                Text(
+                                  service.price,
+                                  style: appTextStyle15(AppColors.mainBlackTextColor),
+                                  overflow: TextOverflow.ellipsis,
                                 )
                               ],
                             ),

@@ -68,8 +68,12 @@ class LikesScreen extends StatelessWidget {
                     return FutureBuilder<double>(
                       future: FireStoreMethod().getAverageRating(specialist.userId),
                       builder: (context, ratingSnapshot) {
-                        if (ratingSnapshot.connectionState == ConnectionState.waiting) {
+                        if (!ratingSnapshot.hasData) {
                           return SizedBox.shrink();
+                        }
+
+                        if (ratingSnapshot.data == null) {
+                          return Center(child: CircularProgressIndicator());
                         }
 
                         double averageRating = ratingSnapshot.data ?? 0.0;

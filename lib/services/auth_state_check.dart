@@ -21,7 +21,7 @@ class AuthWrapper extends StatelessWidget {
             return FutureBuilder<String?>(
               future: FirebaseService().getUserRole(user.uid),
               builder: (context, roleSnapshot) {
-                if (roleSnapshot.connectionState == ConnectionState.waiting) {
+                if (!roleSnapshot.hasData) {
                   return Scaffold(
                     backgroundColor: AppColors.appBGColor,
                     body: Center(

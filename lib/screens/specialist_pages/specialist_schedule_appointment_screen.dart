@@ -627,15 +627,15 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     try {
       setState(() => _isLoading = true);
 
-      await _repo.deleteAppointment(appointmentId);
+      await _repo.cancelAppointment(appointmentId);
       setState(() {
         // Remove the appointment from local list immediately
-        _appointments.removeWhere((appt) => appt.appointmentId == appointmentId);
+        _appointments.removeWhere((apt) => apt.appointmentId == appointmentId);
       });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete appointment: $e')),
+          SnackBar(content: Text('Failed to cancel appointment: $e')),
         );
       }
     } finally {
