@@ -10,6 +10,7 @@ import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_schedule_appointment_screen.dart';
+import 'package:stylehub/screens/specialist_pages/success_screen.dart';
 
 class MakeAppointmentScreen extends StatefulWidget {
   final String specialistId;
@@ -154,6 +155,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
         SnackBar(content: Text('Successfully booked ${_selectedSlots.length} slots')),
       );
       setState(() => _selectedSlots.clear());
+      Navigator.push(context, MaterialPageRoute(builder: (context) => SuccessScreen()));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Booking failed: $e')),

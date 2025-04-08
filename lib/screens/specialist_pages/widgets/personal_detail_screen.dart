@@ -131,6 +131,18 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                               color: Colors.black,
                             )),
                       ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pushNamed(context, '/send_otp_screen'),
+                            child: Text(
+                              LocaleData.changePassword.getString(context),
+                              style: appTextStyle16(AppColors.newThirdGrayColor),
+                            ),
+                          )
+                        ],
+                      ),
                     ],
                   ),
                 ],

@@ -35,41 +35,51 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           style: appTextStyle24(AppColors.newThirdGrayColor),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore.collection('appointments').where('clientId', isEqualTo: user.uid).orderBy('date', descending: true).snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore.collection('appointments').where('clientId', isEqualTo: user.uid).orderBy('date', descending: true).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Text(
-                'No appointments booked yet',
-                style: appTextStyle16(AppColors.newThirdGrayColor),
-              ),
-            );
-          }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No appointments booked yet',
+                      style: appTextStyle16(AppColors.newThirdGrayColor),
+                    ),
+                  );
+                }
 
-          final appointments = snapshot.data!.docs;
+                final appointments = snapshot.data!.docs;
 
-          return ListView.builder(
-            padding: EdgeInsets.all(16.w),
-            itemCount: appointments.length,
-            itemBuilder: (context, index) {
-              final appointment = appointments[index].data() as Map<String, dynamic>;
-              final date = (appointment['date'] as Timestamp).toDate();
-              final status = appointment['status'] as String? ?? 'booked';
+                return ListView.builder(
+                  padding: EdgeInsets.all(16.w),
+                  itemCount: appointments.length,
+                  itemBuilder: (context, index) {
+                    final appointment = appointments[index].data() as Map<String, dynamic>;
+                    final date = (appointment['date'] as Timestamp).toDate();
+                    final status = appointment['status'] as String? ?? 'booked';
 
-              return AppointmentCard(
-                specialistId: appointment['specialistId'] as String,
-                date: date,
-                status: status,
-                onCancel: () => _cancelAppointment(context, appointments[index].id),
-              );
-            },
-          );
-        },
+                    return AppointmentCard(
+                      specialistId: appointment['specialistId'] as String,
+                      date: date,
+                      status: status,
+                      onCancel: () => _cancelAppointment(context, appointments[index].id),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          Container(
+            height: 50.h,
+            color: Colors.transparent,
+          )
+        ],
       ),
     );
   }

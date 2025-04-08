@@ -221,7 +221,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                         onPressed: () {
                           setState(() => _isLoading = true);
 
-                          // FirebaseAuth.instance.signOut();
+                
                           _firebaseService.logout(context);
                           setState(() => _isLoading = false);
                         }),

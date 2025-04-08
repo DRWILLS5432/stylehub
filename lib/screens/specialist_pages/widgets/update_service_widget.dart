@@ -376,10 +376,10 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
               },
               child: Text(
                 _isEditingProfession
-                    ? 'Save'
+                    ? LocaleData.save.getString(context)
                     : hasProfession
-                        ? 'Edit'
-                        : 'Create',
+                        ? LocaleData.edit.getString(context)
+                        : LocaleData.create.getString(context),
                 style: appTextStyle14(AppColors.newThirdGrayColor),
               ),
             ),
@@ -423,10 +423,10 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
               },
               child: Text(
                 _isEditingExperience
-                    ? 'Save'
+                    ? LocaleData.save.getString(context)
                     : hasExperience
-                        ? 'Edit'
-                        : 'Create',
+                        ? LocaleData.edit.getString(context)
+                        : LocaleData.create.getString(context),
                 style: appTextStyle14(AppColors.newThirdGrayColor),
               ),
             ),
@@ -470,10 +470,10 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
               },
               child: Text(
                 _isEditingCity
-                    ? 'Save'
+                    ? LocaleData.save.getString(context)
                     : hasCity
-                        ? 'Edit'
-                        : 'Create',
+                        ? LocaleData.edit.getString(context)
+                        : LocaleData.create.getString(context),
                 style: appTextStyle14(AppColors.newThirdGrayColor),
               ),
             ),
@@ -524,10 +524,10 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
               },
               child: Text(
                 _isEditingBio
-                    ? 'Save'
+                    ? LocaleData.save.getString(context)
                     : hasBio
-                        ? 'Edit'
-                        : 'Create',
+                        ? LocaleData.edit.getString(context)
+                        : LocaleData.create.getString(context),
                 style: appTextStyle14(AppColors.newThirdGrayColor),
               ),
             ),
@@ -577,10 +577,10 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
               },
               child: Text(
                 _isEditingPhone
-                    ? 'Save'
+                    ? LocaleData.save.getString(context)
                     : hasPhone
-                        ? 'Edit'
-                        : 'Create',
+                        ? LocaleData.edit.getString(context)
+                        : LocaleData.create.getString(context),
                 style: appTextStyle14(AppColors.newThirdGrayColor),
               ),
             ),
@@ -785,7 +785,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                           return Column(
                             children: [
                               Text(
-                                'You can Upload another photo after saving this one',
+                                LocaleData.youCanUploadMore.getString(context),
                                 style: appTextStyle12K(AppColors.mainBlackTextColor),
                                 textAlign: TextAlign.center,
                               ),
@@ -807,7 +807,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                                 child: isLoading
                                     ? const CircularProgressIndicator()
                                     : Text(
-                                        'Save Image',
+                                        LocaleData.save.getString(context),
                                         style: appTextStyle14(AppColors.mainBlackTextColor),
                                       ),
                               )

@@ -22,9 +22,6 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  bool _isResendEnabled = false;
-  int _remainingSeconds = 60;
-  Timer? _timer;
 
   @override
   void initState() {
@@ -34,28 +31,8 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
   @override
   void dispose() {
     _emailController.dispose();
-    _timer?.cancel();
+
     super.dispose();
-  }
-
-  void startTimer() {
-    setState(() {
-      _isResendEnabled = false;
-      _remainingSeconds = 60;
-    });
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds > 0) {
-        setState(() {
-          _remainingSeconds--;
-        });
-      } else {
-        timer.cancel();
-        setState(() {
-          _isResendEnabled = true;
-        });
-      }
-    });
   }
 
   Future<void> _sendOtp(context) async {
@@ -65,7 +42,6 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password reset email sent! Check your inbox.')),
       );
-      startTimer();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -73,25 +49,6 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
-  }
-
-  TextSpan _buildResendCodeTextSpan(BuildContext context, bool isResendEnabled, int remainingSeconds) {
-    return TextSpan(
-      style: appTextStyle16(
-        isResendEnabled ? AppColors.mainBlackTextColor : AppColors.appGrayTextColor,
-      ),
-      children: [
-        if (!isResendEnabled)
-          TextSpan(
-            text: ' $remainingSeconds s',
-            style: appTextStyle12K(AppColors.appGrayTextColor),
-          ),
-        isResendEnabled
-            ? TextSpan(text: LocaleData.resendCode.getString(context), style: appTextStyle16700(AppColors.mainBlackTextColor))
-            : TextSpan(text: ' ${LocaleData.resendCode.getString(context)}', style: appTextStyle16400(AppColors.mainBlackTextColor)),
-        TextSpan(text: ' once timer ends', style: appTextStyle12K(AppColors.mainBlackTextColor)),
-      ],
-    );
   }
 
   @override
@@ -119,7 +76,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
               children: [
                 SizedBox(height: 10.h),
                 Text(
-                  LocaleData.forgotPassword.getString(context),
+                  LocaleData.changePassword.getString(context),
                   style: appTextStyle23(AppColors.mainBlackTextColor),
                 ),
                 SizedBox(height: 60.h),
@@ -152,20 +109,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 20.h),
-                TextButton(
-                  onPressed: _isResendEnabled
-                      ? () {
-                          if (_formKey.currentState!.validate()) {
-                            _sendOtp(context);
-                          }
-                        }
-                      : null,
-                  child: RichText(
-                    text: _buildResendCodeTextSpan(context, _isResendEnabled, _remainingSeconds),
-                  ),
-                ),
-                SizedBox(height: 20.h),
+                SizedBox(height: 50.h),
                 Text(
                   LocaleData.checkEmail.getString(context),
                   style: appTextStyle14(AppColors.mainBlackTextColor),
@@ -196,26 +140,6 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                     }
                   },
                 ),
-                // ElevatedButton(
-                //   onPressed: () {
-                //     if (_formKey.currentState!.validate()) {
-                //       if (!_isLoading) {
-                //         _sendOtp();
-                //       }
-                //     }
-                //   },
-                //   style: ElevatedButton.styleFrom(minimumSize: Size.fromHeight(50.h), backgroundColor: Colors.black),
-                //   child: _isLoading
-                //       ? SizedBox(
-                //           height: 20.h,
-                //           width: 20.w,
-                //           child: const CircularProgressIndicator(
-                //             color: Colors.white,
-                //             strokeWidth: 2,
-                //           ),
-                //         )
-                //       : Text(LocaleData.sendOTP.getString(context), style: appTextStyle19(AppColors.whiteColor)),
-                // ),
                 SizedBox(height: 60.h),
               ],
             ),

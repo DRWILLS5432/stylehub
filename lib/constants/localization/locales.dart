@@ -32,8 +32,8 @@ mixin LocaleData {
   static const String emailInvalid = 'Please enter a valid email';
   static const String passwordInvalid = 'Password must be at least 6 characters';
   static const String roleRequired = 'Role field is required';
-  static const String forgotPassword = 'Forgot Password?';
-  static const String sendOTP = 'Send OTP';
+  static const String forgotPassword = 'Change Password?';
+  static const String sendOTP = 'Send Code';
   static const String enterRegisteredEmail = 'Enter Registered Email Address';
   static const String resetPassword = 'Reset Password';
   static const String newPassword = 'Enter New Password';
@@ -41,11 +41,11 @@ mixin LocaleData {
   static const String emailAddress = 'Email Address';
   static const String resendCode = 'Resend Code';
   static const String confirm = 'Confirm';
-  static const String checkEmail = 'Check your email, An OTP wiil be sent to you to reset your password';
+  static const String checkEmail = 'Check your email, A reset link will be sent to you to reset your password';
   static const String seconds = 'Seconds';
   static const String editProfile = 'Edit Profile';
   static const String logout = 'Logout';
-  static const String changePassword = 'Change Password';
+  static const String changePassword = 'Forgot Password';
   static const String updateService = 'Update Service';
   static const String editProfileDetail = 'Update your profile details';
   static const String updateServiceDetail = 'Update services you render';
@@ -96,6 +96,11 @@ mixin LocaleData {
   static const String accept = 'Accept';
   static const String serviceName = 'Service Name';
   static const String goToClient = 'Ready to go to Client';
+  static const String save = 'Save';
+  static const String create = 'Create';
+  static const String update = 'Update';
+  static const String youCanUploadMore = 'You can Upload another photo after saving this one';
+  static const String goBack = 'Return';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -125,7 +130,7 @@ mixin LocaleData {
     passwordInvalid: 'Password must be at least 6 characters',
     roleRequired: 'Role field is required',
     forgotPassword: 'Forgot Password?',
-    sendOTP: 'Send OTP',
+    sendOTP: 'Send Code',
     enterRegisteredEmail: 'Enter Registered Email Address',
     resetPassword: 'Reset Password',
     newPassword: 'Enter New Password',
@@ -133,7 +138,7 @@ mixin LocaleData {
     emailAddress: 'Email Address',
     resendCode: 'Resend Code',
     confirm: 'Confirm',
-    checkEmail: 'Check your email, An OTP wiil be sent to you to reset your password',
+    checkEmail: 'Check your email, A reset link will be sent to you to reset your password',
     seconds: 'Seconds',
     editProfile: 'Edit Profile',
     logout: 'Logout',
@@ -188,6 +193,11 @@ mixin LocaleData {
     accept: 'Accept',
     serviceName: 'Service Name',
     goToClient: 'Ready to go to Client',
+    save: 'Save',
+    create: 'Create',
+    update: 'Update',
+    youCanUploadMore: 'You can Upload another photo after saving this one',
+    goBack: 'Return',
   };
 
   // static const Map<String, dynamic> UK = {
@@ -364,5 +374,10 @@ mixin LocaleData {
     accept: 'Принять',
     serviceName: 'Название услуги',
     goToClient: 'Готов к клиенту',
+    save: 'Сохранить',
+    create: 'Создать',
+    update: 'Обновить',
+    youCanUploadMore: 'Вы можете загрузить ещё',
+    goBack: 'Назад',
   };
 }
