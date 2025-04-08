@@ -25,6 +25,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
   // TimeSlot? _selectedSlot;
   final List<TimeSlot> _selectedSlots = [];
   final _firestore = FirebaseFirestore.instance;
+  bool isLoading = false;
 
   // final _auth = FirebaseAuth.instance;
 
@@ -80,6 +81,10 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
   /// the operation, an error message is displayed to the user.
 
   Future<void> _bookAppointment(String firstName, String lastName) async {
+    setState(() {
+      isLoading = true;
+    });
+
     if (_selectedSlots.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please select at least one time slot')),
@@ -120,13 +125,14 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
             _selectedDate.month,
             _selectedDate.day,
             slot.hour,
+            slot.minute,
           )),
           'status': 'booked',
           'createdAt': FieldValue.serverTimestamp(),
         });
 
         // Update availability
-        final index = slots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour);
+        final index = slots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute);
         if (index != -1) {
           slots[index] = slots[index].copyWith(isOpen: false);
         }
@@ -152,7 +158,17 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Booking failed: $e')),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
+  }
+
+  String _formatTime(int hour, int minute) {
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
 
   @override
@@ -214,23 +230,18 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
               style: appTextStyle24500(AppColors.mainBlackTextColor),
             ),
             SizedBox(height: 20.h),
+
+// Update the FutureBuilder in build method
             FutureBuilder<List<TimeSlot>>(
               future: _getAvailability(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return CircularProgressIndicator.adaptive(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.appBGColor),
-                  );
+                  return CircularProgressIndicator.adaptive();
                 }
 
                 final slots = snapshot.data ?? [];
                 if (slots.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No available time slots for this date',
-                      style: appTextStyle14(AppColors.primaryRedColor),
-                    ),
-                  );
+                  return Center(child: Text('No available time slots'));
                 }
 
                 return Wrap(
@@ -238,11 +249,13 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
                   runSpacing: 8,
                   children: slots.map((slot) {
                     return TimeSlotButton(
-                      time: _formatHour(slot.hour),
-                      isSelected: _selectedSlots.any((s) => s.day == slot.day && s.hour == slot.hour),
+                      time: _formatTime(slot.hour, slot.minute),
+                      isSelected: _selectedSlots.any((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute),
                       onPressed: () => setState(() {
-                        if (_selectedSlots.any((s) => s.day == slot.day && s.hour == slot.hour)) {
-                          _selectedSlots.removeWhere((s) => s.day == slot.day && s.hour == slot.hour);
+                        final existingIndex = _selectedSlots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute);
+
+                        if (existingIndex != -1) {
+                          _selectedSlots.removeAt(existingIndex);
                         } else {
                           _selectedSlots.add(slot);
                         }
@@ -307,10 +320,12 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
                   child: ReusableButton(
                     bgColor: AppColors.whiteColor,
                     color: AppColors.appBGColor,
-                    text: Text(
-                      'Make Appointment',
-                      style: appTextStyle15(AppColors.newThirdGrayColor),
-                    ),
+                    text: isLoading
+                        ? CircularProgressIndicator.adaptive()
+                        : Text(
+                            'Make Appointment',
+                            style: appTextStyle15(AppColors.newThirdGrayColor),
+                          ),
                     onPressed: () => _bookAppointment(provider.specialistModel!.firstName, provider.specialistModel!.lastName),
                   ),
                 ),
@@ -323,11 +338,11 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
     );
   }
 
-  String _formatHour(int hour) {
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    return '$displayHour:00 $period';
-  }
+  // String _formatHour(int hour) {
+  //   final period = hour >= 12 ? 'PM' : 'AM';
+  //   final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+  //   return '$displayHour:00 $period';
+  // }
 }
 
 class TimeSlotButton extends StatelessWidget {

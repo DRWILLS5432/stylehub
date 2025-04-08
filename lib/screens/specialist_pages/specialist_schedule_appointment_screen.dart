@@ -26,6 +26,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   List<TimeSlot> _timeSlots = [];
   bool _isExpanded = false;
   final List<String> _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  final int _intervalMinutes = 15;
 
   @override
   void initState() {
@@ -41,12 +42,28 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   }
 
   void _initializeTimeSlots() {
-    _timeSlots = List.generate(24, (hour) {
-      return List.generate(7, (day) {
-        return TimeSlot(day: day, hour: hour, isOpen: false);
-      });
-    }).expand((i) => i).toList();
+    _timeSlots = [];
+    for (int day = 0; day < 7; day++) {
+      for (int hour = 0; hour < 24; hour++) {
+        for (int minute = 0; minute < 60; minute += _intervalMinutes) {
+          _timeSlots.add(TimeSlot(
+            day: day,
+            hour: hour,
+            minute: minute,
+            isOpen: false,
+          ));
+        }
+      }
+    }
   }
+
+  // void _initializeTimeSlots() {
+  //   _timeSlots = List.generate(24, (hour) {
+  //     return List.generate(7, (day) {
+  //       return TimeSlot(day: day, hour: hour, isOpen: false);
+  //     });
+  //   }).expand((i) => i).toList();
+  // }
 
   DateTime _getFirstMonday(DateTime date) {
     date = DateTime(date.year, date.month, date.day);
@@ -68,11 +85,20 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     _loadSavedSlots();
   }
 
-  String _formatHour(int hour) {
-    if (_is24HourFormat) return '${hour.toString().padLeft(2, '0')}:00';
+  // String _formatHour(int hour) {
+  //   if (_is24HourFormat) return '${hour.toString().padLeft(2, '0')}:00';
+  //   final period = hour >= 12 ? 'PM' : 'AM';
+  //   final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+  //   return '$displayHour:00 $period';
+  // }
+
+  String _formatTime(int hour, [int minute = 0]) {
+    if (_is24HourFormat) {
+      return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+    }
     final period = hour >= 12 ? 'PM' : 'AM';
     final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    return '$displayHour:00 $period';
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
 
   // Check if a day is in the past relative to the current date
@@ -85,29 +111,70 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     return adjustedDay < currentDayOfWeek;
   }
 
-  void _toggleTimeSlot(TimeSlot slot, String firstName, String lastName) {
-    // Prevent toggling if the day is in the past
-    if (_isDayInPast(slot.day)) {
-      return;
-    }
-    setState(() => slot.isOpen = !slot.isOpen);
-    _sendToBackend(firstName, lastName);
-  }
+  // void _toggleTimeSlot(TimeSlot slot, String firstName, String lastName) {
+  //   // Prevent toggling if the day is in the past
+  //   if (_isDayInPast(slot.day)) {
+  //     return;
+  //   }
+  //   setState(() => slot.isOpen = !slot.isOpen);
+  //   _sendToBackend(firstName, lastName);
+  // }
 
   Future<void> _loadSavedSlots() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     final weekKey = _currentWeekStart.toIso8601String();
-    final doc = await FirebaseFirestore.instance.collection('availability').doc(user.uid).collection('weeks').doc(weekKey).get();
+    try {
+      final doc = await FirebaseFirestore.instance.collection('availability').doc(user.uid).collection('weeks').doc(weekKey).get();
 
-    if (doc.exists) {
-      final data = doc.data() as Map<String, dynamic>;
-      final savedSlots = (data['slots'] as List).map((slot) => TimeSlot.fromMap(slot)).toList();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        final savedSlots = (data['slots'] as List).map((slot) => TimeSlot.fromMap(slot)).toList();
 
-      setState(() {
-        _timeSlots = savedSlots;
-      });
+        // Merge with default slots to ensure all slots exist
+        _initializeTimeSlots(); // Create default slots first
+
+        // Update with saved values where they exist
+        for (final savedSlot in savedSlots) {
+          final index = _timeSlots.indexWhere((s) => s.day == savedSlot.day && s.hour == savedSlot.hour && s.minute == savedSlot.minute);
+
+          if (index != -1) {
+            _timeSlots[index] = savedSlot;
+          }
+        }
+      } else {
+        _initializeTimeSlots(); // Just use defaults if no saved data
+      }
+    } catch (e) {
+      _initializeTimeSlots(); // Fallback to defaults on error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading slots: $e')),
+      );
+    }
+  }
+
+  void _toggleTimeSlot(TimeSlot slot, String firstName, String lastName) {
+    if (_isDayInPast(slot.day)) return;
+
+    setState(() {
+      slot.isOpen = !slot.isOpen;
+      // Optionally: Automatically close adjacent slots to create breaks
+      _manageAdjacentSlots(slot);
+    });
+
+    _sendToBackend(firstName, lastName);
+  }
+
+  // Optional: Automatically manage adjacent slots to create breaks
+  void _manageAdjacentSlots(TimeSlot slot) {
+    if (slot.isOpen) {
+      // When opening a slot, you might want to close the next one to create a break
+      final nextSlotIndex = _timeSlots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute + _intervalMinutes);
+
+      if (nextSlotIndex != -1) {
+        _timeSlots[nextSlotIndex].isOpen = false;
+      }
     }
   }
 
@@ -342,6 +409,97 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     );
   }
 
+//   Widget _buildTimeTable() {
+//     final user = Provider.of<SpecialistProvider>(context).specialistModel;
+//     return SizedBox(
+//       width: 80.w * 7.5,
+//       child: ListView.builder(
+//         shrinkWrap: true,
+//         physics: NeverScrollableScrollPhysics(),
+//         itemCount: 24 * (60 ~/ _intervalMinutes),
+//         itemBuilder: (context, index) {
+//           final hour = index ~/ (60 ~/ _intervalMinutes);
+//           final minute = (index % (60 ~/ _intervalMinutes)) * _intervalMinutes;
+//           return Padding(
+//             padding: EdgeInsets.symmetric(vertical: 4.h),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 SizedBox(
+//                   width: 60.w,
+//                   child: Text(
+//                     _formatTime(hour, minute),
+//                     style: TextStyle(fontSize: 12.sp),
+//                   ),
+//                 ),
+//                 Expanded(
+//                   child: GridView.builder(
+//                     shrinkWrap: true,
+//                     physics: NeverScrollableScrollPhysics(),
+//                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+//                       crossAxisCount: 7,
+//                       childAspectRatio: 1.5,
+//                     ),
+//                     itemCount: 7,
+//                     itemBuilder: (context, dayIndex) {
+//                       final slot = _timeSlots.firstWhere(
+//                         (s) => s.hour == hour && s.minute == minute && s.day == dayIndex,
+//                       );
+//                       final isPastDay = _isDayInPast(dayIndex);
+
+//                       return Consumer<SpecialistProvider>(builder: (context, provider, child) {
+//                         return GestureDetector(
+//                           onTap: isPastDay
+//                               ? null
+//                               : () => _toggleTimeSlot(
+//                                     slot,
+//                                     user!.firstName,
+//                                     user.lastName,
+//                                   ),
+//                           child: Container(
+//                             margin: EdgeInsets.all(2.w),
+//                             decoration: BoxDecoration(
+//                               color: isPastDay
+//                                   ? Colors.grey.shade400
+//                                   : slot.isOpen
+//                                       ? Colors.green.shade100
+//                                       : Colors.grey.shade200,
+//                               borderRadius: BorderRadius.circular(4.w),
+//                               border: Border.all(
+//                                 color: isPastDay
+//                                     ? Colors.grey
+//                                     : slot.isOpen
+//                                         ? Colors.green
+//                                         : Colors.grey,
+//                               ),
+//                             ),
+//                             child: Center(
+//                               child: Text(
+//                                 isPastDay ? 'Unavailable' : (slot.isOpen ? 'Opened' : 'Open'),
+//                                 style: TextStyle(
+//                                   color: isPastDay
+//                                       ? Colors.grey
+//                                       : slot.isOpen
+//                                           ? Colors.green
+//                                           : Colors.black,
+//                                   fontSize: 10.sp,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         );
+//                       });
+//                     },
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
   Widget _buildTimeTable() {
     final user = Provider.of<SpecialistProvider>(context).specialistModel;
     return SizedBox(
@@ -349,18 +507,21 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       child: ListView.builder(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
-        itemCount: 24,
-        itemBuilder: (context, hourIndex) {
+        itemCount: 24 * (60 ~/ _intervalMinutes),
+        itemBuilder: (context, index) {
+          final hour = index ~/ (60 ~/ _intervalMinutes);
+          final minute = (index % (60 ~/ _intervalMinutes)) * _intervalMinutes;
+
           return Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.h),
+            padding: EdgeInsets.symmetric(vertical: 2.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
                   width: 60.w,
                   child: Text(
-                    _formatHour(hourIndex),
-                    style: TextStyle(fontSize: 12.sp),
+                    _formatTime(hour, minute),
+                    style: TextStyle(fontSize: 10.sp),
                   ),
                 ),
                 Expanded(
@@ -373,9 +534,27 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                     ),
                     itemCount: 7,
                     itemBuilder: (context, dayIndex) {
-                      final slot = _timeSlots.firstWhere(
-                        (s) => s.hour == hourIndex && s.day == dayIndex,
-                      );
+                      // Safer slot lookup with fallback
+                      TimeSlot? slot;
+                      try {
+                        slot = _timeSlots.firstWhere(
+                          (s) => s.hour == hour && s.minute == minute && s.day == dayIndex,
+                          orElse: () => TimeSlot(
+                            day: dayIndex,
+                            hour: hour,
+                            minute: minute,
+                            isOpen: false,
+                          ),
+                        );
+                      } catch (e) {
+                        slot = TimeSlot(
+                          day: dayIndex,
+                          hour: hour,
+                          minute: minute,
+                          isOpen: false,
+                        );
+                      }
+
                       final isPastDay = _isDayInPast(dayIndex);
 
                       return Consumer<SpecialistProvider>(builder: (context, provider, child) {
@@ -383,34 +562,34 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                           onTap: isPastDay
                               ? null
                               : () => _toggleTimeSlot(
-                                    slot,
+                                    slot!,
                                     user!.firstName,
                                     user.lastName,
                                   ),
                           child: Container(
-                            margin: EdgeInsets.all(2.w),
+                            margin: EdgeInsets.all(1.w),
                             decoration: BoxDecoration(
                               color: isPastDay
                                   ? Colors.grey.shade400
-                                  : slot.isOpen
+                                  : slot!.isOpen
                                       ? Colors.green.shade100
                                       : Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(4.w),
+                              borderRadius: BorderRadius.circular(2.w),
                               border: Border.all(
                                 color: isPastDay
                                     ? Colors.grey
-                                    : slot.isOpen
+                                    : slot!.isOpen
                                         ? Colors.green
                                         : Colors.grey,
                               ),
                             ),
                             child: Center(
                               child: Text(
-                                isPastDay ? 'Unavailable' : (slot.isOpen ? 'Opened' : 'Open'),
+                                isPastDay ? 'Unavailable' : (slot!.isOpen ? 'Opened' : 'Open'),
                                 style: TextStyle(
                                   color: isPastDay
                                       ? Colors.grey
-                                      : slot.isOpen
+                                      : slot!.isOpen
                                           ? Colors.green
                                           : Colors.black,
                                   fontSize: 10.sp,
@@ -435,11 +614,13 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
 class TimeSlot {
   final int day;
   final int hour;
+  final int minute; // Added minute field
   bool isOpen;
 
   TimeSlot({
     required this.day,
     required this.hour,
+    required this.minute,
     required this.isOpen,
   });
 
@@ -447,6 +628,7 @@ class TimeSlot {
     return {
       'day': day,
       'hour': hour,
+      'minute': minute,
       'isOpen': isOpen,
     };
   }
@@ -455,6 +637,7 @@ class TimeSlot {
     return TimeSlot(
       day: map['day'],
       hour: map['hour'],
+      minute: map['minute'] ?? 0, // Default to 0 for backward compatibility
       isOpen: map['isOpen'],
     );
   }
@@ -463,6 +646,7 @@ class TimeSlot {
     return TimeSlot(
       day: day,
       hour: hour,
+      minute: minute,
       isOpen: isOpen ?? this.isOpen,
     );
   }

@@ -161,7 +161,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
         body: StreamBuilder(
             stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+              if (!snapshot.hasData) {
                 return Center(child: CircularProgressIndicator());
               }
 
@@ -210,7 +210,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                           fit: BoxFit.fill,
                                         )
                                       : Image.asset(
-                                          'assets/master1.png',
+                                          'assets/master2.png',
                                           fit: BoxFit.cover,
                                         ),
                                 ),
@@ -252,24 +252,45 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             // Widget to display list of selected Categories
                             // Display categories
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20.w),
-                              child: Wrap(
-                                spacing: 12.0,
-                                children: categories
-                                    .map((category) => Column(
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 30.dg,
-                                            ),
-                                            SizedBox(
-                                              height: 6.h,
-                                            ),
-                                            Text(category, style: appTextStyle15(AppColors.newThirdGrayColor)),
-                                          ],
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
+                                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                                child: Wrap(
+                                  spacing: 12.0,
+                                  children: categories.map((category) {
+                                    late ImageProvider image;
+
+                                    // Set image based on category name
+                                    if (category == 'Shave') {
+                                      image = NetworkImage(
+                                          'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2Fshave.png?alt=media&token=0ed65c60-972d-4b60-b672-d1760c428f96');
+                                    } else if (category == 'Haircut') {
+                                      image = NetworkImage(
+                                          'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2Fhaircut.png?alt=media&token=3dbdcaba-6ca7-4e9c-a529-2ba661904a7d');
+                                    } else if (category == 'Facials') {
+                                      image = NetworkImage(
+                                          'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2Ffacials.png?alt=media&token=e83ecc0f-226f-486c-8b47-d26228787970'); //
+                                    } else if (category == 'Manicure') {
+                                      image = NetworkImage(
+                                          'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2Fmanicure.png?alt=media&token=a175f502-9439-47e3-b059-f96d8d5b1fc8');
+                                    } else if (category == 'Massage') {
+                                      image = NetworkImage(
+                                          'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2Fmassasge.png?alt=media&token=10eacdf6-2fb9-4cf7-a170-24af32e2dead');
+                                    } else {
+                                      image = AssetImage('assets/master1.png');
+                                    }
+
+                                    return Column(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 34,
+                                          backgroundColor: const Color.fromARGB(255, 129, 128, 127),
+                                          child: CircleAvatar(radius: 30.dg, backgroundImage: image, backgroundColor: Colors.white),
+                                        ),
+                                        SizedBox(height: 6.h),
+                                        Text(category, style: appTextStyle15(AppColors.newThirdGrayColor)),
+                                      ],
+                                    );
+                                  }).toList(),
+                                )),
                             // Widget to display services
                             SizedBox(height: 36.h),
                             Padding(
@@ -303,7 +324,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                                 borderRadius: BorderRadius.circular(100.dg),
                                                 child: Image.network(
                                                   images[index],
-                                                  width: 130.w,
+                                                  width: 120.w,
                                                   height: 140.h,
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (context, error, stackTrace) => Image.asset(

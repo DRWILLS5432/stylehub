@@ -92,7 +92,8 @@ class Service {
   // This is a field, not a getter
   String name;
   String price;
+  String imageUrl;
   bool selected;
 
-  Service({this.name = '', this.price = '', this.selected = false});
+  Service({this.name = '', this.price = '', this.selected = false, this.imageUrl = ''});
 }

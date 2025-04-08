@@ -36,7 +36,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore.collection('appointments').where('clientId', isEqualTo: user.uid).orderBy('date', descending: false).snapshots(),
+        stream: _firestore.collection('appointments').where('clientId', isEqualTo: user.uid).orderBy('date', descending: true).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

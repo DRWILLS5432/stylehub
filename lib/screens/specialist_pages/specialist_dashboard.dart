@@ -207,16 +207,27 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                               border: Border.all(
-                                                color: filterProvider.selectedCategory == category.name ? AppColors.newThirdGrayColor : Colors.transparent,
+                                                color: const Color.fromARGB(255, 129, 128, 127),
                                                 width: 3,
                                               ),
+                                              boxShadow: filterProvider.selectedCategory == category.name
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: Colors.grey,
+                                                        blurRadius: 6,
+                                                        offset: Offset(0, 5),
+                                                      ),
+                                                    ]
+                                                  : [],
                                             ),
                                             child: CircleAvatar(
                                               backgroundColor: AppColors.whiteColor,
                                               radius: 35,
-                                              backgroundImage: AssetImage(
-                                                categoryImages[index % categoryImages.length],
-                                              ),
+                                              backgroundImage: category.imageUrl != null
+                                                  ? NetworkImage(category.imageUrl!)
+                                                  : AssetImage(
+                                                      categoryImages[index % categoryImages.length],
+                                                    ) as ImageProvider,
                                             ),
                                           ),
                                           SizedBox(height: 4),
