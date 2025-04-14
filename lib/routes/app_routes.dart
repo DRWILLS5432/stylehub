@@ -24,6 +24,7 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
     '/specialist_profile': (context) => SpecialistProfileScreen(),
     '/personal_details': (context) => PersonalDetailScreen(),
     '/filter_screen': (context) => FilterScreen(),
+    // '/notification_detail': (context) => NotificationScreen(),
     // '/specialist_detail_screen': (context) => SpecialistDetailScreen(),
     // '/make_appointment_screen': (context) => MakeAppointmentScreen(),
   };

@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   // Register a new user
   Future<User?> registerUser({
@@ -190,6 +192,33 @@ class FirebaseService {
       throw 'An unexpected error occurred: $e';
     }
   }
+
+  // Method to save FCM token to Firestore
+  Future<void> saveFcmToken(String userId, String token) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'fcmToken': token,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error saving FCM token: $e');
+      rethrow;
+    }
+  }
+
+  // Method to get FCM token from Firestore
+  Future<String?> getFcmToken(String userId) async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection('users').doc(userId).get();
+      return doc['fcmToken'] as String?;
+    } catch (e) {
+      print('Error getting FCM token: $e');
+      return null;
+    }
+  }
+
+  
+
 
   // Method to logout
   Future<void> logout(context) async {

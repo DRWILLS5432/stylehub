@@ -14,6 +14,7 @@ import 'package:stylehub/screens/specialist_pages/model/specialist_model.dart';
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/filter_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
+import 'package:stylehub/screens/specialist_pages/screens/notification_detail.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
 import 'package:stylehub/storage/fire_store_method.dart';
 
@@ -147,12 +148,23 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                       ),
                     ),
                     // Notification icon
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 30.h),
-                      child: Image.asset(
-                        'assets/images/Bell.png',
-                        height: 26.h,
-                        width: 27.w,
+                    InkWell(
+                      radius: 20,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationScreen(),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 30.h),
+                        child: Image.asset(
+                          'assets/images/Bell.png',
+                          height: 26.h,
+                          width: 27.w,
+                        ),
                       ),
                     ),
                   ],

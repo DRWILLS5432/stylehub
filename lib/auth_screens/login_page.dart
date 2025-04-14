@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,6 +11,7 @@ import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_home_page.dart';
+import 'package:stylehub/services/fcm_services/push_notification_service.dart';
 import 'package:stylehub/services/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
@@ -444,6 +447,32 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           await SharedPreferencesHelper.savePassword(loginPasswordController.text.trim());
 
           String? role = await _firebaseService.getUserRole(user.uid);
+
+          // Get the user's FCM token (assuming it's stored in your database)
+          // String? fcmToken = await _firebaseService.getFcmToken(user.uid);
+          String? fcmToken = await FirebaseMessaging.instance.getToken();
+          print('Current Token: $fcmToken');
+
+          if (fcmToken != null) {
+            // Save to your database
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'fcmToken': fcmToken});
+            // Send welcome notification
+            try {
+              print('Notification sending');
+              await PushNotificationService.sendPushNotification(
+                // fcmToken,
+                // await PushNotificationService.getAccessToken(),
+                fcmToken,
+
+                'Welcome to StyleHub!',
+                'Thank you for logging in. We hope you enjoy our services.',
+              );
+            } catch (e) {
+              print('Error sending welcome notification: $e');
+              // You can choose to handle this error or ignore it
+            }
+          }
+
           if (role == 'Customer') {
             Navigator.pushReplacement(
               context,
@@ -474,6 +503,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     //     );
 
     //     if (user != null) {
+    //       // Save the password to SharedPreferences
+    //       await SharedPreferencesHelper.savePassword(loginPasswordController.text.trim());
+
     //       String? role = await _firebaseService.getUserRole(user.uid);
     //       if (role == 'Customer') {
     //         Navigator.pushReplacement(
