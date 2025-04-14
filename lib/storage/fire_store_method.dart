@@ -84,18 +84,53 @@ class FireStoreMethod {
     required String userId,
     required List<Map<String, String>> newServices,
   }) async {
-    String res = "Some error occurred";
     try {
+      // Validate input data first
+      for (var service in newServices) {
+        if (service['service'] == null || service['service']!.isEmpty || service['price'] == null || service['price']!.isEmpty || service['duration'] == null || service['duration']!.isEmpty) {
+          return 'All service fields (name, price, duration) are required';
+        }
+
+        // Validate price and duration are numbers
+        if (double.tryParse(service['price']!) == null) {
+          return 'Price must be a valid number';
+        }
+
+        if (int.tryParse(service['duration']!) == null) {
+          return 'Duration must be a valid number (minutes)';
+        }
+      }
+
       await _firestore.collection('users').doc(userId).set({
         'services': newServices,
         'timestamp': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      res = 'success';
+
+      return 'success';
     } catch (err) {
-      res = err.toString();
+      // More specific error handling
+      if (err is FirebaseException) {
+        return 'Firebase error: ${err.message}';
+      }
+      return 'Failed to update services: ${err.toString()}';
     }
-    return res;
   }
+  // Future<String> updateServices({
+  //   required String userId,
+  //   required List<Map<String, String>> newServices,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'services': newServices,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+  //     res = 'success';
+  //   } catch (err) {
+  //     res = err.toString();
+  //   }
+  //   return res;
+  // }
 
   Future<String> updateCategories({
     required String userId,

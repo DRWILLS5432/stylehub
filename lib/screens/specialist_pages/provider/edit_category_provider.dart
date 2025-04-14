@@ -22,13 +22,20 @@ class EditCategoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateService(int index, String name, String price) {
-    _services[index] = Service(name: name, price: price);
+  void updateService(int index, String name, String price, String duration) {
+    _services[index] = Service(name: name, price: price, duration: duration);
     notifyListeners();
   }
 
+  // void submitForm() {
+  //   _submittedServices = List.from(_services.where((s) => s.name.isNotEmpty && s.price.isNotEmpty));
+  //   _submittedCategories = List.from(_selectedCategories);
+  //   _services = [Service()];
+  //   notifyListeners();
+  // }
+
   void submitForm() {
-    _submittedServices = List.from(_services.where((s) => s.name.isNotEmpty && s.price.isNotEmpty));
+    _submittedServices = List.from(_services.where((s) => s.name.isNotEmpty && s.price.isNotEmpty && s.duration.isNotEmpty));
     _submittedCategories = List.from(_selectedCategories);
     _services = [Service()];
     notifyListeners();
@@ -92,8 +99,9 @@ class Service {
   // This is a field, not a getter
   String name;
   String price;
+  String duration;
   String imageUrl;
   bool selected;
 
-  Service({this.name = '', this.price = '', this.selected = false, this.imageUrl = ''});
+  Service({this.name = '', this.price = '60', this.duration = '', this.selected = false, this.imageUrl = ''});
 }

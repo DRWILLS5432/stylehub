@@ -281,7 +281,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                     return Column(
                                       children: [
                                         CircleAvatar(
-                                          radius: 34,
+                                          radius: 33.dg,
                                           backgroundColor: const Color.fromARGB(255, 129, 128, 127),
                                           child: CircleAvatar(radius: 30.dg, backgroundImage: image, backgroundColor: Colors.white),
                                         ),
@@ -341,14 +341,19 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                       },
                                     ),
                                   )
-                                : Text('No images uploaded'),
+                                : Padding(
+                                    padding: const EdgeInsets.only(left: 20.0),
+                                    child: Text('No images uploaded'),
+                                  ),
 
                             SizedBox(height: 36.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),
                               child: Text(LocaleData.services.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
                             ),
-                            SizedBox(height: 10.h), // Display services
+
+                            SizedBox(height: 10.h),
+                            // Display services
                             Column(
                               children: services.map((service) {
                                 return Padding(

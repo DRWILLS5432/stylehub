@@ -39,6 +39,7 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
         .map((service) => {
               'service': service.name,
               'price': service.price,
+              'duration': service.duration,
             })
         .toList();
 
@@ -243,11 +244,22 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
           children: [
             Text(
               LocaleData.services.getString(context),
-              style: appTextStyle15(AppColors.mainBlackTextColor).copyWith(fontWeight: FontWeight.w700),
+              style: appTextStyle14(AppColors.mainBlackTextColor).copyWith(fontWeight: FontWeight.w700),
             ),
-            Text(
-              LocaleData.priceRange.getString(context),
-              style: appTextStyle15(AppColors.mainBlackTextColor).copyWith(fontWeight: FontWeight.w700),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  LocaleData.priceRange.getString(context),
+                  style: appTextStyle14(AppColors.mainBlackTextColor).copyWith(fontWeight: FontWeight.w700),
+                ),
+                SizedBox(width: 10.w),
+                Text(
+                  'Time(mins)',
+                  style: appTextStyle14(AppColors.mainBlackTextColor).copyWith(fontWeight: FontWeight.w700),
+                ),
+                SizedBox(width: 5.w),
+              ],
             ),
           ],
         ),
@@ -278,10 +290,15 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onChanged: (value) => provider.updateService(index, value, provider.services[index].price),
+                        onChanged: (value) => provider.updateService(
+                          index,
+                          value,
+                          provider.services[index].price,
+                          provider.services[index].duration,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 10.w),
                     Expanded(
                       flex: 1,
                       child: TextField(
@@ -299,7 +316,38 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                           ),
                         ),
                         keyboardType: TextInputType.number,
-                        onChanged: (value) => provider.updateService(index, provider.services[index].name, value),
+                        onChanged: (value) => provider.updateService(
+                          index,
+                          provider.services[index].name,
+                          value,
+                          provider.services[index].duration,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      flex: 1,
+                      child: TextField(
+                        cursorColor: AppColors.appBGColor,
+                        decoration: InputDecoration(
+                          hintText: '60 mins',
+                          hintStyle: appTextStyle12(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.appBGColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.appBGColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) => provider.updateService(
+                          index,
+                          provider.services[index].name,
+                          provider.services[index].price,
+                          value,
+                        ),
                       ),
                     ),
                   ],
@@ -343,7 +391,7 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
               ),
             ),
             onPressed: () async {
-              if (provider.services.any((s) => s.name.isEmpty || s.price.isEmpty)) {
+              if (provider.services.any((s) => s.name.isEmpty || s.price.isEmpty || s.duration.isEmpty)) {
                 // Show error if any service is incomplete
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Please fill all service fields')),

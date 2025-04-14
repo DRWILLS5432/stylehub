@@ -12,6 +12,7 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/settings_widget.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/update_service_widget.dart';
@@ -30,6 +31,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
   bool _isLoading = false;
 
   final FirebaseService _firebaseService = FirebaseService();
+  final TextEditingController _addressController = TextEditingController();
 
   @override
   void initState() {
@@ -119,7 +121,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
         backgroundColor: AppColors.whiteColor,
       ),
       body: SafeArea(
-        child: Consumer<SpecialistProvider>(builder: (context, provider, _) {
+        child: Consumer2<SpecialistProvider, AddressProvider>(builder: (context, provider, addressProvider, _) {
           final userData = provider.specialistModel;
           // final fullName = "${userData?.firstName} ${userData?.lastName.toString()}";
 
@@ -154,30 +156,36 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
 
                   TextButton(onPressed: _pickImage, child: Text(LocaleData.changeProfilePics.getString(context), style: appTextStyle14(AppColors.appGrayTextColor))),
                   SizedBox(width: 29.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
-                      SizedBox(width: 2.w),
-                      Text(
-                        'enina 36A Entrance 4',
-                        style: appTextStyle12K(AppColors.newThirdGrayColor),
-                      ),
-                      SizedBox(width: 5.w),
-                      Container(
-                        // padding: EdgeInsets.all(5.dg),
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(50.dg), border: Border.all(color: AppColors.mainBlackTextColor)),
-                        child: CircleAvatar(
-                          backgroundColor: AppColors.mainBlackTextColor,
-                          radius: 10.dg,
-                          child: Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppColors.whiteColor,
-                            size: 16.h,
+                  InkWell(
+                    radius: 20,
+                    onTap: _showAddressBottomSheet,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
+                        SizedBox(width: 2.w),
+
+                        // entered or selected location address
+                        Text(
+                          addressProvider.selectedAddress != null ? addressProvider.selectedAddress!.details : 'Tap to select address',
+                          style: appTextStyle12K(AppColors.newThirdGrayColor),
+                        ),
+                        SizedBox(width: 5.w),
+                        Container(
+                          // padding: EdgeInsets.all(5.dg),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(50.dg), border: Border.all(color: AppColors.mainBlackTextColor)),
+                          child: CircleAvatar(
+                            backgroundColor: AppColors.mainBlackTextColor,
+                            radius: 10.dg,
+                            child: Icon(
+                              Icons.arrow_forward_ios,
+                              color: AppColors.whiteColor,
+                              size: 16.h,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(height: 26),
                   Column(
@@ -221,7 +229,6 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                         onPressed: () {
                           setState(() => _isLoading = true);
 
-                
                           _firebaseService.logout(context);
                           setState(() => _isLoading = false);
                         }),
@@ -235,6 +242,89 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
           );
         }),
       ),
+    );
+  }
+
+  void _showAddressBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Consumer<AddressProvider>(
+            builder: (context, addressProvider, _) {
+              return Container(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Select Address',
+                      style: appTextStyle18(AppColors.mainBlackTextColor),
+                    ),
+                    SizedBox(height: 20),
+
+                    // Existing addresses
+                    if (addressProvider.addresses.isNotEmpty)
+                      ...addressProvider.addresses.map((address) => RadioListTile<Address>(
+                            title: Text(address.name),
+                            subtitle: Text(address.details),
+                            value: address,
+                            groupValue: addressProvider.selectedAddress,
+                            onChanged: (value) {
+                              addressProvider.selectedAddress = value;
+                              Navigator.pop(context);
+                            },
+                          )),
+
+                    // Divider
+                    if (addressProvider.addresses.isNotEmpty) Divider(height: 30),
+
+                    // New address input
+                    TextField(
+                      controller: _addressController,
+                      decoration: InputDecoration(
+                        labelText: 'Enter new address',
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.location_pin),
+                          onPressed: () async {
+                            try {
+                              final address = await Provider.of<AddressProvider>(context, listen: false).getCurrentLocationAddress();
+
+                              _addressController.text = address.details;
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_addressController.text.isNotEmpty) {
+                          final newAddress = Address(
+                            name: 'Custom Address',
+                            details: _addressController.text,
+                          );
+                          await Provider.of<AddressProvider>(context, listen: false).addAddress(newAddress);
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text('Save Address'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
