@@ -11,6 +11,7 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/model/specialist_model.dart';
+import 'package:stylehub/screens/specialist_pages/provider/app_notification_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/filter_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
@@ -79,6 +80,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // final provider = Provider.of<NotificationProvider>(context);
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: CustomScrollView(
@@ -158,14 +160,28 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                           ),
                         );
                       },
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: 30.h),
-                        child: Image.asset(
-                          'assets/images/Bell.png',
-                          height: 26.h,
-                          width: 27.w,
-                        ),
-                      ),
+                      child: Consumer<NotificationProvider>(builder: (context, provider, _) {
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 30.h),
+                          child: Stack(
+                            children: [
+                              Image.asset(
+                                'assets/images/Bell.png',
+                                height: 26.h,
+                                width: 27.w,
+                              ),
+                              provider.notifications.isEmpty
+                                  ? const SizedBox()
+                                  : const Positioned(
+                                      right: 0,
+                                      child: CircleAvatar(
+                                        radius: 4,
+                                        backgroundColor: Colors.red,
+                                      ))
+                            ],
+                          ),
+                        );
+                      }),
                     ),
                   ],
                 ),

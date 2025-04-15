@@ -57,13 +57,22 @@ class LikesScreen extends StatelessWidget {
 
                     // Create a simplified specialist model from the favorite data
                     final specialist = SpecialistModel(
-                      userId: favoriteData['specialistId'],
-                      firstName: favoriteData['specialistName'],
-                      lastName: favoriteData['specialistLastName'],
-                      profileImage: favoriteData['profileImage'],
-                      role: favoriteData['role'], email: '', bio: '', experience: '', city: '', phone: '', categories: [], images: [], services: [],
-                      // Other fields can be added if needed
-                    );
+                        userId: favoriteData['specialistId'],
+                        firstName: favoriteData['specialistName'],
+                        lastName: favoriteData['specialistLastName'],
+                        profileImage: favoriteData['profileImage'],
+                        role: favoriteData['role'],
+                        email: '',
+                        bio: '',
+                        experience: '',
+                        city: '',
+                        phone: '',
+                        categories: [],
+                        images: [],
+                        services: [],
+                        isAvailable: false
+                        // Other fields can be added if needed
+                        );
 
                     return FutureBuilder<double>(
                       future: FireStoreMethod().getAverageRating(specialist.userId),

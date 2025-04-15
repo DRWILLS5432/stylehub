@@ -1,97 +1,123 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:stylehub/constants/app/app_colors.dart';
+import 'package:stylehub/constants/app/textstyle.dart';
+import 'package:stylehub/screens/specialist_pages/model/app_notification_model.dart';
+import 'package:stylehub/screens/specialist_pages/provider/app_notification_provider.dart';
 
 class NotificationScreen extends StatelessWidget {
-  final String? tappedPayload;
-
-  const NotificationScreen({super.key, this.tappedPayload});
+  const NotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Map<String, dynamic> payloadData = {};
-
-    if (tappedPayload != null && tappedPayload!.isNotEmpty) {
-      try {
-        payloadData = jsonDecode(tappedPayload!);
-      } catch (e) {
-        payloadData = {"error": "Invalid payload format"};
-      }
-    }
-
-    final title = payloadData['title'];
-    final body = payloadData['body'];
-
-    // Remove title and body from map to prevent duplicates
-    payloadData.remove('title');
-    payloadData.remove('body');
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Notification Details"),
+        title: const Text("Notifications"),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: TextButton(
+              child: Text("Clear all", style: appTextStyle14(AppColors.mainBlackTextColor)),
+              onPressed: () => context.read<NotificationProvider>().clearAllNotifications(),
+            ),
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title != null)
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
-                ),
+      body: Consumer<NotificationProvider>(
+        builder: (context, provider, _) {
+          if (provider.notifications.isEmpty) {
+            return Center(child: Text("No notifications yet", style: appTextStyle16(AppColors.mainBlackTextColor)));
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16.dg),
+            itemCount: provider.notifications.length,
+            itemBuilder: (context, index) {
+              final notification = provider.notifications[index];
+              return NotificationTile(
+                notification: notification,
+                onTap: () => provider.markNotificationAsRead(notification.id),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class NotificationTile extends StatelessWidget {
+  final AppNotification notification;
+  final VoidCallback onTap;
+
+  const NotificationTile({
+    super.key,
+    required this.notification,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        onTap();
+        // Add any additional navigation logic here
+      },
+      child: Card(
+        color: notification.isRead ? AppColors.whiteColor : AppColors.appBGColor,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(16.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      notification.title,
+                      style: appTextStyle14(AppColors.mainBlackTextColor).copyWith(
+                        fontWeight: notification.isRead ? FontWeight.normal : FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (!notification.isRead)
+                    Container(
+                      width: 8.w,
+                      height: 8.h,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
               ),
-            if (body != null) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text(
-                body,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
+                notification.body,
+                style: appTextStyle12K(AppColors.mainBlackTextColor),
+              ),
+              SizedBox(height: 8.h),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  _formatDate(notification.timestamp),
+                  style: appTextStyle10(AppColors.newThirdGrayColor),
                 ),
               ),
             ],
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 8),
-            if (payloadData.isNotEmpty)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: payloadData.length,
-                  itemBuilder: (context, index) {
-                    final entry = payloadData.entries.elementAt(index);
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "${_beautifyKey(entry.key)}: ",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(entry.value.toString()),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  static String _beautifyKey(String key) {
-    return key.replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (match) {
-      return '${match.group(1)} ${match.group(2)}';
-    }).replaceFirst(key[0], key[0].toUpperCase());
+  String _formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
   }
 }

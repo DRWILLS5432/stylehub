@@ -90,6 +90,7 @@ class SpecialistModel {
   final List<String> categories;
   final List<String> images;
   final List<Map<String, dynamic>> services;
+  final bool isAvailable;
 
   SpecialistModel({
     required this.userId,
@@ -105,6 +106,7 @@ class SpecialistModel {
     required this.categories,
     required this.images,
     required this.services,
+    required this.isAvailable,
   });
 
   /// Creates a SpecialistModel from a Firestore document
@@ -124,6 +126,7 @@ class SpecialistModel {
       categories: List<String>.from(data['categories'] ?? []),
       images: List<String>.from(data['images'] ?? []),
       services: List<Map<String, dynamic>>.from(data['services'] ?? []),
+      isAvailable: data['isAvailable'] ?? false,
     );
   }
 
@@ -148,6 +151,7 @@ class SpecialistModel {
       'categories': categories,
       'images': images,
       'services': services,
+      'isAvailable': isAvailable,
     };
   }
 
@@ -166,6 +170,7 @@ class SpecialistModel {
     List<String>? categories,
     List<String>? images,
     List<Map<String, dynamic>>? services,
+    bool? isAvailable,
   }) {
     return SpecialistModel(
       userId: userId ?? this.userId,
@@ -181,6 +186,7 @@ class SpecialistModel {
       categories: categories ?? this.categories,
       images: images ?? this.images,
       services: services ?? this.services,
+      isAvailable: isAvailable ?? this.isAvailable,
     );
   }
 

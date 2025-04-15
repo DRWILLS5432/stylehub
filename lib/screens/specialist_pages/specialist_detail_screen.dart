@@ -6,6 +6,7 @@ import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:stylehub/constants/Helpers/app_helpers.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
@@ -170,7 +171,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
               }
 
               final userData = snapshot.data!.data() as Map<String, dynamic>;
-              final profileImage = userData['profileImage'] ?? '';
+              final profileImage = userData['profileImage'];
               final bio = userData['bio'] ?? 'No bio available';
               final categories = List<String>.from(userData['categories'] ?? []);
               final images = List<String>.from(userData['images'] ?? []);
@@ -209,10 +210,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                           base64Decode(profileImage),
                                           fit: BoxFit.fill,
                                         )
-                                      : Image.asset(
-                                          'assets/master2.png',
-                                          fit: BoxFit.cover,
-                                        ),
+                                      : Icon(Icons.person, size: 200.dg),
                                 ),
                               ),
                             ),
@@ -360,11 +358,15 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                                   child: Row(
                                     children: [
-                                      Text(service['service'] ?? 'Service'),
+                                      Text(service['service'] ?? 'Service', style: appTextStyle15(AppColors.newThirdGrayColor).copyWith(fontWeight: FontWeight.w700)),
                                       Spacer(),
                                       Text('-'),
                                       Spacer(),
-                                      Text('Price: ${service['price']}'),
+                                      Text(
+                                          formatPrice(
+                                            service['price'],
+                                          ),
+                                          style: appTextStyle15(AppColors.newThirdGrayColor).copyWith(fontWeight: FontWeight.w700)),
                                     ],
                                     // title: Text(service['service'] ?? 'Service'),
                                     // subtitle: Text('Price: ${service['price']}'),

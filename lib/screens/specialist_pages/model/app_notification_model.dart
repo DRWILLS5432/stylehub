@@ -1,27 +1,40 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
-
 class AppNotification {
   final String id;
   final String title;
   final String body;
-  final DateTime receivedTime;
-  final Map<String, dynamic> data;
+  final Map<String, dynamic> payload;
+  final DateTime timestamp;
+  bool isRead;
 
   AppNotification({
-    required this.id,
     required this.title,
     required this.body,
-    required this.receivedTime,
-    required this.data,
-  });
+    required this.payload,
+    DateTime? timestamp,
+    this.isRead = false,
+    String? id,
+  })  : id = id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        timestamp = timestamp ?? DateTime.now();
 
-  factory AppNotification.fromRemoteMessage(RemoteMessage message) {
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
-      id: message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      title: message.notification?.title ?? 'No title',
-      body: message.notification?.body ?? 'No body',
-      receivedTime: DateTime.now(),
-      data: message.data,
+      id: json['id'],
+      title: json['title'],
+      body: json['body'],
+      payload: json['payload'] ?? {},
+      timestamp: DateTime.parse(json['timestamp']),
+      isRead: json['isRead'] ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'body': body,
+      'payload': payload,
+      'timestamp': timestamp.toIso8601String(),
+      'isRead': isRead,
+    };
   }
 }

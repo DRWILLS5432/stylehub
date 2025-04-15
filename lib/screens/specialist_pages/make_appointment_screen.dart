@@ -679,8 +679,10 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/success_screen.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/select_address_widget.dart';
 
 // Define your TimeSlot model if not defined already:
 class TimeSlot {
@@ -738,6 +740,18 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
   final List<TimeSlot> _selectedSlots = [];
   final _firestore = FirebaseFirestore.instance;
   bool isLoading = false;
+
+  final TextEditingController _addressController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  void fetchUserData() {
+    Provider.of<SpecialistProvider>(context, listen: false).fetchSpecialistData();
+  }
 
   /// Returns the first Monday for the week in which [date] lies.
   DateTime _getFirstMonday(DateTime date) {
@@ -809,10 +823,18 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
   Future<void> _bookAppointment(String firstName, String lastName) async {
     setState(() => isLoading = true);
     final specialistProvider = Provider.of<SpecialistProvider>(context, listen: false);
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
 
     if (_selectedSlots.isEmpty || specialistProvider.selectedServices.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select at least one time slot and service')),
+      );
+      setState(() => isLoading = false);
+      return;
+    }
+    if (addressProvider.selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your address')),
       );
       setState(() => isLoading = false);
       return;
@@ -843,7 +865,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
 
         // Create appointment document.
         batch.set(appointmentRef, {
-          'address': 'The client address',
+          'address': addressProvider.selectedAddress!.details,
           'appointmentId': appointmentRef.id,
           'clientFirstName': firstName,
           'clientLastName': lastName,
@@ -1109,43 +1131,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
                           ),
                         );
                       },
-                    )
-
-                        //  Container(
-                        //   margin: EdgeInsets.symmetric(vertical: 4.h),
-                        //   padding: EdgeInsets.all(12.w),
-                        //   decoration: BoxDecoration(
-                        //     color: isSelected ? AppColors.appBGColor.withOpacity(0.2) : Colors.transparent,
-                        //     border: Border.all(
-                        //       color: isSelected ? AppColors.appBGColor : Colors.grey.shade300,
-                        //       width: 1.5.w,
-                        //     ),
-                        //     borderRadius: BorderRadius.circular(8),
-                        //   ),
-                        //   child: Row(
-                        //     children: [
-                        //       Icon(
-                        //         isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                        //         color: isSelected ? AppColors.appBGColor : Colors.grey,
-                        //       ),
-                        //       SizedBox(width: 12.w),
-                        //       Column(
-                        //         crossAxisAlignment: CrossAxisAlignment.start,
-                        //         children: [
-                        //           Text(
-                        //             service['service'] ?? 'Service',
-                        //             style: appTextStyle14(AppColors.mainBlackTextColor),
-                        //           ),
-                        //           Text(
-                        //             '${service['price']} • ${service['duration']} mins',
-                        //             style: appTextStyle12K(AppColors.newThirdGrayColor),
-                        //           ),
-                        //         ],
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
-                        );
+                    ));
                   }).toList(),
                 );
               },
@@ -1157,26 +1143,37 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
               style: appTextStyle24500(AppColors.mainBlackTextColor),
             ),
             SizedBox(height: 8),
-            AddressCard(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              title: 'Your Address',
-              address: '123 Client Street, City, Country',
-            ),
-            SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                AddressCard(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  title: 'Client Address',
-                  address: '456 Specialist Street, City, Country',
-                ),
-              ],
-            ),
-            SizedBox(height: 20.h),
+            Consumer2<AddressProvider, SpecialistProvider>(builder: (context, addressProvider, userProvider, _) {
+              if (userProvider.specialistModel?.isAvailable == false) {
+                return Center(child: Text('Specialist is not available at the moment'));
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AddressCard(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    title: 'Your Address',
+                    address: addressProvider.selectedAddress != null ? addressProvider.selectedAddress!.details : 'Tap to select address',
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      AddressCard(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        title: 'Client Address',
+                        address: addressProvider.selectedAddress != null ? addressProvider.selectedAddress!.details : 'No address added',
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20.h),
+                ],
+              );
+            }),
+
             // (Optional) An extra button to add more time slots, if needed.
             InkWell(
-              onTap: () {},
+              onTap: _showAddressBottomSheet,
               child: Container(
                 width: 44.w,
                 height: 42.h,
@@ -1221,6 +1218,14 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAddressBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SelectAddressBottomSheet(addressController: _addressController),
     );
   }
 }
@@ -1290,7 +1295,7 @@ class AddressCard extends StatelessWidget {
             style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 4.h),
-          Text(address, style: appTextStyle16500(AppColors.newThirdGrayColor)),
+          Text(address, style: appTextStyle12K(AppColors.newThirdGrayColor)),
         ],
       ),
     );

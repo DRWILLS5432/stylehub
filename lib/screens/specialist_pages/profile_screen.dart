@@ -14,6 +14,7 @@ import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/select_address_widget.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/settings_widget.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/update_service_widget.dart';
 import 'package:stylehub/services/firebase_auth.dart';
@@ -39,6 +40,12 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
     _fetchUserData();
 
     Provider.of<SpecialistProvider>(context, listen: false).fetchSpecialistData();
+    // Clear addresses from the previous user and fetch for the current one.
+    fetchAddresses();
+  }
+
+  void fetchAddresses() {
+    Provider.of<AddressProvider>(context, listen: false).fetchAddresses();
   }
 
   /// Fetches user data from Firestore for the current authenticated user.
@@ -156,8 +163,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
 
                   TextButton(onPressed: _pickImage, child: Text(LocaleData.changeProfilePics.getString(context), style: appTextStyle14(AppColors.appGrayTextColor))),
                   SizedBox(width: 29.h),
-                  InkWell(
-                    radius: 20,
+                  GestureDetector(
                     onTap: _showAddressBottomSheet,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -249,82 +255,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Consumer<AddressProvider>(
-            builder: (context, addressProvider, _) {
-              return Container(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Select Address',
-                      style: appTextStyle18(AppColors.mainBlackTextColor),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Existing addresses
-                    if (addressProvider.addresses.isNotEmpty)
-                      ...addressProvider.addresses.map((address) => RadioListTile<Address>(
-                            title: Text(address.name),
-                            subtitle: Text(address.details),
-                            value: address,
-                            groupValue: addressProvider.selectedAddress,
-                            onChanged: (value) {
-                              addressProvider.selectedAddress = value;
-                              Navigator.pop(context);
-                            },
-                          )),
-
-                    // Divider
-                    if (addressProvider.addresses.isNotEmpty) Divider(height: 30),
-
-                    // New address input
-                    TextField(
-                      controller: _addressController,
-                      decoration: InputDecoration(
-                        labelText: 'Enter new address',
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.location_pin),
-                          onPressed: () async {
-                            try {
-                              final address = await Provider.of<AddressProvider>(context, listen: false).getCurrentLocationAddress();
-
-                              _addressController.text = address.details;
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (_addressController.text.isNotEmpty) {
-                          final newAddress = Address(
-                            name: 'Custom Address',
-                            details: _addressController.text,
-                          );
-                          await Provider.of<AddressProvider>(context, listen: false).addAddress(newAddress);
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Text('Save Address'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
+      builder: (context) => SelectAddressBottomSheet(addressController: _addressController),
     );
   }
 }
