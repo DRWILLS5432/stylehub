@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class PushNotificationService {
   static Future<String> getAccessToken() async {
     final serviceAccessJson =
-        // ADD THE SERVICE ACCOUNT JSON
+        // ADD THE SERVICE ACCOUNT JSON HERE
 
 
     // Properly formatted scopes with commas
