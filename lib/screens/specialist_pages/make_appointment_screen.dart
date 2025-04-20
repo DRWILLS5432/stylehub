@@ -998,56 +998,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
               ),
             ),
             SizedBox(height: 24),
-            // Time Slots Section
-            Text(
-              'Available Time Slots',
-              style: appTextStyle24500(AppColors.mainBlackTextColor),
-            ),
-            SizedBox(height: 20.h),
-            FutureBuilder<List<TimeSlot>>(
-              future: _getAvailability(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator.adaptive());
-                }
-                final slots = snapshot.data ?? [];
-                if (slots.isEmpty) {
-                  return Center(child: Text('No available time slots'));
-                }
-                return Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: slots.map((slot) {
-                    return Tooltip(
-                      message: 'Select for ${Provider.of<SpecialistProvider>(context, listen: false).totalDuration} min service',
-                      child: TimeSlotButton(
-                        time: _formatTime(slot.hour, slot.minute),
-                        isSelected: _selectedSlots.any((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute),
-                        onPressed: () {
-                          // Before adding a time slot, ensure at least one service is selected.
-                          final provider = Provider.of<SpecialistProvider>(context, listen: false);
-                          if (provider.selectedServices.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please select at least one service first')),
-                            );
-                            return;
-                          }
-                          setState(() {
-                            final existingIndex = _selectedSlots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute);
-                            if (existingIndex != -1) {
-                              _selectedSlots.removeAt(existingIndex);
-                            } else {
-                              _selectedSlots.add(slot);
-                            }
-                          });
-                        },
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-            SizedBox(height: 24),
+
             // Services Section
             Text(
               LocaleData.services.getString(context),
@@ -1080,7 +1031,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
                             margin: EdgeInsets.symmetric(vertical: 4.h),
                             padding: EdgeInsets.all(12.w),
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.appBGColor.withOpacity(0.2) : Colors.transparent,
+                              color: isSelected ? AppColors.appBGColor.withValues(alpha: 0.2) : Colors.transparent,
                               border: Border.all(
                                 color: isSelected ? AppColors.appBGColor : Colors.grey.shade300,
                                 width: 1.5.w,
@@ -1137,15 +1088,82 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
               },
             ),
             SizedBox(height: 24),
+            // Time Slots Section
+            Text(
+              'Available Time Slots',
+              style: appTextStyle24500(AppColors.mainBlackTextColor),
+            ),
+            SizedBox(height: 20.h),
+            FutureBuilder<List<TimeSlot>>(
+              future: _getAvailability(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator.adaptive());
+                }
+                final slots = snapshot.data ?? [];
+                if (slots.isEmpty) {
+                  return Center(child: Text('No available time slots'));
+                }
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: slots.map((slot) {
+                    return Tooltip(
+                      message: 'Select for ${Provider.of<SpecialistProvider>(context, listen: false).totalDuration} min service',
+                      child: TimeSlotButton(
+                        time: _formatTime(slot.hour, slot.minute),
+                        isSelected: _selectedSlots.any((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute),
+                        onPressed: () {
+                          // Before adding a time slot, ensure at least one service is selected.
+                          final provider = Provider.of<SpecialistProvider>(context, listen: false);
+                          if (provider.selectedServices.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please select at least one service first')),
+                            );
+                            return;
+                          }
+                          setState(() {
+                            final existingIndex = _selectedSlots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute);
+                            if (existingIndex != -1) {
+                              _selectedSlots.removeAt(existingIndex);
+                            } else {
+                              _selectedSlots.add(slot);
+                            }
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+            SizedBox(height: 24),
+
             // Address Section
             Text(
               'Address of Meeting',
               style: appTextStyle24500(AppColors.mainBlackTextColor),
             ),
+            SizedBox(height: 20.h),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                AddressCard(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  title: 'Client Address',
+                  address: 'Specialist Address',
+                ),
+              ],
+            ),
             SizedBox(height: 8),
             Consumer2<AddressProvider, SpecialistProvider>(builder: (context, addressProvider, userProvider, _) {
               if (userProvider.specialistModel?.isAvailable == false) {
-                return Center(child: Text('Specialist is not available at the moment'));
+                return Center(
+                    child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text('Specialist is not available at the moment'),
+                ));
               }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1155,41 +1173,30 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
                     title: 'Your Address',
                     address: addressProvider.selectedAddress != null ? addressProvider.selectedAddress!.details : 'Tap to select address',
                   ),
-                  SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      AddressCard(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        title: 'Client Address',
-                        address: addressProvider.selectedAddress != null ? addressProvider.selectedAddress!.details : 'No address added',
-                      ),
-                    ],
-                  ),
                   SizedBox(height: 20.h),
+                  // (Optional) An extra button to add more time slots, if needed.
+                  InkWell(
+                    onTap: _showAddressBottomSheet,
+                    child: Container(
+                      width: 44.w,
+                      height: 42.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.dg),
+                        border: Border.all(color: AppColors.appBGColor, width: 2.w),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.add,
+                          color: AppColors.newThirdGrayColor,
+                          size: 26.h,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               );
             }),
 
-            // (Optional) An extra button to add more time slots, if needed.
-            InkWell(
-              onTap: _showAddressBottomSheet,
-              child: Container(
-                width: 44.w,
-                height: 42.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.dg),
-                  border: Border.all(color: AppColors.appBGColor, width: 2.w),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.add,
-                    color: AppColors.newThirdGrayColor,
-                    size: 26.h,
-                  ),
-                ),
-              ),
-            ),
             SizedBox(height: 54.h),
             // Booking Button
             Consumer<SpecialistProvider>(builder: (context, provider, child) {

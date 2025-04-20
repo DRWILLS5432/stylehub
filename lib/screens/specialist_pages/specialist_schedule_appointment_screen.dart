@@ -26,7 +26,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   List<TimeSlot> _timeSlots = [];
   bool _isExpanded = false;
   final List<String> _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  final int _intervalMinutes = 15;
+  final int _intervalMinutes = 60;
 
   @override
   void initState() {
@@ -41,18 +41,33 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     Provider.of<SpecialistProvider>(context, listen: false).fetchSpecialistData();
   }
 
+  // void _initializeTimeSlots() {
+  //   _timeSlots = [];
+  //   for (int day = 0; day < 7; day++) {
+  //     for (int hour = 0; hour < 24; hour++) {
+  //       for (int minute = 0; minute < 60; minute += _intervalMinutes) {
+  //         _timeSlots.add(TimeSlot(
+  //           day: day,
+  //           hour: hour,
+  //           minute: minute,
+  //           isOpen: false,
+  //         ));
+  //       }
+  //     }
+  //   }
+  // }
+
   void _initializeTimeSlots() {
     _timeSlots = [];
     for (int day = 0; day < 7; day++) {
-      for (int hour = 0; hour < 24; hour++) {
-        for (int minute = 0; minute < 60; minute += _intervalMinutes) {
-          _timeSlots.add(TimeSlot(
-            day: day,
-            hour: hour,
-            minute: minute,
-            isOpen: false,
-          ));
-        }
+      // Hours from 8 AM (8) to 11 PM (23)
+      for (int hour = 8; hour < 24; hour++) {
+        _timeSlots.add(TimeSlot(
+          day: day,
+          hour: hour,
+          minute: 0, // All slots at 0 minutes (hourly)
+          isOpen: false,
+        ));
       }
     }
   }
@@ -100,6 +115,33 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     final displayHour = hour % 12 == 0 ? 12 : hour % 12;
     return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
+
+  bool _isSlotInPast(int day, int hour) {
+    final now = DateTime.now();
+    final currentDayOfWeek = now.weekday;
+    final adjustedDay = day + 1;
+
+    if (adjustedDay < currentDayOfWeek) {
+      return true;
+    } else if (adjustedDay == currentDayOfWeek) {
+      final currentHour = now.hour;
+      if (hour < currentHour) {
+        return true;
+      } else if (hour == currentHour) {
+        return now.minute > 0 || now.second > 0 || now.millisecond > 0;
+      }
+    }
+    return false;
+  }
+
+  // String _formatTime(int hour, [int minute = 0]) {
+  //   if (_is24HourFormat) {
+  //     return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+  //   }
+  //   final period = hour >= 12 ? 'PM' : 'AM';
+  //   final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+  //   return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
+  // }
 
   // Check if a day is in the past relative to the current date
   bool _isDayInPast(int day) {
@@ -409,97 +451,6 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     );
   }
 
-//   Widget _buildTimeTable() {
-//     final user = Provider.of<SpecialistProvider>(context).specialistModel;
-//     return SizedBox(
-//       width: 80.w * 7.5,
-//       child: ListView.builder(
-//         shrinkWrap: true,
-//         physics: NeverScrollableScrollPhysics(),
-//         itemCount: 24 * (60 ~/ _intervalMinutes),
-//         itemBuilder: (context, index) {
-//           final hour = index ~/ (60 ~/ _intervalMinutes);
-//           final minute = (index % (60 ~/ _intervalMinutes)) * _intervalMinutes;
-//           return Padding(
-//             padding: EdgeInsets.symmetric(vertical: 4.h),
-//             child: Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 SizedBox(
-//                   width: 60.w,
-//                   child: Text(
-//                     _formatTime(hour, minute),
-//                     style: TextStyle(fontSize: 12.sp),
-//                   ),
-//                 ),
-//                 Expanded(
-//                   child: GridView.builder(
-//                     shrinkWrap: true,
-//                     physics: NeverScrollableScrollPhysics(),
-//                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//                       crossAxisCount: 7,
-//                       childAspectRatio: 1.5,
-//                     ),
-//                     itemCount: 7,
-//                     itemBuilder: (context, dayIndex) {
-//                       final slot = _timeSlots.firstWhere(
-//                         (s) => s.hour == hour && s.minute == minute && s.day == dayIndex,
-//                       );
-//                       final isPastDay = _isDayInPast(dayIndex);
-
-//                       return Consumer<SpecialistProvider>(builder: (context, provider, child) {
-//                         return GestureDetector(
-//                           onTap: isPastDay
-//                               ? null
-//                               : () => _toggleTimeSlot(
-//                                     slot,
-//                                     user!.firstName,
-//                                     user.lastName,
-//                                   ),
-//                           child: Container(
-//                             margin: EdgeInsets.all(2.w),
-//                             decoration: BoxDecoration(
-//                               color: isPastDay
-//                                   ? Colors.grey.shade400
-//                                   : slot.isOpen
-//                                       ? Colors.green.shade100
-//                                       : Colors.grey.shade200,
-//                               borderRadius: BorderRadius.circular(4.w),
-//                               border: Border.all(
-//                                 color: isPastDay
-//                                     ? Colors.grey
-//                                     : slot.isOpen
-//                                         ? Colors.green
-//                                         : Colors.grey,
-//                               ),
-//                             ),
-//                             child: Center(
-//                               child: Text(
-//                                 isPastDay ? 'Unavailable' : (slot.isOpen ? 'Opened' : 'Open'),
-//                                 style: TextStyle(
-//                                   color: isPastDay
-//                                       ? Colors.grey
-//                                       : slot.isOpen
-//                                           ? Colors.green
-//                                           : Colors.black,
-//                                   fontSize: 10.sp,
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                         );
-//                       });
-//                     },
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
   Widget _buildTimeTable() {
     final user = Provider.of<SpecialistProvider>(context).specialistModel;
     return SizedBox(
@@ -507,10 +458,13 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       child: ListView.builder(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
-        itemCount: 24 * (60 ~/ _intervalMinutes),
+        // itemCount: 24 * (60 ~/ _intervalMinutes),
+        itemCount: 16,
         itemBuilder: (context, index) {
-          final hour = index ~/ (60 ~/ _intervalMinutes);
-          final minute = (index % (60 ~/ _intervalMinutes)) * _intervalMinutes;
+          // final hour = index ~/ (60 ~/ _intervalMinutes);
+          // final minute = (index % (60 ~/ _intervalMinutes)) * _intervalMinutes;
+          final hour = 8 + index; // Hours from 8 to 23
+          final minute = 0;
 
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 2.h),
@@ -555,7 +509,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                         );
                       }
 
-                      final isPastDay = _isDayInPast(dayIndex);
+                      // final isPastDay = _isDayInPast(dayIndex);
+                      final isPastDay = _isSlotInPast(slot.day, slot.hour);
 
                       return Consumer<SpecialistProvider>(builder: (context, provider, child) {
                         return GestureDetector(
