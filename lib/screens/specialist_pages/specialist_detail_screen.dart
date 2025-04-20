@@ -18,7 +18,8 @@ import 'package:stylehub/storage/post_review_method.dart';
 
 class SpecialistDetailScreen extends StatefulWidget {
   final String userId;
-  const SpecialistDetailScreen({super.key, required this.userId});
+  final String name;
+  const SpecialistDetailScreen({super.key, required this.userId, required this.name});
 
   @override
   State<SpecialistDetailScreen> createState() => _SpecialistDetailScreenState();
@@ -487,9 +488,9 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                           child: ReusableButton(
                             bgColor: AppColors.whiteColor,
                             color: AppColors.appBGColor,
-                            text: Text('Make Appointment', style: appTextStyle15(AppColors.newThirdGrayColor)),
+                            text: Text(LocaleData.makeAppointment.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
                             onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => MakeAppointmentScreen(specialistId: widget.userId)));
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => MakeAppointmentScreen(specialistId: widget.userId, specialistName: widget.name)));
                             },
                             // onPressed: () => Navigator.pushNamed(context, '/make_appointment_screen'),
                           ),

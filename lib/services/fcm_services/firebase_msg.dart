@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +13,7 @@ import 'package:stylehub/main.dart';
 import 'package:stylehub/screens/specialist_pages/model/app_notification_model.dart';
 import 'package:stylehub/screens/specialist_pages/provider/app_notification_provider.dart';
 import 'package:stylehub/screens/specialist_pages/screens/notification_detail.dart';
+import 'package:stylehub/services/fcm_services/push_notification_service.dart';
 
 class FirebaseNotificationService {
   static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -201,6 +204,45 @@ class FirebaseNotificationService {
 
   static Future<String?> getFcmToken() async {
     return await _firebaseMessaging.getToken();
+  }
+
+  sendPushNotification(String title, String body, User user) async {
+    // String? fcmToken = await _firebaseService.getFcmToken(user.uid);
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    // print('Current Token: $fcmToken');
+
+    if (fcmToken != null) {
+      // Save to your database
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'fcmToken': fcmToken});
+      // Send welcome notification
+      try {
+        // print('Notification sending');
+        await PushNotificationService.sendPushNotification(
+          // fcmToken,
+          // await PushNotificationService.getAccessToken(),
+          fcmToken,
+
+          title,
+          body,
+        );
+      } catch (e) {
+        // print('Error sending welcome notification: $e');
+        // You can choose to handle this error or ignore it
+      }
+    }
+  }
+
+  Future<void> cancelPushNotification(String title, String body, String specialistToken) async {
+    try {
+      await PushNotificationService.sendPushNotification(
+        specialistToken,
+        title,
+        body,
+      );
+    } catch (e) {
+      print('Error sending notification: $e');
+      // Add error handling as needed
+    }
   }
 }
 

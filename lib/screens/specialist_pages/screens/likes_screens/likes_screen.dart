@@ -66,6 +66,7 @@ class LikesScreen extends StatelessWidget {
                         bio: '',
                         experience: '',
                         city: '',
+                        address: '',
                         phone: '',
                         categories: [],
                         images: [],
@@ -173,6 +174,7 @@ Widget buildProfessionalCard(
                     MaterialPageRoute(
                       builder: (context) => SpecialistDetailScreen(
                         userId: user.userId,
+                        name: user.fullName,
                       ),
                     ),
                   );

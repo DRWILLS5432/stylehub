@@ -8,12 +8,15 @@ import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:stylehub/constants/Helpers/app_helpers.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
+import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/edit_category_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/personal_detail_screen.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/select_address_widget.dart';
 import 'package:stylehub/storage/fire_store_method.dart';
 
 class UpdateServiceWidget extends StatefulWidget {
@@ -28,6 +31,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _professionController = TextEditingController();
   final TextEditingController _experienceController = TextEditingController();
 
@@ -40,6 +44,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
   bool _isEditingCity = false;
   bool _isEditingBio = false;
   bool _isEditingPhone = false;
+  bool _isEditingAddress = false;
   Map<String, dynamic>? _initialData;
 
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -49,6 +54,11 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
   void initState() {
     super.initState();
     _loadInitialData();
+    fetchAddress();
+  }
+
+  void fetchAddress() async {
+    await Provider.of<AddressProvider>(context, listen: false).fetchAddresses();
   }
 
   Future<void> _loadInitialData() async {
@@ -238,6 +248,42 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
     }
   }
 
+  Future<void> _updateAddress(BuildContext context) async {
+    if (_addressController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Address field cannot be empty')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final res = await FireStoreMethod().updateAddress(
+        userId: user.uid,
+        newAddress: _addressController.text,
+      );
+
+      if (res == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Address updated successfully!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $res')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating City: $e')),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
   Future<void> _updateBio(BuildContext context) async {
     if (_bioController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -339,6 +385,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
     _experienceController.dispose();
     _phoneController.dispose();
     _professionController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -472,6 +519,69 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                 _isEditingCity
                     ? LocaleData.save.getString(context)
                     : hasCity
+                        ? LocaleData.edit.getString(context)
+                        : LocaleData.create.getString(context),
+                style: appTextStyle14(AppColors.newThirdGrayColor),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddressSection() {
+    final hasAddress = _initialData?['address'] != null && _initialData!['address'].toString().isNotEmpty;
+    final selectedAddress = Provider.of<AddressProvider>(context).selectedAddress;
+
+    // if (selectedAddress == null) {
+    //   return Container();
+    // }
+
+    _addressController.text = selectedAddress?.details.toString() ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PersonalDetailText(text: 'Address'),
+        SizedBox(height: 15.h),
+        InkWell(
+          onTap: _showAddressBottomSheet,
+          child: IgnorePointer(
+            child: TextFormField(
+              controller: _addressController,
+              decoration: InputDecoration(
+                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                hintStyle: appTextStyle16400(AppColors.appGrayTextColor),
+                hintText: '',
+                fillColor: AppColors.grayColor,
+                suffixIcon: Icon(
+                  Icons.arrow_drop_down,
+                  size: 26.h,
+                ),
+                filled: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.h), borderSide: BorderSide.none),
+              ),
+              enabled: _isEditingAddress || !hasAddress,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () {
+                if (_isEditingAddress || !hasAddress) {
+                  _updateAddress(context);
+                }
+                setState(() {
+                  _isEditingAddress = !_isEditingAddress;
+                });
+              },
+              child: Text(
+                _isEditingAddress
+                    ? LocaleData.save.getString(context)
+                    : hasAddress
                         ? LocaleData.edit.getString(context)
                         : LocaleData.create.getString(context),
                 style: appTextStyle14(AppColors.newThirdGrayColor),
@@ -650,6 +760,8 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                 SizedBox(height: 24.h),
                 _buildCitySection(),
                 SizedBox(height: 24.h),
+                _buildAddressSection(),
+                SizedBox(height: 24.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -737,23 +849,19 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      service['service'] ?? '',
-                                      style: appTextStyle15(AppColors.mainBlackTextColor),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                  Text(
+                                    service['service'] ?? '',
+                                    style: appTextStyle15(AppColors.mainBlackTextColor),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
                                     '-',
                                     style: appTextStyle15(AppColors.mainBlackTextColor),
                                   ),
-                                  Expanded(
-                                    child: Text(
-                                      service['price'] ?? '',
-                                      style: appTextStyle15(AppColors.mainBlackTextColor),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                  Text(
+                                    formatPrice(service['price'].toString()) ?? '',
+                                    style: appTextStyle15(AppColors.mainBlackTextColor),
+                                    overflow: TextOverflow.ellipsis,
                                   )
                                 ],
                               ),
@@ -851,6 +959,14 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showAddressBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SelectAddressBottomSheet(addressController: _addressController),
     );
   }
 }

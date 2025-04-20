@@ -172,8 +172,13 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                         SizedBox(width: 2.w),
 
                         // entered or selected location address
+                        // Text(userData.address, style: appTextStyle12K(AppColors.newThirdGrayColor)),
                         Text(
-                          addressProvider.selectedAddress != null ? addressProvider.selectedAddress!.details : 'Tap to select address',
+                          addressProvider.selectedAddress != null
+                              ? addressProvider.selectedAddress!.details
+                              : userData.address.isNotEmpty
+                                  ? userData.address.toString()
+                                  : 'Tap to select address',
                           style: appTextStyle12K(AppColors.newThirdGrayColor),
                         ),
                         SizedBox(width: 5.w),

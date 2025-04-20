@@ -86,6 +86,7 @@ class SpecialistModel {
   final String bio;
   final String experience;
   final String city;
+  final String address;
   final String phone;
   final List<String> categories;
   final List<String> images;
@@ -102,6 +103,7 @@ class SpecialistModel {
     required this.bio,
     required this.experience,
     required this.city,
+    required this.address,
     required this.phone,
     required this.categories,
     required this.images,
@@ -122,6 +124,7 @@ class SpecialistModel {
       bio: data['bio'] ?? 'No bio available',
       experience: data['experience'] ?? 'No experience info',
       city: data['city'] ?? '',
+      address: data['address'] ?? '',
       phone: data['phone'] ?? '',
       categories: List<String>.from(data['categories'] ?? []),
       images: List<String>.from(data['images'] ?? []),
@@ -147,6 +150,7 @@ class SpecialistModel {
       'bio': bio,
       'experience': experience,
       'city': city,
+      'address': address,
       'phone': phone,
       'categories': categories,
       'images': images,
@@ -166,6 +170,7 @@ class SpecialistModel {
     String? bio,
     String? experience,
     String? city,
+    String? address,
     String? phone,
     List<String>? categories,
     List<String>? images,
@@ -182,6 +187,7 @@ class SpecialistModel {
       bio: bio ?? this.bio,
       experience: experience ?? this.experience,
       city: city ?? this.city,
+      address: address ?? this.address,
       phone: phone ?? this.phone,
       categories: categories ?? this.categories,
       images: images ?? this.images,

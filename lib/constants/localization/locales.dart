@@ -101,6 +101,12 @@ mixin LocaleData {
   static const String update = 'Update';
   static const String youCanUploadMore = 'You can Upload another photo after saving this one';
   static const String goBack = 'Return';
+  static const String address = 'Address';
+  static const String availableTimeSlots = 'Available Time Slots';
+  static const String addressOfMeeting = 'Address of Meeting';
+  static const String yurAddress = 'Your Address';
+  static const String specialistAddress = 'Specialist Address';
+  static const String makeAppointment = 'Make Appointment';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -198,6 +204,12 @@ mixin LocaleData {
     update: 'Update',
     youCanUploadMore: 'You can Upload another photo after saving this one',
     goBack: 'Return',
+    address: 'Address',
+    availableTimeSlots: 'Available Time Slots',
+    addressOfMeeting: 'Address of Meeting',
+    yurAddress: 'Your Address',
+    specialistAddress: 'Specialist Address',
+    makeAppointment: 'Make Appointment',
   };
 
   // static const Map<String, dynamic> UK = {
@@ -379,5 +391,11 @@ mixin LocaleData {
     update: 'Обновить',
     youCanUploadMore: 'Вы можете загрузить ещё',
     goBack: 'Назад',
+    address: 'Адрес',
+    availableTimeSlots: 'Доступные временные слоты',
+    addressOfMeeting: 'Адрес встречи',
+    yurAddress: 'Ваш адрес',
+    specialistAddress: 'Адрес специалиста',
+    makeAppointment: 'Записаться',
   };
 }

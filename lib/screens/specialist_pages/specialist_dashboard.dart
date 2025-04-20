@@ -473,6 +473,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                       MaterialPageRoute(
                         builder: (context) => SpecialistDetailScreen(
                           userId: user.userId,
+                          name: user.fullName,
                         ),
                       ),
                     );

@@ -200,6 +200,23 @@ class FireStoreMethod {
     return res;
   }
 
+  Future<String> updateAddress({
+    required String userId,
+    required String newAddress,
+  }) async {
+    String res = "Some error occurred";
+    try {
+      await _firestore.collection('users').doc(userId).set({
+        'address': newAddress,
+        'timestamp': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      res = 'success';
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
   Future<String> updateExperience({
     required String userId,
     required String newExperience,
@@ -257,4 +274,8 @@ class FireStoreMethod {
 
     return totalRating / querySnapshot.docs.length;
   }
+
+  
 }
+
+

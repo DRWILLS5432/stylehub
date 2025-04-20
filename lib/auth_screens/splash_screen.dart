@@ -20,20 +20,20 @@ class _SplashScreenState extends State<SplashScreen> {
     bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
 
     // Delay for 3 seconds to simulate a splash screen
-    Future.delayed(const Duration(seconds: 3), () {
+    // Future.delayed(const Duration(seconds: 0), () {
+    //   Navigator.pushNamed(context, '/onboarding_screen');
+
+    if (isFirstLaunch) {
+      // If it's the first launch, navigate to the OnboardingScreen
       Navigator.pushNamed(context, '/onboarding_screen');
 
-      if (isFirstLaunch) {
-        // If it's the first launch, navigate to the OnboardingScreen
-        Navigator.pushNamed(context, '/onboarding_screen');
-
-        // Set isFirstLaunch to false for future launches
-        prefs.setBool('isFirstLaunch', true);
-      } else {
-        // If it's not the first launch, navigate to the LoginPage
-        Navigator.pushNamed(context, '/login_screen');
-      }
-    });
+      // Set isFirstLaunch to false for future launches
+      prefs.setBool('isFirstLaunch', true);
+    } else {
+      // If it's not the first launch, navigate to the LoginPage
+      Navigator.pushNamed(context, '/login_screen');
+    }
+    // });
   }
 
   @override

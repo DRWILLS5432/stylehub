@@ -139,21 +139,21 @@ class _OnboardingPageThreeState extends State<OnboardingPageThree> {
                         ),
                       ),
                 const SizedBox(height: 20),
-                if (_userPosition != null) // Show only if location is available
-                  Column(
-                    children: [
-                      Text(
-                        'Your Location:',
-                        style: bigTextStyle(),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'Latitude: ${_userPosition!.latitude}\nLongitude: ${_userPosition!.longitude}',
-                        textAlign: TextAlign.center,
-                        style: appTextStyle14(AppColors.whiteColor),
-                      ),
-                    ],
-                  ),
+                // if (_userPosition != null) // Show only if location is available
+                // Column(
+                //   children: [
+                //     Text(
+                //       'Your Location:',
+                //       style: bigTextStyle(),
+                //     ),
+                //     const SizedBox(height: 5),
+                //     Text(
+                //       'Latitude: ${_userPosition!.latitude}\nLongitude: ${_userPosition!.longitude}',
+                //       textAlign: TextAlign.center,
+                //       style: appTextStyle14(AppColors.whiteColor),
+                //     ),
+                //   ],
+                // ),
               ],
             ),
           ),

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/services/fcm_services/firebase_msg.dart';
 
 class AppointmentScreen extends StatefulWidget {
   const AppointmentScreen({super.key});
@@ -85,21 +86,61 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }
 
   Future<void> _cancelAppointment(context, String appointmentId) async {
+    FirebaseNotificationService firebasePushNotificationService = FirebaseNotificationService();
     try {
+      // First get the appointment details
+      final appointmentDoc = await _firestore.collection('appointments').doc(appointmentId).get();
+      final appointment = appointmentDoc.data() as Map<String, dynamic>;
+      final specialistId = appointment['specialistId'] as String;
+      final date = (appointment['date'] as Timestamp).toDate();
+
+      // Get specialist's FCM token
+      final specialistDoc = await _firestore.collection('users').doc(specialistId).get();
+      final specialistToken = specialistDoc['fcmToken'] as String?;
+      final specialistName = '${specialistDoc['firstName']} ${specialistDoc['lastName']}';
+
+      // Update appointment status
       await _firestore.collection('appointments').doc(appointmentId).update({
         'status': 'cancelled',
         'cancelledAt': FieldValue.serverTimestamp(),
       });
 
+      // Send notification to specialist
+      if (specialistToken != null) {
+        final formattedDate = DateFormat('EEE, MMM d, y').format(date);
+        final formattedTime = DateFormat('h:mm a').format(date);
+
+        firebasePushNotificationService.cancelPushNotification(
+            'Appointment Cancelled', 'Your appointment on $formattedDate at $formattedTime with $specialistName has been cancelled', specialistToken);
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Appointment cancelled successfully')),
       );
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to cancel appointment: $e')),
       );
     }
   }
+
+  // Future<void> _cancelAppointment(context, String appointmentId) async {
+  //   try {
+  //     await _firestore.collection('appointments').doc(appointmentId).update({
+  //       'status': 'cancelled',
+  //       'cancelledAt': FieldValue.serverTimestamp(),
+  //     });
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Appointment cancelled successfully')),
+  //     );
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Failed to cancel appointment: $e')),
+  //     );
+  //   }
+  // }
 }
 
 class AppointmentCard extends StatefulWidget {
