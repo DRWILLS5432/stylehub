@@ -1,79 +1,3 @@
-// import 'package:cloud_firestore/cloud_firestore.dart';
-
-// class SpecialistModel {
-//   final String userId;
-//   final String email;
-//   final String firstName;
-//   final String lastName;
-//   final String? profileImage;
-//   final String role;
-
-//   SpecialistModel({
-//     required this.userId,
-//     required this.email,
-//     required this.firstName,
-//     required this.lastName,
-//     this.profileImage,
-//     required this.role,
-//   });
-
-//   // Factory constructor to create a SpecialistModel from a Firestore document
-//   factory SpecialistModel.fromFirestore(DocumentSnapshot doc) {
-//     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-//     return SpecialistModel(
-//       userId: doc.id,
-//       email: data['email'] ?? '',
-//       firstName: data['firstName'] ?? '',
-//       lastName: data['lastName'] ?? '',
-//       profileImage: data['profileImage'] ?? '',
-//       role: data['role'] ?? '',
-//     );
-//   }
-
-//   factory SpecialistModel.fromSnap(DocumentSnapshot snap) {
-//     Map<String, dynamic> data = snap.data() as Map<String, dynamic>;
-//     return SpecialistModel(
-//       userId: snap.id,
-//       email: data['email'] ?? '',
-//       firstName: data['firstName'] ?? '',
-//       lastName: data['lastName'] ?? '',
-//       role: data['role'] ?? '',
-//       profileImage: data['profileImage'] ?? '',
-//     );
-//   }
-
-//   // Convert SpecialistModel to a Map (useful for Firestore updates)
-//   Map<String, dynamic> toMap() {
-//     return {
-//       'userId': userId,
-//       'email': email,
-//       'firstName': firstName,
-//       'lastName': lastName,
-//       'profileImage': profileImage,
-//       'role': role,
-//     };
-//   }
-
-// // CopyWith method for updating properties easily
-//   SpecialistModel copyWith({
-//     String? userId,
-//     String? email,
-//     String? firstName,
-//     String? lastName,
-//     String? profileImage,
-//     String? role,
-//   }) {
-//     return SpecialistModel(
-//       userId: userId.toString(),
-//       email: email ?? this.email,
-//       firstName: firstName ?? this.firstName,
-//       lastName: lastName ?? this.lastName,
-//       profileImage: profileImage ?? this.profileImage,
-//       role: role ?? this.role,
-//     );
-//   }
-// }
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpecialistModel {
@@ -92,6 +16,10 @@ class SpecialistModel {
   final List<String> images;
   final List<Map<String, dynamic>> services;
   final bool isAvailable;
+  final double? lat;
+  final double? lng;
+  final GeoPoint? location;
+  final double averageRating;
 
   SpecialistModel({
     required this.userId,
@@ -109,6 +37,10 @@ class SpecialistModel {
     required this.images,
     required this.services,
     required this.isAvailable,
+    this.lat,
+    this.lng,
+    this.location,
+    required this.averageRating,
   });
 
   /// Creates a SpecialistModel from a Firestore document
@@ -130,6 +62,10 @@ class SpecialistModel {
       images: List<String>.from(data['images'] ?? []),
       services: List<Map<String, dynamic>>.from(data['services'] ?? []),
       isAvailable: data['isAvailable'] ?? false,
+      lat: data['lat']?.toDouble(),
+      lng: data['lng']?.toDouble(),
+      location: data['location'] as GeoPoint?,
+      averageRating: (data['averageRating'] ?? 0.0).toDouble(),
     );
   }
 
@@ -192,7 +128,7 @@ class SpecialistModel {
       categories: categories ?? this.categories,
       images: images ?? this.images,
       services: services ?? this.services,
-      isAvailable: isAvailable ?? this.isAvailable,
+      isAvailable: isAvailable ?? this.isAvailable, averageRating: 0,
     );
   }
 

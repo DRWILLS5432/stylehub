@@ -12,6 +12,8 @@ import 'package:stylehub/routes/app_routes.dart';
 import 'package:stylehub/services/auth_state_check.dart';
 import 'package:stylehub/services/fcm_services/firebase_msg.dart';
 import 'package:stylehub/services/firebase_auth.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 import 'firebase_options.dart';
 
@@ -20,6 +22,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FlutterLocalization.instance.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Africa/Casablanca'));
   // Initialize FCM and get token
   final firebaseService = FirebaseService();
   // Initialize FCM
@@ -64,27 +68,6 @@ class _MyAppState extends State<MyApp> {
   void onTranslatedLanguage(Locale? locale) {
     setState(() {});
   }
-
-  // void _setupNotificationClickHandler() {
-  //   // Handle notification clicks when app is opened from terminated state
-  //   FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
-  //     if (message != null) {
-  //       _handleNotificationClick(message);
-  //     }
-  //   });
-
-  //   // Handle notification clicks when app is in background
-  //   FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationClick);
-  // }
-
-  // void _handleNotificationClick(RemoteMessage message) {
-  //   // Use Navigator to go to specific screen based on message.data
-  //   // Note: You need a GlobalKey<NavigatorState> or context from MaterialApp
-  //   Navigator.of(context).pushNamed(
-  //     '/notification_detail',
-  //     arguments: message.data, // Pass notification payload
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {

@@ -11,6 +11,7 @@ import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/model/appointment_model.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
+import 'package:stylehub/services/fcm_services/firebase_msg.dart';
 import 'package:stylehub/storage/appointment_repo.dart';
 
 class AppointmentScheduler extends StatefulWidget {
@@ -26,7 +27,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   List<TimeSlot> _timeSlots = [];
   bool _isExpanded = false;
   final List<String> _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  final int _intervalMinutes = 60;
+  String specialistAddress = '';
 
   @override
   void initState() {
@@ -39,46 +40,28 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
 
   void getUserInfo() {
     Provider.of<SpecialistProvider>(context, listen: false).fetchSpecialistData();
-  }
+    final specialistModel = Provider.of<SpecialistProvider>(context, listen: false).specialistModel;
 
-  // void _initializeTimeSlots() {
-  //   _timeSlots = [];
-  //   for (int day = 0; day < 7; day++) {
-  //     for (int hour = 0; hour < 24; hour++) {
-  //       for (int minute = 0; minute < 60; minute += _intervalMinutes) {
-  //         _timeSlots.add(TimeSlot(
-  //           day: day,
-  //           hour: hour,
-  //           minute: minute,
-  //           isOpen: false,
-  //         ));
-  //       }
-  //     }
-  //   }
-  // }
+    setState(() {
+      specialistAddress = specialistModel?.address ?? '';
+    });
+  }
 
   void _initializeTimeSlots() {
     _timeSlots = [];
     for (int day = 0; day < 7; day++) {
-      // Hours from 8 AM (8) to 11 PM (23)
       for (int hour = 8; hour < 24; hour++) {
-        _timeSlots.add(TimeSlot(
-          day: day,
-          hour: hour,
-          minute: 0, // All slots at 0 minutes (hourly)
-          isOpen: false,
-        ));
+        for (int minute = 0; minute < 60; minute += 15) {
+          _timeSlots.add(TimeSlot(
+            day: day,
+            hour: hour,
+            minute: minute,
+            isOpen: false,
+          ));
+        }
       }
     }
   }
-
-  // void _initializeTimeSlots() {
-  //   _timeSlots = List.generate(24, (hour) {
-  //     return List.generate(7, (day) {
-  //       return TimeSlot(day: day, hour: hour, isOpen: false);
-  //     });
-  //   }).expand((i) => i).toList();
-  // }
 
   DateTime _getFirstMonday(DateTime date) {
     date = DateTime(date.year, date.month, date.day);
@@ -100,13 +83,6 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     _loadSavedSlots();
   }
 
-  // String _formatHour(int hour) {
-  //   if (_is24HourFormat) return '${hour.toString().padLeft(2, '0')}:00';
-  //   final period = hour >= 12 ? 'PM' : 'AM';
-  //   final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-  //   return '$displayHour:00 $period';
-  // }
-
   String _formatTime(int hour, [int minute = 0]) {
     if (_is24HourFormat) {
       return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
@@ -118,49 +94,11 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
 
   bool _isSlotInPast(int day, int hour) {
     final now = DateTime.now();
-    final currentDayOfWeek = now.weekday;
-    final adjustedDay = day + 1;
+    final slotDate = _currentWeekStart.add(Duration(days: day));
+    final slotDateTime = DateTime(slotDate.year, slotDate.month, slotDate.day, hour);
 
-    if (adjustedDay < currentDayOfWeek) {
-      return true;
-    } else if (adjustedDay == currentDayOfWeek) {
-      final currentHour = now.hour;
-      if (hour < currentHour) {
-        return true;
-      } else if (hour == currentHour) {
-        return now.minute > 0 || now.second > 0 || now.millisecond > 0;
-      }
-    }
-    return false;
+    return slotDateTime.isBefore(now);
   }
-
-  // String _formatTime(int hour, [int minute = 0]) {
-  //   if (_is24HourFormat) {
-  //     return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-  //   }
-  //   final period = hour >= 12 ? 'PM' : 'AM';
-  //   final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-  //   return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
-  // }
-
-  // Check if a day is in the past relative to the current date
-  bool _isDayInPast(int day) {
-    final now = DateTime.now();
-    final currentDayOfWeek = now.weekday; // Monday = 1, Sunday = 7
-    final adjustedDay = day + 1; // Convert to weekday format (Monday = 1, Sunday = 7)
-
-    // If the day is before the current day in the week, it's in the past
-    return adjustedDay < currentDayOfWeek;
-  }
-
-  // void _toggleTimeSlot(TimeSlot slot, String firstName, String lastName) {
-  //   // Prevent toggling if the day is in the past
-  //   if (_isDayInPast(slot.day)) {
-  //     return;
-  //   }
-  //   setState(() => slot.isOpen = !slot.isOpen);
-  //   _sendToBackend(firstName, lastName);
-  // }
 
   Future<void> _loadSavedSlots() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -196,28 +134,15 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     }
   }
 
-  void _toggleTimeSlot(TimeSlot slot, String firstName, String lastName) {
-    if (_isDayInPast(slot.day)) return;
-
+  void _toggleHourlySlots(int day, int hour, bool isOpen, String firstName, String lastName) {
     setState(() {
-      slot.isOpen = !slot.isOpen;
-      // Optionally: Automatically close adjacent slots to create breaks
-      _manageAdjacentSlots(slot);
-    });
-
-    _sendToBackend(firstName, lastName);
-  }
-
-  // Optional: Automatically manage adjacent slots to create breaks
-  void _manageAdjacentSlots(TimeSlot slot) {
-    if (slot.isOpen) {
-      // When opening a slot, you might want to close the next one to create a break
-      final nextSlotIndex = _timeSlots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute + _intervalMinutes);
-
-      if (nextSlotIndex != -1) {
-        _timeSlots[nextSlotIndex].isOpen = false;
+      for (var slot in _timeSlots) {
+        if (slot.day == day && slot.hour == hour) {
+          slot.isOpen = isOpen;
+        }
       }
-    }
+    });
+    _sendToBackend(firstName, lastName);
   }
 
   Future<void> _sendToBackend(String firstName, String lastName) async {
@@ -230,7 +155,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     try {
       await FirebaseFirestore.instance.collection('availability').doc(user.uid).collection('weeks').doc(weekKey).set({
         'specialistId': user.uid,
-        'specialistAddress': 'Asaba Nnebisi road, Port Harcourt',
+        'specialistAddress': specialistAddress,
         'specialistFirstName': firstName,
         'specialistLastName': lastName,
         'weekStart': _currentWeekStart,
@@ -458,14 +383,9 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       child: ListView.builder(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
-        // itemCount: 24 * (60 ~/ _intervalMinutes),
         itemCount: 16,
         itemBuilder: (context, index) {
-          // final hour = index ~/ (60 ~/ _intervalMinutes);
-          // final minute = (index % (60 ~/ _intervalMinutes)) * _intervalMinutes;
-          final hour = 8 + index; // Hours from 8 to 23
-          final minute = 0;
-
+          final hour = 8 + index;
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 2.h),
             child: Row(
@@ -474,7 +394,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                 SizedBox(
                   width: 60.w,
                   child: Text(
-                    _formatTime(hour, minute),
+                    _formatTime(hour, 0),
                     style: TextStyle(fontSize: 10.sp),
                   ),
                 ),
@@ -488,72 +408,57 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                     ),
                     itemCount: 7,
                     itemBuilder: (context, dayIndex) {
-                      // Safer slot lookup with fallback
-                      TimeSlot? slot;
-                      try {
-                        slot = _timeSlots.firstWhere(
-                          (s) => s.hour == hour && s.minute == minute && s.day == dayIndex,
-                          orElse: () => TimeSlot(
-                            day: dayIndex,
-                            hour: hour,
-                            minute: minute,
-                            isOpen: false,
-                          ),
-                        );
-                      } catch (e) {
-                        slot = TimeSlot(
-                          day: dayIndex,
-                          hour: hour,
-                          minute: minute,
-                          isOpen: false,
-                        );
-                      }
+                      // Get all 15-minute slots for this hour and day
+                      final slots = _timeSlots.where((s) => s.day == dayIndex && s.hour == hour).toList();
+                      bool isHourOpen = slots.isNotEmpty && slots.every((s) => s.isOpen);
+                      bool isPast = slots.any((s) => _isSlotInPast(s.day, s.hour));
 
-                      // final isPastDay = _isDayInPast(dayIndex);
-                      final isPastDay = _isSlotInPast(slot.day, slot.hour);
-
-                      return Consumer<SpecialistProvider>(builder: (context, provider, child) {
-                        return GestureDetector(
-                          onTap: isPastDay
-                              ? null
-                              : () => _toggleTimeSlot(
-                                    slot!,
-                                    user!.firstName,
-                                    user.lastName,
-                                  ),
-                          child: Container(
-                            margin: EdgeInsets.all(1.w),
-                            decoration: BoxDecoration(
-                              color: isPastDay
-                                  ? Colors.grey.shade400
-                                  : slot!.isOpen
-                                      ? Colors.green.shade100
-                                      : Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(2.w),
-                              border: Border.all(
-                                color: isPastDay
-                                    ? Colors.grey
-                                    : slot!.isOpen
-                                        ? Colors.green
-                                        : Colors.grey,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                isPastDay ? 'Unavailable' : (slot!.isOpen ? 'Opened' : 'Open'),
-                                style: TextStyle(
-                                  color: isPastDay
+                      return Consumer<SpecialistProvider>(
+                        builder: (context, provider, child) {
+                          return GestureDetector(
+                            onTap: isPast
+                                ? null
+                                : () => _toggleHourlySlots(
+                                      dayIndex,
+                                      hour,
+                                      !isHourOpen,
+                                      user!.firstName,
+                                      user.lastName,
+                                    ),
+                            child: Container(
+                              margin: EdgeInsets.all(1.w),
+                              decoration: BoxDecoration(
+                                color: isPast
+                                    ? Colors.grey.shade400
+                                    : isHourOpen
+                                        ? Colors.green.shade100
+                                        : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(2.w),
+                                border: Border.all(
+                                  color: isPast
                                       ? Colors.grey
-                                      : slot!.isOpen
+                                      : isHourOpen
                                           ? Colors.green
-                                          : Colors.black,
-                                  fontSize: 10.sp,
+                                          : Colors.grey,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  isPast ? 'Unavailable' : (isHourOpen ? 'Opened' : 'Open'),
+                                  style: TextStyle(
+                                    color: isPast
+                                        ? Colors.grey
+                                        : isHourOpen
+                                            ? Colors.green
+                                            : Colors.black,
+                                    fontSize: 10.sp,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      });
+                          );
+                        },
+                      );
                     },
                   ),
                 ),
@@ -784,6 +689,39 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
     }
   }
 
+  Future<void> _scheduleReminder(
+    AppointmentModel appointment,
+  ) async {
+    final now = DateTime.now();
+
+    final appointmentTime = appointment.date;
+    final oneHourBefore = appointmentTime.subtract(Duration(hours: 1));
+
+    if (oneHourBefore.isBefore(now)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cannot set reminder for past appointments.')),
+      );
+      return;
+    }
+
+    try {
+      // Assuming FirebaseNotificationService has a method to schedule notifications
+      await FirebaseNotificationService().schedulePushNotification(
+        title: 'Appointment Reminder',
+        body: 'Your appointment with ${appointment.clientFirstName} ${appointment.clientLastName} is in 1 hour.',
+        scheduledTime: oneHourBefore,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Reminder set for 1 hour before the appointment.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to set reminder: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
@@ -801,37 +739,63 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                         shrinkWrap: true,
                         // physics: NeverScrollableScrollPhysics(),
                         itemBuilder: (context, index) {
+                          //  final appointment = appointments[index].data() as Map<String, dynamic>;
+                          // final date = (appointment['date'] as Timestamp).toDate();
                           final appointment = _appointments[index];
                           return Column(
                             children: [
                               Container(
                                 width: double.infinity,
                                 margin: EdgeInsets.only(left: 18.w, right: 18.w, top: 23.h),
-                                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 19.h),
+                                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                                 decoration: BoxDecoration(color: AppColors.appBGColor, borderRadius: BorderRadius.circular(15.dg)),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Align(
-                                      alignment: Alignment.topRight,
-                                      child: Icon(
-                                        Icons.notifications_on_sharp,
-                                      ),
-                                    ),
+                                        alignment: Alignment.topRight,
+                                        child: IconButton(
+                                          icon: Icon(
+                                            Icons.notifications_on_sharp,
+                                          ),
+                                          onPressed: () => _scheduleReminder(
+                                            appointment,
+                                          ),
+                                        )),
                                     Text(
                                       widget.isSpecialist ? '${appointment.clientFirstName} ${appointment.clientLastName}' : 'Specialist: ${appointment.specialistId}',
-                                      style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                      style: appTextStyle16500(AppColors.mainBlackTextColor),
                                     ),
+                                    SizedBox(height: 8.h),
                                     Text(
-                                      formatDateTime(appointment.date),
-                                      style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                      'Details',
+                                      style: appTextStyle16500(AppColors.mainBlackTextColor),
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.calendar_today, size: 16.dg, color: AppColors.newThirdGrayColor),
+                                        SizedBox(width: 8.w),
+                                        Text(
+                                          DateFormat('EEE, MMM d, y').format(appointment.date),
+                                          style: appTextStyle14(AppColors.newThirdGrayColor),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.access_time, size: 16.dg, color: AppColors.newThirdGrayColor),
+                                        SizedBox(width: 8.w),
+                                        Text(
+                                          DateFormat('h:mm a').format(appointment.date),
+                                          style: appTextStyle14(AppColors.newThirdGrayColor),
+                                        ),
+                                      ],
                                     ),
                                     Text(
                                       appointment.address,
                                       style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                    ),
-                                    SizedBox(
-                                      height: 10.h,
                                     ),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
@@ -925,9 +889,9 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
               );
   }
 
-  String formatDateTime(DateTime date) {
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '${date.day}/${date.month}/${date.year} at $hour:$minute';
-  }
+  // String formatDateTime(DateTime date) {
+  //   final hour = date.hour.toString().padLeft(2, '0');
+  //   final minute = date.minute.toString().padLeft(2, '0');
+  //   return '${date.day}/${date.month}/${date.year} at $hour:$minute';
+  // }
 }

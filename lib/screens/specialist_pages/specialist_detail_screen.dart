@@ -15,11 +15,14 @@ import 'package:stylehub/screens/specialist_pages/make_appointment_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/write_review.dart';
 import 'package:stylehub/storage/likes_method.dart';
 import 'package:stylehub/storage/post_review_method.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SpecialistDetailScreen extends StatefulWidget {
   final String userId;
   final String name;
-  const SpecialistDetailScreen({super.key, required this.userId, required this.name});
+  final double rating;
+  final double distance;
+  const SpecialistDetailScreen({super.key, required this.userId, required this.name, required this.rating, required this.distance});
 
   @override
   State<SpecialistDetailScreen> createState() => _SpecialistDetailScreenState();
@@ -177,6 +180,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
               final categories = List<String>.from(userData['categories'] ?? []);
               final images = List<String>.from(userData['images'] ?? []);
               final services = List<Map<String, dynamic>>.from(userData['services'] ?? []);
+              final phone = userData['phone'];
 
               // Set default top image if it's not set
               if (selectedImage == null && images.isNotEmpty) {
@@ -224,7 +228,10 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   Row(
                                     children: [
                                       Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
-                                      Text("70m", style: appTextStyle12()),
+                                      Text(
+                                        formatDistance(widget.distance),
+                                        style: appTextStyle15(AppColors.newThirdGrayColor),
+                                      ),
                                     ],
                                   ),
                                   StreamBuilder<QuerySnapshot>(
@@ -232,7 +239,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                     builder: (context, snapshot) {
                                       return Row(
                                         children: [
-                                          Text('5.0'.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                                          Text(widget.rating.toStringAsFixed(1), style: appTextStyle15(AppColors.newThirdGrayColor)),
                                           Icon(Icons.star, color: AppColors.mainBlackTextColor, size: 15.dg),
                                           SizedBox(width: 10.w),
                                         ],
@@ -386,23 +393,39 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                               child: Text(bio.toString(), style: appTextStyle15(AppColors.newThirdGrayColor)),
                             ),
                             SizedBox(height: 20.h),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 15.w),
-                              child: Row(
-                                children: [
-                                  Container(
-                                      // width: 143.w,
+                            if (phone != null && phone.isNotEmpty)
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 15.w),
+                                child: Row(
+                                  children: [
+                                    Container(
                                       padding: EdgeInsets.symmetric(horizontal: 0.w),
                                       height: 32.h,
                                       child: ReusableButton(
                                         bgColor: AppColors.grayColor,
                                         color: AppColors.appBGColor,
                                         text: Text(LocaleData.callMe.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
-                                        onPressed: () {},
-                                      )),
-                                ],
+                                        onPressed: () async {
+                                          final Uri phoneUri = Uri(scheme: 'tel', path: phone);
+                                          try {
+                                            if (await canLaunchUrl(phoneUri)) {
+                                              await launchUrl(phoneUri);
+                                            } else {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('Could not launch phone app')),
+                                              );
+                                            }
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Error initiating call: $e')),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
                             SizedBox(height: 36.h),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.w),

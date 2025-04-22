@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
@@ -15,9 +16,9 @@ import 'package:stylehub/screens/specialist_pages/provider/app_notification_prov
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/filter_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
+import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/screens/notification_detail.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
-import 'package:stylehub/storage/fire_store_method.dart';
 
 class SpecialistDashboard extends StatefulWidget {
   const SpecialistDashboard({super.key});
@@ -30,6 +31,8 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   String? userName;
   Uint8List? _imageBytes;
   String? currentUserId;
+  Position? _currentPosition;
+  Address? _selectedAddress;
 
   @override
   void initState() {
@@ -77,6 +80,26 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     'assets/images/one.png',
     'assets/images/four.png',
   ];
+  Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
+    Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
+
+    // Existing filters
+    if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
+      query = query.where('city', isEqualTo: filterProvider.selectedCity);
+    }
+
+    if (filterProvider.selectedCategory != null && filterProvider.selectedCategory!.isNotEmpty) {
+      query = query.where('categories', arrayContains: filterProvider.selectedCategory);
+    }
+
+    if (filterProvider.highestRating) {
+      query = query.orderBy('averageRating', descending: true);
+    } else if (filterProvider.mediumRating) {
+      query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
+    }
+
+    return query.snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -322,6 +345,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
             builder: (context, filterProvider, child) {
               return StreamBuilder<QuerySnapshot>(
                 stream: _getSpecialistsStream(filterProvider),
+// In the StreamBuilder's builder function:
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return SliverToBoxAdapter(
@@ -335,7 +359,8 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                     );
                   }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  final docs = snapshot.data!.docs;
+                  if (docs.isEmpty) {
                     return SliverToBoxAdapter(
                       child: Center(
                         child: Text(
@@ -346,28 +371,52 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                     );
                   }
 
+                  final specialists = docs.map((doc) => SpecialistModel.fromFirestore(doc)).toList();
+                  final filteredSpecialists = _applyProximityFilters(
+                    specialists: specialists,
+                    filterProvider: filterProvider,
+                  );
+
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
-                        return FutureBuilder<double>(
-                          future: FireStoreMethod().getAverageRating(user.userId),
-                          builder: (context, ratingSnapshot) {
-                            if (!ratingSnapshot.hasData) {
-                              return SizedBox.shrink();
-                            }
-                            if (ratingSnapshot.hasError) {
-                              return Text("Error loading rating");
-                            }
-
-                            double averageRating = ratingSnapshot.data ?? 0.0;
-                            return buildProfessionalCard(context, user, averageRating);
-                          },
+                        final specialist = filteredSpecialists[index];
+                        final distance = _calculateDistance(specialist);
+                        return buildProfessionalCard(
+                          context,
+                          specialist,
+                          specialist.averageRating,
+                          distance.toString(),
                         );
                       },
-                      childCount: snapshot.data!.docs.length,
+                      childCount: filteredSpecialists.length,
                     ),
                   );
+
+                  // SliverList(
+                  //   delegate: SliverChildBuilderDelegate(
+                  //     (context, index) {
+                  //       SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
+                  //       return FutureBuilder<double>(
+                  //         future: FireStoreMethod().getAverageRating(user.userId),
+                  //         builder: (context, ratingSnapshot) {
+                  //           if (!ratingSnapshot.hasData) {
+                  //             return SizedBox.shrink();
+                  //           }
+                  //           if (ratingSnapshot.hasError) {
+                  //             return Text("Error loading rating");
+                  //           }
+
+                  //           double averageRating = ratingSnapshot.data ?? 0.0;
+
+                  //           // print(averageRating.toString());
+                  //           return buildProfessionalCard(context, user, averageRating);
+                  //         },
+                  //       );
+                  //     },
+                  //     childCount: snapshot.data!.docs.length,
+                  //   ),
+                  // );
                 },
               );
             },
@@ -381,34 +430,89 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     );
   }
 
-  Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
-    Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
+  List<SpecialistModel> _applyProximityFilters({
+    required List<SpecialistModel> specialists,
+    required FilterProvider filterProvider,
+  }) {
+    // Filter by max distance
+    var filtered = specialists.where((specialist) {
+      if (filterProvider.maxDistance == null || _currentPosition == null || specialist.lat == null || specialist.lng == null) {
+        return true;
+      }
 
-    // Apply city filter if selected
-    if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
-      query = query.where('city', isEqualTo: filterProvider.selectedCity);
+      final distance = _calculateDistance(specialist);
+      return distance <= filterProvider.maxDistance!;
+    }).toList();
+
+    // Sort by distance if enabled
+    if (filterProvider.sortByDistance && _currentPosition != null) {
+      filtered.sort((a, b) {
+        final distA = _calculateDistance(a);
+        final distB = _calculateDistance(b);
+        return distA.compareTo(distB);
+      });
     }
 
-    // Apply category filter if selected
-    if (filterProvider.selectedCategory != null && filterProvider.selectedCategory!.isNotEmpty) {
-      query = query.where('categories', arrayContains: filterProvider.selectedCategory);
-    }
+    // Apply rating sorting if needed
+    // if (filterProvider.highestRating) {
+    //   filtered.sort((a, b) => b.averageRating.compareTo(a.averageRating));
+    // }
 
-    // Apply rating filters
-    if (filterProvider.highestRating) {
-      query = query.orderBy('averageRating', descending: true);
-    } else if (filterProvider.mediumRating) {
-      query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
-    }
-
-    return query.snapshots();
+    return filtered;
   }
+
+  // Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
+  //   Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
+
+  //   // Apply city filter if selected
+  //   if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
+  //     query = query.where('city', isEqualTo: filterProvider.selectedCity);
+  //   }
+
+  //   // Apply category filter if selected
+  //   if (filterProvider.selectedCategory != null && filterProvider.selectedCategory!.isNotEmpty) {
+  //     query = query.where('categories', arrayContains: filterProvider.selectedCategory);
+  //   }
+
+  //   // Apply rating filters
+  //   if (filterProvider.highestRating) {
+  //     query = query.orderBy('averageRating', descending: true);
+  //   } else if (filterProvider.mediumRating) {
+  //     query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
+  //   }
+
+  //   return query.snapshots();
+  // }
+  // Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
+  //   Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
+
+  //   // City filter
+  //   if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
+  //     query = query.where('city', isEqualTo: filterProvider.selectedCity);
+  //   }
+
+  //   // Category filter
+  //   if (filterProvider.selectedCategory != null && filterProvider.selectedCategory!.isNotEmpty) {
+  //     query = query.where('categories', arrayContains: filterProvider.selectedCategory);
+  //   }
+
+  //   // Rating filters (mutually exclusive)
+  //   if (filterProvider.highestRating) {
+  //     query = query.orderBy('averageRating', descending: true);
+  //   } else if (filterProvider.mediumRating) {
+  //     query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
+  //   }
+
+  //   return query.snapshots();
+  // }
 
   Widget buildProfessionalCard(
     BuildContext context,
     SpecialistModel user,
     double averageRating,
+    String? distance,
   ) {
+    double distance = _calculateDistance(user);
     return Card(
       margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       color: Color(0xFFD7D1BE),
@@ -463,7 +567,10 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                 Row(
                   children: [
                     Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
-                    Text("70m", style: appTextStyle15(AppColors.newThirdGrayColor)),
+                    Text(
+                      formatDistance(distance),
+                      style: appTextStyle15(AppColors.newThirdGrayColor),
+                    ),
                   ],
                 ),
                 TextButton(
@@ -471,10 +578,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SpecialistDetailScreen(
-                          userId: user.userId,
-                          name: user.fullName,
-                        ),
+                        builder: (context) => SpecialistDetailScreen(userId: user.userId, name: user.fullName, rating: averageRating, distance: distance),
                       ),
                     );
                   },
@@ -490,4 +594,21 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
       ),
     );
   }
+
+  double _calculateDistance(SpecialistModel specialist) {
+    if (_currentPosition == null || specialist.lat == null || specialist.lng == null) return 0;
+
+    return Geolocator.distanceBetween(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+          specialist.lat!,
+          specialist.lng!,
+        ) /
+        1000; // Convert meters to kilometers
+  }
+}
+
+String formatDistance(double km) {
+  if (km < 1) return '${(km * 1000).round()}m';
+  return '${km.toStringAsFixed(1)}km';
 }

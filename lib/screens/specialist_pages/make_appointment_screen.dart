@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -74,6 +75,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
   final List<TimeSlot> _selectedSlots = [];
   final _firestore = FirebaseFirestore.instance;
   bool isLoading = false;
+  bool _isTimeSlotsExpanded = false;
 
   final TextEditingController _addressController = TextEditingController();
   FirebaseNotificationService firebasePushNotificationService = FirebaseNotificationService();
@@ -127,8 +129,13 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
 
   /// Determines if [candidate] should be blocked because it follows a selected slot
   /// by less than the combined duration of services plus a 15 minute break.
+// Revised _shouldBlockCandidateSlot function with equality check
   bool _shouldBlockCandidateSlot(TimeSlot candidate, TimeSlot selected, int serviceDuration) {
-    // Build DateTime objects for comparison
+    // Check if the candidate is the same as the selected slot
+    if (candidate.day == selected.day && candidate.hour == selected.hour && candidate.minute == selected.minute) {
+      return false; // Do not block the same slot
+    }
+
     final selectedStart = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -159,6 +166,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
     setState(() => isLoading = true);
     final specialistProvider = Provider.of<SpecialistProvider>(context, listen: false);
     final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
 
     if (_selectedSlots.isEmpty || specialistProvider.selectedServices.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,6 +225,11 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
           'totalDuration': totalServiceDuration,
           'status': 'booked',
           'createdAt': FieldValue.serverTimestamp(),
+          // Add these new fields for reminders
+          'remindersEnabled': false,
+          'reminder24HSent': false,
+          'reminder1HSent': false,
+          'specialistFCMToken': fcmToken ?? '',
         });
 
         final startTime = DateTime(
@@ -266,6 +279,18 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
         MaterialPageRoute(builder: (context) => const SuccessScreen()),
       );
       firebasePushNotificationService.sendPushNotification('Appointment booked', 'Your appointment with ${widget.specialistName} has been successfully booked', user);
+
+      // Send confirmation notification
+      firebasePushNotificationService.sendPushNotification(
+        'Appointment booked',
+        'Your appointment with ${widget.specialistName} has been successfully booked',
+        user,
+      );
+
+      // Send notification to specialist
+      if (fcmToken != null) {
+        firebasePushNotificationService.sendPushNotification('New Appointment', 'You have a new appointment with $firstName $lastName', user);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Booking failed: $e')),
@@ -425,6 +450,8 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
             ),
             SizedBox(height: 24),
             // Time Slots Section
+
+            // In the build method, modify the Time Slots section:
             Text(
               LocaleData.availableTimeSlots.getString(context),
               style: appTextStyle24500(AppColors.mainBlackTextColor),
@@ -440,36 +467,36 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
                 if (slots.isEmpty) {
                   return Center(child: Text('No available time slots'));
                 }
-                return Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: slots.map((slot) {
-                    return Tooltip(
-                      message: 'Select for ${Provider.of<SpecialistProvider>(context, listen: false).totalDuration} min service',
-                      child: TimeSlotButton(
-                        time: _formatTime(slot.hour, slot.minute),
-                        isSelected: _selectedSlots.any((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute),
-                        onPressed: () {
-                          // Before adding a time slot, ensure at least one service is selected.
-                          final provider = Provider.of<SpecialistProvider>(context, listen: false);
-                          if (provider.selectedServices.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please select at least one service first')),
-                            );
-                            return;
-                          }
-                          setState(() {
-                            final existingIndex = _selectedSlots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute);
-                            if (existingIndex != -1) {
-                              _selectedSlots.removeAt(existingIndex);
-                            } else {
-                              _selectedSlots.add(slot);
-                            }
-                          });
-                        },
+                return Column(
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _isTimeSlotsExpanded ? slots.map((slot) => _buildTimeSlotButton(slot)).toList() : slots.take(9).map((slot) => _buildTimeSlotButton(slot)).toList(),
+                    ),
+                    if (slots.length > 9)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => setState(() => _isTimeSlotsExpanded = !_isTimeSlotsExpanded),
+                            child: Row(
+                              children: [
+                                Text(
+                                  _isTimeSlotsExpanded ? 'See Less' : 'See More',
+                                  style: TextStyle(color: AppColors.mainBlackTextColor),
+                                ),
+                                Icon(
+                                  _isTimeSlotsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                  color: AppColors.mainBlackTextColor,
+                                  size: 20.h,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  }).toList(),
+                  ],
                 );
               },
             ),
@@ -573,6 +600,34 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
       builder: (context) => SelectAddressBottomSheet(addressController: _addressController),
     );
   }
+
+  Widget _buildTimeSlotButton(TimeSlot slot) {
+    final provider = Provider.of<SpecialistProvider>(context, listen: false);
+    return Tooltip(
+      textStyle: appTextStyle12(),
+      message: 'Select for ${provider.totalDuration} min service',
+      child: TimeSlotButton(
+        time: _formatTime(slot.hour, slot.minute),
+        isSelected: _selectedSlots.any((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute),
+        onPressed: () {
+          if (provider.selectedServices.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please select at least one service first')),
+            );
+            return;
+          }
+          setState(() {
+            final index = _selectedSlots.indexWhere((s) => s.day == slot.day && s.hour == slot.hour && s.minute == slot.minute);
+            if (index != -1) {
+              _selectedSlots.removeAt(index);
+            } else {
+              _selectedSlots.add(slot);
+            }
+          });
+        },
+      ),
+    );
+  }
 }
 
 class TimeSlotButton extends StatelessWidget {
@@ -593,7 +648,7 @@ class TimeSlotButton extends StatelessWidget {
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         backgroundColor: isSelected ? AppColors.appBGColor : AppColors.whiteColor,
-        padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 4.h),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.dg),
         ),
@@ -604,7 +659,7 @@ class TimeSlotButton extends StatelessWidget {
       ),
       child: Text(
         time,
-        style: appTextStyle16500(
+        style: appTextStyle12K(
           isSelected ? AppColors.mainBlackTextColor : AppColors.newThirdGrayColor,
         ),
       ),

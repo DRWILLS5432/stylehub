@@ -124,23 +124,6 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       );
     }
   }
-
-  // Future<void> _cancelAppointment(context, String appointmentId) async {
-  //   try {
-  //     await _firestore.collection('appointments').doc(appointmentId).update({
-  //       'status': 'cancelled',
-  //       'cancelledAt': FieldValue.serverTimestamp(),
-  //     });
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Appointment cancelled successfully')),
-  //     );
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Failed to cancel appointment: $e')),
-  //     );
-  //   }
-  // }
 }
 
 class AppointmentCard extends StatefulWidget {
@@ -243,6 +226,13 @@ class _AppointmentCardState extends State<AppointmentCard> {
                 style: appTextStyle12K(AppColors.whiteColor),
               ),
             ),
+            if (widget.status == 'booked')
+              IconButton(
+                icon: Icon(
+                  Icons.notifications_on_sharp,
+                ),
+                onPressed: _scheduleReminder,
+              ),
           ],
         ),
       ],
@@ -280,23 +270,38 @@ class _AppointmentCardState extends State<AppointmentCard> {
           ],
         ),
         SizedBox(height: 4.h),
-        // Row(
-        //   children: [
-        //     Container(
-        //       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-        //       decoration: BoxDecoration(
-        //         color: _getStatusColor(),
-        //         borderRadius: BorderRadius.circular(4.dg),
-        //       ),
-        //       child: Text(
-        //         widget.status.toUpperCase(),
-        //         style: appTextStyle12K(AppColors.whiteColor),
-        //       ),
-        //     ),
-        //   ],
-        // ),
       ],
     );
+  }
+
+  Future<void> _scheduleReminder() async {
+    final now = DateTime.now();
+    final appointmentTime = widget.date;
+    final oneHourBefore = appointmentTime.subtract(Duration(hours: 1));
+
+    if (oneHourBefore.isBefore(now)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cannot set reminder for past appointments.')),
+      );
+      return;
+    }
+
+    try {
+      // Assuming FirebaseNotificationService has a method to schedule notifications
+      await FirebaseNotificationService().schedulePushNotification(
+        title: 'Appointment Reminder',
+        body: 'Your appointment with ${_specialistData?['firstName']} is in 1 hour.',
+        scheduledTime: oneHourBefore,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Reminder set for 1 hour before the appointment.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to set reminder: $e')),
+      );
+    }
   }
 
   Widget _buildActionButtons() {
@@ -356,22 +361,6 @@ class _AppointmentCardState extends State<AppointmentCard> {
             child: Center(child: Text(LocaleData.cancel.getString(context), style: appTextStyle12K(AppColors.mainBlackTextColor))),
           ),
         )),
-        // SizedBox(width: 16.w),
-        // Expanded(
-        //   child: ElevatedButton(
-        //     onPressed: () {
-        //       // Handle reschedule or other actions
-        //     },
-        //     style: ElevatedButton.styleFrom(
-        //       backgroundColor: AppColors.appBGColor,
-        //       padding: EdgeInsets.symmetric(vertical: 12.h),
-        //     ),
-        //     child: Text(
-        //       'Reschedule',
-        //       style: appTextStyle14(AppColors.whiteColor),
-        //     ),
-        //   ),
-        // ),
       ],
     );
   }

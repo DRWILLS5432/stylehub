@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class PushNotificationService {
   static Future<String> getAccessToken() async {
     final serviceAccessJson =
-        // ADD THE SERVICE ACCOUNT JSON 
+        // ADD THE SERVICE ACCOUNT JSON
 
 
     // Properly formatted scopes with commas
@@ -26,47 +26,6 @@ class PushNotificationService {
   }
 
   // static Future<void> sendPushNotificationToClient(
-  //   String deviceToken,
-  //   String title,
-  //   String body,
-  // ) async {
-  //   try {
-  //     final String serverAccessTokenKey = await getAccessToken();
-  //     const String endpointFirebaseCloudMessaging = 'https://fcm.googleapis.com/v1/projects/stylehub-1cfee/messages:send';
-
-  //     final Map<String, dynamic> message = {
-  //       'message': {
-  //         'token': deviceToken,
-  //         'notification': {
-  //           'title': title,
-  //           'body': body,
-  //         },
-  //         'data': {
-  //           'title': title,
-  //           'body': body,
-  //         }
-  //       },
-  //     };
-
-  //     final response = await http.post(
-  //       Uri.parse(endpointFirebaseCloudMessaging),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'Bearer $serverAccessTokenKey',
-  //       },
-  //       body: jsonEncode(message),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       print('Notification sent successfully');
-  //     } else {
-  //       print('Failed to send notification: ${response.statusCode} - ${response.body}');
-  //       throw Exception('Failed to send notification');
-  //     }
-  //   } catch (e) {
-  //     print('Error in sendPushNotificationToClient: $e');
-  //     rethrow;
-  //   }
 
   static Future<void> sendPushNotification(String fcmToken, String title, String body) async {
     final accessToken = await PushNotificationService.getAccessToken();
@@ -102,8 +61,8 @@ class PushNotificationService {
       }),
     );
 
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    print('Response status:}');
+    print('Response body: ');
   }
 }
 

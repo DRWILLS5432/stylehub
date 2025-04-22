@@ -57,9 +57,9 @@ class SuccessScreen extends StatelessWidget {
                       bgColor: AppColors.whiteColor,
                       onPressed: () {
                         if (userData!.role == 'Stylist') {
-                          Navigator.pushNamed(context, '/specialist_page');
+                          Navigator.pushNamedAndRemoveUntil(context, '/specialist_page', (arguments) => false);
                         } else {
-                          Navigator.pushNamed(context, '/customer_page');
+                          Navigator.pushNamedAndRemoveUntil(context, '/customer_page', (arguments) => false);
                         }
                       },
                     );
