@@ -16,7 +16,6 @@ import 'package:stylehub/screens/specialist_pages/provider/app_notification_prov
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/filter_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/language_provider.dart';
-import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/screens/notification_detail.dart';
 import 'package:stylehub/screens/specialist_pages/specialist_detail_screen.dart';
 
@@ -32,7 +31,9 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   Uint8List? _imageBytes;
   String? currentUserId;
   Position? _currentPosition;
-  Address? _selectedAddress;
+  double? _userLat;
+  double? _userLng;
+  // Address? _selectedAddress;
 
   @override
   void initState() {
@@ -40,6 +41,8 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     _fetchUserData();
     fetchCategories();
   }
+
+// 2. Modify _fetchUserData to get stored coordinates
 
   void fetchCategories() {
     final provider = Provider.of<EditCategoryProvider>(context, listen: false);
@@ -68,6 +71,9 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
               }
             }
           });
+
+          _userLat = userData['lat']?.toDouble();
+          _userLng = userData['lng']?.toDouble();
         }
       }
     }
@@ -113,7 +119,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
             expandedHeight: 170.h,
             toolbarHeight: 10.h,
             pinned: true,
-            backgroundColor: AppColors.appBGColor,
+            // backgroundColor: AppColors.appBGColor,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
@@ -222,7 +228,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
               background: Container(
                 height: 120.h,
                 color: Color(0xFFD7D1BE),
-                padding: EdgeInsets.only(left: 16.w),
+                padding: EdgeInsets.only(left: 16.w, top: 15.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -392,31 +398,6 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                       childCount: filteredSpecialists.length,
                     ),
                   );
-
-                  // SliverList(
-                  //   delegate: SliverChildBuilderDelegate(
-                  //     (context, index) {
-                  //       SpecialistModel user = SpecialistModel.fromSnap(snapshot.data!.docs[index]);
-                  //       return FutureBuilder<double>(
-                  //         future: FireStoreMethod().getAverageRating(user.userId),
-                  //         builder: (context, ratingSnapshot) {
-                  //           if (!ratingSnapshot.hasData) {
-                  //             return SizedBox.shrink();
-                  //           }
-                  //           if (ratingSnapshot.hasError) {
-                  //             return Text("Error loading rating");
-                  //           }
-
-                  //           double averageRating = ratingSnapshot.data ?? 0.0;
-
-                  //           // print(averageRating.toString());
-                  //           return buildProfessionalCard(context, user, averageRating);
-                  //         },
-                  //       );
-                  //     },
-                  //     childCount: snapshot.data!.docs.length,
-                  //   ),
-                  // );
                 },
               );
             },
@@ -430,82 +411,6 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     );
   }
 
-  List<SpecialistModel> _applyProximityFilters({
-    required List<SpecialistModel> specialists,
-    required FilterProvider filterProvider,
-  }) {
-    // Filter by max distance
-    var filtered = specialists.where((specialist) {
-      if (filterProvider.maxDistance == null || _currentPosition == null || specialist.lat == null || specialist.lng == null) {
-        return true;
-      }
-
-      final distance = _calculateDistance(specialist);
-      return distance <= filterProvider.maxDistance!;
-    }).toList();
-
-    // Sort by distance if enabled
-    if (filterProvider.sortByDistance && _currentPosition != null) {
-      filtered.sort((a, b) {
-        final distA = _calculateDistance(a);
-        final distB = _calculateDistance(b);
-        return distA.compareTo(distB);
-      });
-    }
-
-    // Apply rating sorting if needed
-    // if (filterProvider.highestRating) {
-    //   filtered.sort((a, b) => b.averageRating.compareTo(a.averageRating));
-    // }
-
-    return filtered;
-  }
-
-  // Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
-  //   Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
-
-  //   // Apply city filter if selected
-  //   if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
-  //     query = query.where('city', isEqualTo: filterProvider.selectedCity);
-  //   }
-
-  //   // Apply category filter if selected
-  //   if (filterProvider.selectedCategory != null && filterProvider.selectedCategory!.isNotEmpty) {
-  //     query = query.where('categories', arrayContains: filterProvider.selectedCategory);
-  //   }
-
-  //   // Apply rating filters
-  //   if (filterProvider.highestRating) {
-  //     query = query.orderBy('averageRating', descending: true);
-  //   } else if (filterProvider.mediumRating) {
-  //     query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
-  //   }
-
-  //   return query.snapshots();
-  // }
-  // Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
-  //   Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
-
-  //   // City filter
-  //   if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
-  //     query = query.where('city', isEqualTo: filterProvider.selectedCity);
-  //   }
-
-  //   // Category filter
-  //   if (filterProvider.selectedCategory != null && filterProvider.selectedCategory!.isNotEmpty) {
-  //     query = query.where('categories', arrayContains: filterProvider.selectedCategory);
-  //   }
-
-  //   // Rating filters (mutually exclusive)
-  //   if (filterProvider.highestRating) {
-  //     query = query.orderBy('averageRating', descending: true);
-  //   } else if (filterProvider.mediumRating) {
-  //     query = query.where('averageRating', isGreaterThanOrEqualTo: 2.5).where('averageRating', isLessThan: 4.0);
-  //   }
-
-  //   return query.snapshots();
-  // }
-
   Widget buildProfessionalCard(
     BuildContext context,
     SpecialistModel user,
@@ -513,102 +418,169 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
     String? distance,
   ) {
     double distance = _calculateDistance(user);
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      color: Color(0xFFD7D1BE),
-      child: Padding(
-        padding: EdgeInsets.only(left: 17.w, right: 17.h, top: 29.h, bottom: 12.h),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(2.dg),
-                  decoration: BoxDecoration(
-                    color: AppColors.whiteColor,
-                    borderRadius: BorderRadius.circular(100.dg),
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SpecialistDetailScreen(userId: user.userId, name: user.fullName, rating: averageRating, distance: distance),
+        ),
+      ),
+      child: Card(
+        margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        color: Color(0xFFD7D1BE),
+        child: Padding(
+          padding: EdgeInsets.only(left: 17.w, right: 17.h, top: 29.h, bottom: 12.h),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(2.dg),
+                    decoration: BoxDecoration(
+                      color: AppColors.whiteColor,
+                      borderRadius: BorderRadius.circular(100.dg),
+                    ),
+                    child: CircleAvatar(
+                      radius: 60.dg,
+                      backgroundImage: user.profileImage != null ? MemoryImage(base64Decode(user.profileImage!)) : AssetImage('assets/master1.png') as ImageProvider,
+                    ),
                   ),
-                  child: CircleAvatar(
-                    radius: 60.dg,
-                    backgroundImage: user.profileImage != null ? MemoryImage(base64Decode(user.profileImage!)) : AssetImage('assets/master1.png') as ImageProvider,
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(user.fullName, style: appTextStyle20(AppColors.newThirdGrayColor)),
-                      Text(
-                        user.role,
-                        style: appTextStyle15(AppColors.newThirdGrayColor),
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: List.generate(
-                          5,
-                          (index) => Icon(
-                            index < averageRating.floor() ? Icons.star : Icons.star_border,
-                            color: Colors.black,
-                            size: 20,
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(user.fullName, style: appTextStyle20(AppColors.newThirdGrayColor)),
+                        Text(
+                          user.role,
+                          style: appTextStyle15(AppColors.newThirdGrayColor),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          children: List.generate(
+                            5,
+                            (index) => Icon(
+                              index < averageRating.floor() ? Icons.star : Icons.star_border,
+                              color: Colors.black,
+                              size: 20,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
+                      Text(
+                        formatDistance(distance),
+                        style: appTextStyle15(AppColors.newThirdGrayColor),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_pin, color: AppColors.newThirdGrayColor),
-                    Text(
-                      formatDistance(distance),
-                      style: appTextStyle15(AppColors.newThirdGrayColor),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SpecialistDetailScreen(userId: user.userId, name: user.fullName, rating: averageRating, distance: distance),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      LocaleData.view.getString(context),
+                      style: appTextStyle14(AppColors.newThirdGrayColor),
                     ),
-                  ],
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SpecialistDetailScreen(userId: user.userId, name: user.fullName, rating: averageRating, distance: distance),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    LocaleData.view.getString(context),
-                    style: appTextStyle14(AppColors.newThirdGrayColor),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   double _calculateDistance(SpecialistModel specialist) {
-    if (_currentPosition == null || specialist.lat == null || specialist.lng == null) return 0;
+    // Early return if any coordinate is missing
+    if (_userLat == null || _userLng == null || specialist.lat == null || specialist.lng == null) {
+      // debugPrint('Missing coordinates:');
+      // if (_userLat == null) debugPrint(' - User latitude is null');
+      // if (_userLng == null) debugPrint(' - User longitude is null');
+      // if (specialist.lat == null) debugPrint(' - Specialist latitude is null (ID: ${specialist.userId})');
+      // if (specialist.lng == null) debugPrint(' - Specialist longitude is null (ID: ${specialist.userId})');
+      // // Optional: Print available coordinates
+      // if (_userLat != null || _userLng != null) {
+      //   debugPrint('User coordinates: lat:$_userLat, lng:$_userLng');
+      // }
 
-    return Geolocator.distanceBetween(
-          _currentPosition!.latitude,
-          _currentPosition!.longitude,
-          specialist.lat!,
-          specialist.lng!,
-        ) /
-        1000; // Convert meters to kilometers
+      // if (specialist.lat != null || specialist.lng != null) {
+      //   debugPrint('Specialist coordinates: lat:${specialist.lat}, lng:${specialist.lng}');
+      // }
+      return 0; // Or return null, or throw an error, depending on your needs
+    }
+
+    final distance = Geolocator.distanceBetween(
+      _userLat!,
+      _userLng!,
+      specialist.lat!,
+      specialist.lng!,
+    );
+
+    // debugPrint('Distance calculation successful:');
+    // debugPrint(' - User location: ($_userLat, $_userLng)');
+    // debugPrint(' - Specialist location: (${specialist.lat}, ${specialist.lng})');
+    // debugPrint(' - Calculated distance: ${distance / 1000} km');
+
+    return distance / 1000; // Convert meters to kilometers
   }
-}
 
-String formatDistance(double km) {
-  if (km < 1) return '${(km * 1000).round()}m';
-  return '${km.toStringAsFixed(1)}km';
+  List<SpecialistModel> _applyProximityFilters({
+    required List<SpecialistModel> specialists,
+    required FilterProvider filterProvider,
+  }) {
+    final hasValidUserCoords = _userLat != null && _userLng != null;
+
+    var filtered = specialists.where((specialist) {
+      // Skip specialists with missing coordinates if proximity is enabled
+      if (filterProvider.maxDistance != null || filterProvider.sortByDistance) {
+        if (specialist.lat == null || specialist.lng == null || !hasValidUserCoords) {
+          return false; // Exclude from results
+        }
+      }
+
+      // Proximity check
+      if (filterProvider.maxDistance != null && hasValidUserCoords) {
+        final distance = _calculateDistance(specialist);
+        return distance <= filterProvider.maxDistance!;
+      }
+
+      return true;
+    }).toList();
+
+    // Sort only if user coordinates are valid
+    if (filterProvider.sortByDistance && hasValidUserCoords) {
+      filtered.sort((a, b) {
+        final distA = _calculateDistance(a);
+        final distB = _calculateDistance(b);
+        return distA.compareTo(distB);
+      });
+    }
+
+    return filtered;
+  }
+
+// 5. Update distance display formatting
+  String formatDistance(double km) {
+    if (km <= 0) return 'N/A';
+    if (km < 1) return '${(km * 1000).round()}m';
+    return '${km.toStringAsFixed(1)}km';
+  }
 }

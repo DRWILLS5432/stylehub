@@ -20,7 +20,7 @@ class PushNotificationService {
       client.close();
       return credentials.accessToken.data;
     } catch (e) {
-      print('Error getting access token: $e');
+      // print('Error getting access token: $e');
       rethrow;
     }
   }
@@ -61,8 +61,8 @@ class PushNotificationService {
       }),
     );
 
-    print('Response status:}');
-    print('Response body: ');
+    // print('Response status:}');
+    // print('Response body: ');
   }
 }
 

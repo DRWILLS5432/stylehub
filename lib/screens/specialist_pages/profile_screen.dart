@@ -12,6 +12,7 @@ import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/screens/admin/admin_panel.dart';
 import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/select_address_widget.dart';
@@ -86,6 +87,20 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
         }
       }
     }
+  }
+
+  void _navigateToAdminPanel() async {
+    // final user = FirebaseAuth.instance.currentUser;
+    // if (user == null) return;
+
+    // final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    // if (doc.data()?['role'] == LocaleData.stylist.getString(context)) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => AdminDashboard()));
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('Admin access required')),
+    //   );
+    // }
   }
 
   /// Allows the user to pick an image from their device's gallery, and then
@@ -220,6 +235,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                     ],
                   ),
                   SizedBox(height: 51.h),
+                  ProfileTiles(onTap: _navigateToAdminPanel, title: 'Admin Panel', subtitle: LocaleData.updateSettings.getString(context), icon: 'assets/images/Settings.png'),
                   SizedBox(
                     width: 212.w,
                     height: 45.h,

@@ -12,9 +12,7 @@ import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/specialist_pages/make_appointment_screen.dart';
-import 'package:stylehub/screens/specialist_pages/widgets/write_review.dart';
 import 'package:stylehub/storage/likes_method.dart';
-import 'package:stylehub/storage/post_review_method.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SpecialistDetailScreen extends StatefulWidget {
@@ -29,10 +27,10 @@ class SpecialistDetailScreen extends StatefulWidget {
 }
 
 class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
-  bool toggleReviewField = false;
+  // bool toggleReviewField = false;
   bool toggleLikeIcon = false;
   String? selectedImage;
-  final ReviewService _reviewService = ReviewService();
+  // final ReviewService _reviewService = ReviewService();
   final LikeService _likeService = LikeService();
 
   @override
@@ -85,24 +83,24 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
   /// - `context`: The BuildContext to use for showing a SnackBar.
   /// - `rating`: An integer representing the user's rating for the specialist.
   /// - `comment`: A string containing the user's comments or feedback.
-  void _submitReview(context, int rating, String comment) async {
-    String result = await _reviewService.submitReview(
-      userId: widget.userId,
-      rating: rating,
-      comment: comment,
-    );
+  // void _submitReview(context, int rating, String comment) async {
+  //   String result = await _reviewService.submitReview(
+  //     userId: widget.userId,
+  //     rating: rating,
+  //     comment: comment,
+  //   );
 
-    if (result == 'success') {
-      setState(() => toggleReviewField = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted successfully!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result)),
-      );
-    }
-  }
+  //   if (result == 'success') {
+  //     setState(() => toggleReviewField = false);
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Review submitted successfully!')),
+  //     );
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(result)),
+  //     );
+  //   }
+  // }
 
   void _showZoomableImage(BuildContext context, String image, {bool isBase64 = false}) {
     showDialog(
@@ -174,18 +172,53 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                 return Center(child: Text('Specialist not found'));
               }
 
+              // final userData = snapshot.data!.data() as Map<String, dynamic>;
+              // final profileImage = userData['profileImage'];
+              // final bio = userData['bio'] ?? 'No bio available';
+              // final categories = List<String>.from(userData['categories'] ?? []);
+              // final images = List<String>.from(userData['images'] ?? []);
+              // final services = List<Map<String, dynamic>>.from(userData['services'] ?? []);
+              // final phone = userData['phone'];
+
               final userData = snapshot.data!.data() as Map<String, dynamic>;
               final profileImage = userData['profileImage'];
               final bio = userData['bio'] ?? 'No bio available';
               final categories = List<String>.from(userData['categories'] ?? []);
-              final images = List<String>.from(userData['images'] ?? []);
+
+              // Modified code: Get approved previous work
+              final previousWorkStatus = userData['previousWorkStatus'] ?? 'draft';
+              final previousWork = previousWorkStatus == 'approved' ? List<String>.from(userData['previousWork'] ?? []) : [];
+
               final services = List<Map<String, dynamic>>.from(userData['services'] ?? []);
               final phone = userData['phone'];
 
               // Set default top image if it's not set
-              if (selectedImage == null && images.isNotEmpty) {
-                selectedImage = images[0];
-              }
+              // if (selectedImage == null && images.isNotEmpty) {
+              //   selectedImage = images[0];
+              // }
+
+              // stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).snapshots(),
+              // builder: (context, snapshot) {
+              //   if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+              //   if (!snapshot.data!.exists) return Center(child: Text('Specialist not found'));
+
+              //   final userData = snapshot.data!.data() as Map<String, dynamic>;
+
+              //   // Approval status checks
+              //   final isProfileApproved = userData['profileImageStatus'] == 'approved';
+              //   final isBioApproved = userData['bioStatus'] == 'approved';
+              //   final isCategoriesApproved = userData['categoriesStatus'] == 'approved';
+              //   final isPreviousWorkApproved = userData['previousWorkStatus'] == 'approved';
+              //   final isServicesApproved = userData['servicesStatus'] == 'approved';
+              //   final isPhoneApproved = userData['phoneStatus'] == 'approved';
+
+              //   // Approved data
+              //   final profileImage = isProfileApproved ? userData['profileImage'] : null;
+              //   final bio = isBioApproved ? userData['bio'] : null;
+              //   final categories = isCategoriesApproved ? List<String>.from(userData['categories'] ?? []) : [];
+              //   final images = isPreviousWorkApproved ? List<String>.from(userData['images'] ?? []) : [];
+              //   final services = isServicesApproved ? List<Map<String, dynamic>>.from(userData['services'] ?? []) : [];
+              //   final phone = isPhoneApproved ? userData['phone'] : null;
 
               return Stack(
                 children: [
@@ -213,7 +246,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   child: profileImage != null
                                       ? Image.memory(
                                           base64Decode(profileImage),
-                                          fit: BoxFit.fill,
+                                          fit: BoxFit.cover,
                                         )
                                       : Icon(Icons.person, size: 200.dg),
                                 ),
@@ -279,7 +312,7 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                           'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2Fmanicure.png?alt=media&token=a175f502-9439-47e3-b059-f96d8d5b1fc8');
                                     } else if (category == 'Massage') {
                                       image = NetworkImage(
-                                          'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2Fmassasge.png?alt=media&token=10eacdf6-2fb9-4cf7-a170-24af32e2dead');
+                                          'https://firebasestorage.googleapis.com/v0/b/stylehub-1cfee.firebasestorage.app/o/category_images%2FGroup%2017.png?alt=media&token=46a73c77-20ac-40a1-a82c-7f02c8de351b');
                                     } else {
                                       image = AssetImage('assets/master1.png');
                                     }
@@ -306,17 +339,63 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             SizedBox(height: 20.h),
                             // Display uploaded images
                             // **Display Uploaded Images (Previous Work)**
-                            images.isNotEmpty
+                            // images.isNotEmpty
+                            //     ? SizedBox(
+                            //         height: 140,
+                            //         child: ListView.builder(
+                            //           scrollDirection: Axis.horizontal,
+                            //           itemCount: images.length,
+                            //           itemBuilder: (context, index) {
+                            //             return GestureDetector(
+                            //               onTap: () {
+                            //                 // Show zoomable image
+                            //                 _showZoomableImage(context, images[index]);
+                            //               },
+                            //               child: Padding(
+                            //                 padding: const EdgeInsets.all(5.0),
+                            //                 child: Container(
+                            //                   decoration: BoxDecoration(
+                            //                     borderRadius: BorderRadius.circular(110.dg),
+                            //                     color: AppColors.appBGColor,
+                            //                   ),
+                            //                   padding: EdgeInsets.all(3.w),
+                            //                   child: ClipRRect(
+                            //                     borderRadius: BorderRadius.circular(100.dg),
+                            //                     child: Image.network(
+                            //                       images[index],
+                            //                       width: 120.w,
+                            //                       height: 140.h,
+                            //                       fit: BoxFit.cover,
+                            //                       errorBuilder: (context, error, stackTrace) => Image.asset(
+                            //                         'assets/default_work.png', // Add a default work image to your assets
+                            //                         width: 120.w,
+                            //                         height: 140.h,
+                            //                         fit: BoxFit.cover,
+                            //                       ),
+                            //                     ),
+                            //                   ),
+                            //                 ),
+                            //               ),
+                            //             );
+                            //           },
+                            //         ),
+                            //       )
+                            //     : Padding(
+                            //         padding: const EdgeInsets.only(left: 20.0),
+                            //         child: Text('No images uploaded'),
+                            //       ),
+
+                            // Display approved previous work
+                            previousWork.isNotEmpty
                                 ? SizedBox(
                                     height: 140,
                                     child: ListView.builder(
                                       scrollDirection: Axis.horizontal,
-                                      itemCount: images.length,
+                                      itemCount: previousWork.length,
                                       itemBuilder: (context, index) {
                                         return GestureDetector(
                                           onTap: () {
-                                            // Show zoomable image
-                                            _showZoomableImage(context, images[index]);
+                                            _showZoomableImage(context, previousWork[index]);
                                           },
                                           child: Padding(
                                             padding: const EdgeInsets.all(5.0),
@@ -329,13 +408,13 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                               child: ClipRRect(
                                                 borderRadius: BorderRadius.circular(100.dg),
                                                 child: Image.network(
-                                                  images[index],
+                                                  previousWork[index],
                                                   width: 120.w,
                                                   height: 140.h,
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (context, error, stackTrace) => Image.asset(
-                                                    'assets/default_work.png', // Add a default work image to your assets
-                                                    width: 120.w,
+                                                    'assets/default_work.png',
+                                                    width: 130.w,
                                                     height: 140.h,
                                                     fit: BoxFit.cover,
                                                   ),
@@ -349,7 +428,9 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                                   )
                                 : Padding(
                                     padding: const EdgeInsets.only(left: 20.0),
-                                    child: Text('No images uploaded'),
+                                    child: Text(
+                                      previousWorkStatus == 'pending' ? 'Previous work pending approval' : 'No previous work available',
+                                    ),
                                   ),
 
                             SizedBox(height: 36.h),
@@ -432,28 +513,28 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                               child: Text(LocaleData.reviews.getString(context), style: appTextStyle15600(AppColors.newThirdGrayColor)),
                             ),
                             SizedBox(height: 20.h),
-                            InkWell(
-                              radius: 20.dg,
-                              onTap: () => setState(() {
-                                toggleReviewField = !toggleReviewField;
-                              }),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 15.w),
-                                child: Row(
-                                  children: [
-                                    Text(LocaleData.leaveA.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
-                                    SizedBox(width: 10.w),
-                                    Text(LocaleData.review.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (toggleReviewField)
-                              WriteReviewWidget(
-                                  toggleReviewField: toggleReviewField,
-                                  onSubmit: (int rating, String review) {
-                                    _submitReview(context, rating, review);
-                                  }),
+                            // InkWell(
+                            //   radius: 20.dg,
+                            //   onTap: () => setState(() {
+                            //     toggleReviewField = !toggleReviewField;
+                            //   }),
+                            //   child: Padding(
+                            //     padding: EdgeInsets.symmetric(horizontal: 15.w),
+                            //     child: Row(
+                            //       children: [
+                            //         Text(LocaleData.leaveA.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                            //         SizedBox(width: 10.w),
+                            //         Text(LocaleData.review.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
+                            //       ],
+                            //     ),
+                            //   ),
+                            // ),
+                            // if (toggleReviewField)
+                            // WriteReviewWidget(
+                            //     toggleReviewField: toggleReviewField,
+                            //     onSubmit: (int rating, String review) {
+                            //       _submitReview(context, rating, review);
+                            //     }),
                             SizedBox(
                               height: 18.h,
                             ),

@@ -7,7 +7,10 @@ import 'package:intl/intl.dart';
 import 'package:stylehub/constants/app/app_colors.dart';
 import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
+import 'package:stylehub/screens/specialist_pages/specialist_schedule_appointment_screen.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/write_review.dart';
 import 'package:stylehub/services/fcm_services/firebase_msg.dart';
+import 'package:stylehub/storage/post_review_method.dart';
 
 class AppointmentScreen extends StatefulWidget {
   const AppointmentScreen({super.key});
@@ -64,12 +67,16 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     final appointment = appointments[index].data() as Map<String, dynamic>;
                     final date = (appointment['date'] as Timestamp).toDate();
                     final status = appointment['status'] as String? ?? 'booked';
+                    final now = DateTime.now();
+                    final effectiveStatus = (status == 'booked' && date.isBefore(now)) ? 'completed' : status;
 
                     return AppointmentCard(
+                      appointmentId: appointments[index].id, // Pass the document ID
                       specialistId: appointment['specialistId'] as String,
                       date: date,
-                      status: status,
+                      status: effectiveStatus,
                       onCancel: () => _cancelAppointment(context, appointments[index].id),
+                      onDelete: () => _deleteAppointment(appointments[index].id), // Add this line
                     );
                   },
                 );
@@ -88,16 +95,22 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   Future<void> _cancelAppointment(context, String appointmentId) async {
     FirebaseNotificationService firebasePushNotificationService = FirebaseNotificationService();
     try {
-      // First get the appointment details
+      // Fetch appointment details
       final appointmentDoc = await _firestore.collection('appointments').doc(appointmentId).get();
       final appointment = appointmentDoc.data() as Map<String, dynamic>;
       final specialistId = appointment['specialistId'] as String;
       final date = (appointment['date'] as Timestamp).toDate();
+      final totalDuration = appointment['totalDuration'] as int;
 
-      // Get specialist's FCM token
+      // Calculate time range affected by the appointment
+      final appointmentStart = date;
+      final appointmentEnd = appointmentStart.add(Duration(minutes: totalDuration));
+      final breakEnd = appointmentEnd.add(Duration(minutes: 15));
+
+      // Get specialist's details
       final specialistDoc = await _firestore.collection('users').doc(specialistId).get();
       final specialistToken = specialistDoc['fcmToken'] as String?;
-      final specialistName = '${specialistDoc['firstName']} ${specialistDoc['lastName']}';
+      // final specialistName = '${specialistDoc['firstName']} ${specialistDoc['lastName']}';
 
       // Update appointment status
       await _firestore.collection('appointments').doc(appointmentId).update({
@@ -105,13 +118,82 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         'cancelledAt': FieldValue.serverTimestamp(),
       });
 
-      // Send notification to specialist
+      // Calculate the week of the appointment
+      DateTime getFirstMonday(DateTime date) {
+        date = DateTime(date.year, date.month, date.day);
+        while (date.weekday != DateTime.monday) {
+          date = date.subtract(Duration(days: 1));
+        }
+        return date;
+      }
+
+      final weekStart = getFirstMonday(date);
+      final availabilityRef = _firestore.collection('availability').doc(specialistId).collection('weeks').doc(weekStart.toIso8601String());
+
+      // Reopen slots in availability
+      final availabilityDoc = await availabilityRef.get();
+      if (availabilityDoc.exists) {
+        List<TimeSlot> slots = (availabilityDoc.data()!['slots'] as List).map((s) => TimeSlot.fromMap(s)).toList();
+
+        // Reopen slots affected by this appointment
+        for (int i = 0; i < slots.length; i++) {
+          final slot = slots[i];
+          final slotTime = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            slot.hour,
+            slot.minute,
+          );
+
+          if (slotTime.isAfter(appointmentStart.subtract(Duration(minutes: 1))) && slotTime.isBefore(breakEnd)) {
+            slots[i] = slot.copyWith(isOpen: true);
+          }
+        }
+
+        // Re-block slots based on other active appointments
+        final weekEnd = weekStart.add(Duration(days: 7));
+        final activeAppointments = await _firestore
+            .collection('appointments')
+            .where('specialistId', isEqualTo: specialistId)
+            .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(weekStart))
+            .where('date', isLessThan: Timestamp.fromDate(weekEnd))
+            .where('status', whereIn: ['booked', 'completed']).get();
+
+        for (final apptDoc in activeAppointments.docs) {
+          final appt = apptDoc.data();
+          final apptDate = (appt['date'] as Timestamp).toDate();
+          final apptDuration = appt['totalDuration'] as int;
+          final apptStart = apptDate;
+          final apptEnd = apptStart.add(Duration(minutes: apptDuration));
+          final apptBreakEnd = apptEnd.add(Duration(minutes: 15));
+
+          for (int i = 0; i < slots.length; i++) {
+            final slot = slots[i];
+            final slotTime = DateTime(
+              apptDate.year,
+              apptDate.month,
+              apptDate.day,
+              slot.hour,
+              slot.minute,
+            );
+
+            if (slotTime.isAfter(apptStart.subtract(Duration(minutes: 1))) && slotTime.isBefore(apptBreakEnd)) {
+              slots[i] = slot.copyWith(isOpen: false);
+            }
+          }
+        }
+
+        await availabilityRef.update({
+          'slots': slots.map((s) => s.toMap()).toList(),
+        });
+      }
+
+      // Send notification
       if (specialistToken != null) {
         final formattedDate = DateFormat('EEE, MMM d, y').format(date);
         final formattedTime = DateFormat('h:mm a').format(date);
-
-        firebasePushNotificationService.cancelPushNotification(
-            'Appointment Cancelled', 'Your appointment on $formattedDate at $formattedTime with $specialistName has been cancelled', specialistToken);
+        firebasePushNotificationService.cancelPushNotification('Appointment Cancelled', 'Your appointment on $formattedDate at $formattedTime has been cancelled', specialistToken);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,25 +201,44 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       );
       Navigator.pop(context);
     } catch (e) {
+      // print(e);
+      // print(stackTrace);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Failed to cancel appointment: $e')),
+      // );
+    }
+  }
+
+  Future<void> _deleteAppointment( String appointmentId) async {
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).delete();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to cancel appointment: $e')),
+        const SnackBar(content: Text('Appointment deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete appointment: $e')),
       );
     }
   }
 }
 
 class AppointmentCard extends StatefulWidget {
+  final String appointmentId;
   final String specialistId;
   final DateTime date;
   final String status;
   final VoidCallback onCancel;
+  final VoidCallback onDelete;
 
   const AppointmentCard({
     super.key,
+    required this.appointmentId,
     required this.specialistId,
     required this.date,
     required this.status,
     required this.onCancel,
+    required this.onDelete,
   });
 
   @override
@@ -145,8 +246,11 @@ class AppointmentCard extends StatefulWidget {
 }
 
 class _AppointmentCardState extends State<AppointmentCard> {
+  bool toggleReviewField = false;
   Map<String, dynamic>? _specialistData;
   bool _isLoading = false;
+
+  final ReviewService _reviewService = ReviewService();
 
   @override
   void initState() {
@@ -171,6 +275,25 @@ class _AppointmentCardState extends State<AppointmentCard> {
     }
   }
 
+  void _submitReview(context, int rating, String comment) async {
+    String result = await _reviewService.submitReview(
+      userId: widget.specialistId,
+      rating: rating,
+      comment: comment,
+    );
+
+    if (result == 'success') {
+      setState(() => toggleReviewField = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted successfully!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -189,7 +312,50 @@ class _AppointmentCardState extends State<AppointmentCard> {
             SizedBox(height: 12.h),
             _buildAppointmentInfo(),
             SizedBox(height: 16.h),
-            if (widget.status == 'booked') _buildActionButtons(),
+            _buildActionButtons(),
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (widget.status == 'completed' || widget.status == 'cancelled')
+                  InkWell(
+                    radius: 20.dg,
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => SizedBox(
+                          height: 250.h,
+                          child: WriteReviewWidget(
+                              // toggleReviewField: toggleReviewField,
+                              onSubmit: (int rating, String review) {
+                            _submitReview(context, rating, review);
+                          }),
+                        ),
+                      );
+                    },
+                    // => setState(() {
+                    //   toggle,ReviewField = !toggleReviewField;
+                    // }),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.w),
+                      child: Row(
+                        children: [
+                          Text(LocaleData.leaveA.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
+                          SizedBox(width: 10.w),
+                          Text(LocaleData.review.getString(context), style: appTextStyle15(AppColors.mainBlackTextColor)),
+                        ],
+                      ),
+                    ),
+                  ),
+                // if (toggleReviewField)
+                //   WriteReviewWidget(
+                //       toggleReviewField: toggleReviewField,
+                //       onSubmit: (int rating, String review) {
+                //         _submitReview(context, rating, review);
+                //       }),
+              ],
+            )
           ],
         ),
       ),
@@ -198,6 +364,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
 
   Widget _buildSpecialistInfo() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,9 +373,12 @@ class _AppointmentCardState extends State<AppointmentCard> {
               '${_specialistData?['firstName'] ?? ''} ${_specialistData?['lastName'] ?? ''}',
               style: appTextStyle16500(AppColors.mainBlackTextColor),
             ),
-            Text(
-              _specialistData?['profession']?.toString() ?? 'Specialist',
-              style: appTextStyle14(AppColors.newThirdGrayColor),
+            SizedBox(
+              width: 160.w,
+              child: Text(
+                _specialistData?['profession']?.toString() ?? 'Specialist',
+                style: appTextStyle14(AppColors.newThirdGrayColor),
+              ),
             ),
           ],
         ),
@@ -305,6 +475,62 @@ class _AppointmentCardState extends State<AppointmentCard> {
   }
 
   Widget _buildActionButtons() {
+    final bool canDelete = widget.status == 'cancelled' || widget.status == 'completed' || widget.date.isBefore(DateTime.now());
+
+    if (widget.status == 'booked') {
+      return _buildCancelButton();
+    } else if (canDelete) {
+      return _buildDeleteButton();
+    } else {
+      return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildDeleteButton() {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Delete Appointment'),
+                content: Text('Are you sure you want to delete this appointment?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('No'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      widget.onDelete(); // Fixed: Call onDelete instead of onCancel
+                    },
+                    child: Text('Yes'),
+                  ),
+                ],
+              ),
+            ),
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8.dg),
+                color: Colors.red,
+              ),
+              child: Center(
+                child: Text(
+                  'Delete',
+                  style: appTextStyle12K(AppColors.whiteColor),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCancelButton() {
     return Row(
       children: [
         SizedBox(height: 16.h),

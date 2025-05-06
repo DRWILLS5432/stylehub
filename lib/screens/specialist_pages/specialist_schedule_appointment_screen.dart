@@ -752,16 +752,32 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Align(
-                                        alignment: Alignment.topRight,
-                                        child: IconButton(
-                                          icon: Icon(
-                                            Icons.notifications_on_sharp,
-                                          ),
-                                          onPressed: () => _scheduleReminder(
-                                            appointment,
-                                          ),
-                                        )),
+                                    Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                                      IconButton(
+                                        icon: Row(
+                                          children: [
+                                            Container(
+                                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                              decoration: BoxDecoration(
+                                                color: _getStatusColor(appointment.status),
+                                                borderRadius: BorderRadius.circular(4.dg),
+                                              ),
+                                              child: Text(
+                                                appointment.status.toUpperCase(),
+                                                style: appTextStyle12K(AppColors.whiteColor),
+                                              ),
+                                            ),
+                                            SizedBox(width: 10.w),
+                                            Icon(
+                                              Icons.notifications_on_sharp,
+                                            ),
+                                          ],
+                                        ),
+                                        onPressed: () => _scheduleReminder(
+                                          appointment,
+                                        ),
+                                      ),
+                                    ]),
                                     Text(
                                       widget.isSpecialist ? '${appointment.clientFirstName} ${appointment.clientLastName}' : 'Specialist: ${appointment.specialistId}',
                                       style: appTextStyle16500(AppColors.mainBlackTextColor),
@@ -797,85 +813,118 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                                       appointment.address,
                                       style: appTextStyle16400(AppColors.mainBlackTextColor),
                                     ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () => showDialog(
-                                              context: context,
-                                              builder: (context) => AlertDialog(
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(15.dg),
-                                                    ),
-                                                    contentPadding: EdgeInsets.zero,
-                                                    titlePadding: EdgeInsets.zero,
-                                                    actionsPadding: EdgeInsets.only(top: 10.h, bottom: 20.h),
-                                                    title: Column(
-                                                      children: [
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.end,
-                                                          children: [
-                                                            IconButton(
-                                                                onPressed: () => Navigator.pop(context),
-                                                                icon: Icon(
-                                                                  Icons.close,
-                                                                  color: AppColors.appBGColor,
-                                                                )),
-                                                          ],
-                                                        ),
-                                                        SizedBox(
-                                                          height: 6.h,
-                                                        ),
-                                                        SizedBox(
-                                                          width: 211.w,
-                                                          child: Text(
-                                                            'Before canceling your booking you have to inform the client first , if you have done this , you can proceed to cancel , if not please inform client first',
-                                                            style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                            textAlign: TextAlign.center,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    actions: [
-                                                      Row(
-                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                    // if (appointment.status == 'cancelled' || appointment.status == 'completed')
+                                    if (appointment.status == 'cancelled' || appointment.status == 'completed')
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text('Delete Appointment'),
+                                              content: const Text('Are you sure you want to delete this appointment?'),
+                                              actions: [
+                                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No')),
+                                                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Yes')),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true) {
+                                            await _repo.deleteAppointment(appointment.appointmentId);
+                                            setState(() {
+                                              _appointments.removeWhere((apt) => apt.appointmentId == appointment.appointmentId);
+                                            });
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          minimumSize: Size(double.infinity, 30.h),
+                                          backgroundColor: AppColors.primaryRedColor,
+                                        ),
+                                        child: Text(
+                                          'Delete',
+                                          style: appTextStyle12K(AppColors.whiteColor),
+                                        ),
+                                      ),
+                                    // CANCEL APPOINTMENT SECTION
+                                    if (appointment.status == 'booked')
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          ElevatedButton(
+                                            onPressed: () => showDialog(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(15.dg),
+                                                      ),
+                                                      contentPadding: EdgeInsets.zero,
+                                                      titlePadding: EdgeInsets.zero,
+                                                      actionsPadding: EdgeInsets.only(top: 10.h, bottom: 20.h),
+                                                      title: Column(
                                                         children: [
+                                                          Row(
+                                                            mainAxisAlignment: MainAxisAlignment.end,
+                                                            children: [
+                                                              IconButton(
+                                                                  onPressed: () => Navigator.pop(context),
+                                                                  icon: Icon(
+                                                                    Icons.close,
+                                                                    color: AppColors.appBGColor,
+                                                                  )),
+                                                            ],
+                                                          ),
                                                           SizedBox(
-                                                            height: 32.h,
-                                                            width: 120.w,
-                                                            child: ReusableButton(
-                                                              color: AppColors.appBGColor,
-                                                              text: Text(
-                                                                LocaleData.cancel.getString(context),
-                                                                style: appTextStyle16400(AppColors.mainBlackTextColor),
-                                                              ),
-                                                              onPressed: () {
-                                                                Navigator.pop(context); // Close the dialog
-                                                                _cancelAppointment(appointment.appointmentId);
-                                                              },
+                                                            height: 6.h,
+                                                          ),
+                                                          SizedBox(
+                                                            width: 211.w,
+                                                            child: Text(
+                                                              'Before canceling your booking you have to inform the client first , if you have done this , you can proceed to cancel , if not please inform client first',
+                                                              style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                                              textAlign: TextAlign.center,
                                                             ),
                                                           ),
                                                         ],
                                                       ),
-                                                    ],
-                                                  )),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.whiteColor,
-                                            minimumSize: Size(3.w, 25.h),
-                                            shape: RoundedRectangleBorder(
-                                              side: BorderSide(color: AppColors.newGrayColor, width: 2.w),
-                                              borderRadius: BorderRadius.circular(5.dg),
+                                                      actions: [
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            SizedBox(
+                                                              height: 32.h,
+                                                              width: 120.w,
+                                                              child: ReusableButton(
+                                                                color: AppColors.appBGColor,
+                                                                text: Text(
+                                                                  LocaleData.cancel.getString(context),
+                                                                  style: appTextStyle16400(AppColors.mainBlackTextColor),
+                                                                ),
+                                                                onPressed: () {
+                                                                  Navigator.pop(context); // Close the dialog
+                                                                  _cancelAppointment(appointment.appointmentId);
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    )),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColors.whiteColor,
+                                              minimumSize: Size(3.w, 25.h),
+                                              shape: RoundedRectangleBorder(
+                                                side: BorderSide(color: AppColors.newGrayColor, width: 2.w),
+                                                borderRadius: BorderRadius.circular(5.dg),
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                LocaleData.cancel.getString(context),
+                                                style: appTextStyle12K(AppColors.mainBlackTextColor),
+                                              ),
                                             ),
                                           ),
-                                          child: Center(
-                                            child: Text(
-                                              LocaleData.cancel.getString(context),
-                                              style: appTextStyle12K(AppColors.mainBlackTextColor),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    )
+                                        ],
+                                      )
                                   ],
                                 ),
                               ),
@@ -887,6 +936,19 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                   ),
                 ],
               );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'booked':
+        return AppColors.greenColor;
+      case 'cancelled':
+        return AppColors.primaryRedColor;
+      case 'completed':
+        return AppColors.mainColor;
+      default:
+        return AppColors.grayColor;
+    }
   }
 
   // String formatDateTime(DateTime date) {

@@ -100,13 +100,13 @@ class AppointmentRepository {
     } catch (e) {
       throw Exception('Failed to cancel appointment: $e');
     }
-
   }
-  // Future<void> deleteAppointment(String appointmentId) async {
-  //   try {
-  //     await _firestore.collection('appointments').doc(appointmentId).delete();
-  //   } catch (e) {
-  //     throw Exception('Failed to delete appointment: $e');
-  //   }
-  // }
+
+  Future<void> deleteAppointment(String appointmentId) async {
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).delete();
+    } catch (e) {
+      throw Exception('Failed to delete appointment: $e');
+    }
+  }
 }

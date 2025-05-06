@@ -66,7 +66,7 @@ class AddressProvider with ChangeNotifier {
   Future<void> _saveToFirestore(Address address) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).collection('addresses').add({
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': address.name,
         'details': address.details,
         'lat': address.lat,

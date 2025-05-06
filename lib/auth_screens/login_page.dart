@@ -139,9 +139,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         );
 
         if (user != null) {
-          if (selectedRole == 'Customer') {
+          if (selectedRole == LocaleData.customer.getString(context)) {
             Navigator.pushNamed(context, '/customer_page');
-          } else if (selectedRole == 'Stylist') {
+          } else if (selectedRole == LocaleData.stylist.getString(context)) {
             Navigator.pushNamed(context, '/specialist_page');
           }
         }
@@ -474,12 +474,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           //   }
           // }
 
-          if (role == 'Customer') {
+          if (role == LocaleData.customer.getString(context)) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => CustomerPage()),
             );
-          } else if (role == 'Stylist') {
+          } else if (role == LocaleData.stylist.getString(context)) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => SpecialistPage()),

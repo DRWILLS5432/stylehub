@@ -83,31 +83,32 @@ class _FilterScreenState extends State<FilterScreen> {
                 ),
                 SizedBox(height: 20.h),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Maximum Distance (${filterProvider.maxDistance?.toStringAsFixed(1) ?? '0'} km)',
-                            style: appTextStyle16(AppColors.newGrayColor),
-                          ),
-                          Slider(
-                            value: filterProvider.maxDistance ?? 0,
-                            min: 0,
-                            max: 100,
-                            divisions: 20,
-                            label: '${(filterProvider.maxDistance ?? 0).toStringAsFixed(1)} km',
-                            onChanged: (value) {
-                              filterProvider.setMaxDistance(value);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                // Proximity filter slider
+                // Row(
+                //   children: [
+                //     Expanded(
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         children: [
+                //           Text(
+                //             'Maximum Distance (${filterProvider.maxDistance?.toStringAsFixed(1) ?? '0'} km)',
+                //             style: appTextStyle16(AppColors.newGrayColor),
+                //           ),
+                //           Slider(
+                //             value: filterProvider.maxDistance ?? 0,
+                //             min: 0,
+                //             max: 100,
+                //             divisions: 20,
+                //             label: '${(filterProvider.maxDistance ?? 0).toStringAsFixed(1)} km',
+                //             onChanged: (value) {
+                //               filterProvider.setMaxDistance(value);
+                //             },
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ],
+                // ),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -310,6 +311,7 @@ class _FilterScreenState extends State<FilterScreen> {
     final filterProvider = Provider.of<FilterProvider>(context, listen: false);
 
     showModalBottomSheet(
+      backgroundColor: AppColors.whiteColor,
       context: context,
       builder: (context) {
         return Container(
