@@ -53,7 +53,7 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0.h),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
@@ -98,20 +98,20 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
             controller: _reviewController,
             decoration: InputDecoration(
               hintText: LocaleData.writeYourRevHere.getString(context),
-              suffixIcon: _isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator.adaptive(
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : IconButton(
-                      icon: Image.asset(
-                        'assets/images/PaperPlane.png',
-                        color: AppColors.mainBlackTextColor,
-                      ),
-                      onPressed: () => _submitReview(context),
-                    ),
+              // suffixIcon: _isLoading
+              //     ? const Padding(
+              //         padding: EdgeInsets.only(right: 10, top: 120),
+              //         child: CircularProgressIndicator.adaptive(
+              //           strokeWidth: 2,
+              //         ),
+              //       )
+              //     : IconButton(
+              //         icon: Image.asset(
+              //           'assets/images/PaperPlane.png',
+              //           color: AppColors.mainBlackTextColor,
+              //         ),
+              //         onPressed: () => _submitReview(context),
+              //       ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.dg),
                 borderSide: BorderSide(
@@ -132,8 +132,25 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
                     width: 2.h,
                   )),
             ),
-            maxLines: 3,
-            minLines: 1,
+            maxLines: 4,
+            // minLines: 1,
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              InkWell(
+                onTap: () => _submitReview(context),
+                child: CircleAvatar(
+                  backgroundColor: AppColors.appSecondaryColor,
+                  radius: 18.r,
+                  child: Image.asset(
+                    'assets/images/PaperPlane.png',
+                    color: AppColors.mainBlackTextColor,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

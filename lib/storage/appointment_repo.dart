@@ -102,9 +102,10 @@ class AppointmentRepository {
     }
   }
 
-  Future<void> deleteAppointment(String appointmentId) async {
+  Future<void> deleteAppointment(context, String appointmentId) async {
     try {
       await _firestore.collection('appointments').doc(appointmentId).delete();
+      Navigator.pop(context);
     } catch (e) {
       throw Exception('Failed to delete appointment: $e');
     }

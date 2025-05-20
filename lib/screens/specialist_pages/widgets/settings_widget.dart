@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,11 +19,58 @@ class SettingsWidget extends StatefulWidget {
 class _SettingsWidgetState extends State<SettingsWidget> {
   late FlutterLocalization _flutterLocalization;
   List<String> availableLanguages = ['en', 'ru'];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  bool _isAllowNotifications = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _flutterLocalization = FlutterLocalization.instance;
+    _fetchNotificationSettings();
+  }
+
+  /// Fetches the user's notification settings from Firestore.
+  Future<void> _fetchNotificationSettings() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      final data = doc.data();
+      setState(() {
+        _isAllowNotifications = data?['isNotificationsEnabled'] ?? false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching notification settings: $e')),
+      );
+    }
+    setState(() => _isLoading = false);
+  }
+
+  /// Updates the notification settings in Firestore.
+  Future<void> _updateNotifications(bool value) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'isNotificationsEnabled': value,
+        'notificationsUpdated': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      setState(() {
+        _isAllowNotifications = value;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating notifications: $e')),
+      );
+    }
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -70,23 +119,18 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   style: appTextStyle12K(AppColors.appGrayTextColor),
                 ),
                 Switch(
-                    activeColor: AppColors.whiteColor,
-                    activeTrackColor: AppColors.greenColor,
-                    value: isSwitch,
-                    onChanged: (value) {
-                      setState(() {
-                        isSwitch = value;
-                      });
-                    })
+                  activeColor: AppColors.whiteColor,
+                  activeTrackColor: AppColors.greenColor,
+                  value: _isAllowNotifications,
+                  onChanged: _isLoading ? null : _updateNotifications,
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
-
-  bool isSwitch = false;
 
   void _setLocale(String? value, LanguageProvider provider) {
     if (value == null) return;
@@ -103,33 +147,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         return;
     }
 
-    // Update the provider
     provider.setLanguage(value);
     Navigator.pop(context);
   }
-
-  // bool isSwitch = false;
-  // void _setLocale(String? value) {
-  //   if (value == null) return;
-
-  //   String languageCode = value;
-  //   switch (languageCode) {
-  //     case 'en':
-  //       _flutterLocalization.translate('en');
-  //       break;
-  //     case 'ru':
-  //       _flutterLocalization.translate('ru');
-  //       break;
-
-  //     default:
-  //       return;
-  //   }
-
-  //   setState(() {
-  //     _currentLocale = value;
-  //     Navigator.pop(context);
-  //   });
-  // }
 }
 
 Widget _buildDropdown({
@@ -138,8 +158,6 @@ Widget _buildDropdown({
   required List<String> items,
 }) {
   return Container(
-    // width: 80.w,
-    // height: 28.h,
     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
     decoration: BoxDecoration(
       color: AppColors.grayColor,
@@ -149,8 +167,7 @@ Widget _buildDropdown({
     child: DropdownButtonHideUnderline(
       child: DropdownButton<String>(
         borderRadius: BorderRadius.circular(12.dg),
-
-        isExpanded: true, // Added to take available space
+        isExpanded: true,
         padding: EdgeInsets.zero,
         value: value,
         onChanged: onChanged,
@@ -158,7 +175,7 @@ Widget _buildDropdown({
           return DropdownMenuItem<String>(
             value: item,
             child: Text(
-              getLanguageName(item), // Added to get name for each language code
+              getLanguageName(item),
               style: appTextStyle16400(AppColors.appGrayTextColor),
             ),
           );
@@ -171,7 +188,6 @@ Widget _buildDropdown({
   );
 }
 
-// Helper function to get language name from language code
 String getLanguageName(String languageCode) {
   switch (languageCode) {
     case 'en':

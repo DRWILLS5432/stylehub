@@ -13,7 +13,7 @@ class StorageMethod {
   /// If [isPost] is false, the file overwrites the existing file at the given location.
   ///
   /// Returns the download URL of the uploaded file.
-   Future<String> uploadImageToStorage(String childName, Uint8List file, bool isPost) async {
+  Future<String> uploadImageToStorage(String childName, Uint8List file, bool isPost) async {
     Reference ref = _storage.ref().child(childName).child(_auth.currentUser!.uid);
 
     if (isPost) {

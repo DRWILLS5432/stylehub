@@ -27,16 +27,17 @@ class _FilterScreenState extends State<FilterScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.whiteColor,
         actions: [
-          if (filterProvider.filtersApplied)
-            TextButton(
-              onPressed: () {
-                filterProvider.clearFilters();
-              },
-              child: Text(
-                'Clear',
-                style: appTextStyle16(AppColors.mainBlackTextColor),
-              ),
+          // if (filterProvider.filtersApplied)
+          TextButton(
+            onPressed: () {
+              filterProvider.clearFilters();
+              Navigator.pop(context);
+            },
+            child: Text(
+              'Clear',
+              style: appTextStyle16(AppColors.mainBlackTextColor),
             ),
+          ),
         ],
       ),
       body: SafeArea(

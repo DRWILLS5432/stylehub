@@ -33,6 +33,7 @@ mixin LocaleData {
   static const String passwordInvalid = 'Password must be at least 6 characters';
   static const String roleRequired = 'Role field is required';
   static const String forgotPassword = 'Change Password?';
+  static const String goToAdmin = 'Go to Admin';
   static const String sendOTP = 'Send Code';
   static const String enterRegisteredEmail = 'Enter Registered Email Address';
   static const String resetPassword = 'Reset Password';
@@ -107,6 +108,21 @@ mixin LocaleData {
   static const String yurAddress = 'Your Address';
   static const String specialistAddress = 'Specialist Address';
   static const String makeAppointment = 'Make Appointment';
+  static const String date = 'Date';
+  static const String time = 'Time';
+  static const String youCanUploadMoreImages = 'You can Upload another photo after saving this one';
+  static const String admin = 'Admin';
+  static const String loginFailed = 'Login Failed';
+  static const String loginAsAdmin = 'Login as Admin';
+  static const String name = 'Name';
+  static const String enterName = 'Enter Name';
+  static const String nameRequired = 'Name field is required';
+  static const String nameInvalid = 'Please enter a valid name';
+  static const String totalUsers = 'Total Users';
+  static const String help = 'Help';
+  static const String subject = 'Subject';
+  static const String message = 'Message';
+  static const String submit = 'Submit';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -210,6 +226,19 @@ mixin LocaleData {
     yurAddress: 'Your Address',
     specialistAddress: 'Specialist Address',
     makeAppointment: 'Make Appointment',
+    goToAdmin: 'Go to Admin',
+    admin: 'Admin',
+    loginAsAdmin: 'Login as Admin',
+    loginFailed: 'Login Failed',
+    name: 'Name',
+    enterName: 'Enter Name',
+    nameRequired: 'Name field is required',
+    nameInvalid: 'Please enter a valid name',
+    totalUsers: 'Total Users',
+    help: 'Help',
+    subject: 'Subject',
+    message: 'Message',
+    submit: 'Submit',
   };
 
   // static const Map<String, dynamic> UK = {
@@ -397,5 +426,18 @@ mixin LocaleData {
     yurAddress: 'Ваш адрес',
     specialistAddress: 'Адрес специалиста',
     makeAppointment: 'Записаться',
+    goToAdmin: 'Перейти в админку',
+    admin: 'Администратор',
+    loginAsAdmin: 'Вход как администратор',
+    loginFailed: 'Вход не удался',
+    name: 'Имя',
+    enterName: 'Введите имя',
+    nameRequired: 'Имя обязательно',
+    nameInvalid: 'Неверное имя',
+    totalUsers: 'Всего пользователей',
+    help: 'Помощь',
+    subject: 'Тема',
+    message: 'Сообщение',
+    submit: 'Отправить',
   };
 }

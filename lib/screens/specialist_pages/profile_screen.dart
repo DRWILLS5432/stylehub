@@ -15,6 +15,7 @@ import 'package:stylehub/onboarding_page/onboarding_screen.dart';
 import 'package:stylehub/screens/admin/admin_panel.dart';
 import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
+import 'package:stylehub/screens/specialist_pages/widgets/help_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/select_address_widget.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/settings_widget.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/update_service_widget.dart';
@@ -40,13 +41,13 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
     super.initState();
     _fetchUserData();
 
-    Provider.of<SpecialistProvider>(context, listen: false).fetchSpecialistData();
     // Clear addresses from the previous user and fetch for the current one.
     fetchAddresses();
   }
 
   void fetchAddresses() {
-    Provider.of<AddressProvider>(context, listen: false).fetchAddresses();
+    Provider.of<SpecialistProvider>(context, listen: false).fetchSpecialistData();
+    // Provider.of<AddressProvider>(context, listen: false).fetchAddresses();
   }
 
   /// Fetches user data from Firestore for the current authenticated user.
@@ -110,14 +111,43 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
   /// 3. Updates the `_imageBytes` field with the encoded image bytes.
   /// 4. Calls the [_saveImageToFirestore] method to store the base64 image in Firestore.
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      Uint8List imageBytes = await pickedFile.readAsBytes();
-      String base64Image = base64Encode(imageBytes);
-      setState(() {
-        _imageBytes = imageBytes;
-      });
-      await _saveImageToFirestore(base64Image);
+    try {
+      final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        // Read image bytes
+        Uint8List imageBytes = await pickedFile.readAsBytes();
+
+        // Check image size (e.g., limit to 5MB)
+        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+        if (imageBytes.length > maxSizeInBytes) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Image size is too large. Please select an image smaller than 2MB.')),
+          );
+          return;
+        }
+
+        // Encode to base64
+        String base64Image = base64Encode(imageBytes);
+
+        // Update UI
+        setState(() {
+          _imageBytes = imageBytes;
+          _isLoading = true;
+        });
+
+        // Save to Firestore
+        await _saveImageToFirestore(base64Image);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload image. Please try another image.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -127,13 +157,35 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
   /// with the given base64 image. If the document doesn't exist, this method will
   /// create it.
   Future<void> _saveImageToFirestore(String base64Image) async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'profileImage': base64Image,
-      }, SetOptions(merge: true));
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'profileImage': base64Image,
+        }, SetOptions(merge: true));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile image updated successfully')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User not authenticated')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save image to Firestore')),
+      );
     }
   }
+
+  // Future<void> _saveImageToFirestore(String base64Image) async {
+  //   User? user = FirebaseAuth.instance.currentUser;
+  //   if (user != null) {
+  //     await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+  //       'profileImage': base64Image,
+  //     }, SetOptions(merge: true));
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -144,10 +196,10 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
       ),
       body: SafeArea(
         child: Consumer2<SpecialistProvider, AddressProvider>(builder: (context, provider, addressProvider, _) {
-          final userData = provider.specialistModel;
+          // final userData = provider.specialistModel;
           // final fullName = "${userData?.firstName} ${userData?.lastName.toString()}";
 
-          if (userData == null) {
+          if (provider.specialistModel == null) {
             return Center(child: CircularProgressIndicator());
           }
           // print(userData.role);
@@ -190,9 +242,9 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                         // Text(userData.address, style: appTextStyle12K(AppColors.newThirdGrayColor)),
                         Text(
                           addressProvider.selectedAddress != null
-                              ? addressProvider.selectedAddress!.details
-                              : userData.address.isNotEmpty
-                                  ? userData.address.toString()
+                              ? provider.specialistModel!.address
+                              : provider.specialistModel!.address.isNotEmpty
+                                  ? provider.specialistModel!.address
                                   : 'Tap to select address',
                           style: appTextStyle12K(AppColors.newThirdGrayColor),
                         ),
@@ -221,7 +273,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                           title: LocaleData.personalDetails.getString(context),
                           subtitle: LocaleData.editProfileDetail.getString(context),
                           icon: 'assets/images/User.png'),
-                      if (userData.role == 'Stylist')
+                      if (provider.specialistModel!.role == 'Stylist')
                         ProfileTiles(
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateServiceWidget())),
                             title: LocaleData.specialistDetails.getString(context),
@@ -231,11 +283,16 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsWidget())),
                           title: LocaleData.appSettings.getString(context),
                           subtitle: LocaleData.updateSettings.getString(context),
-                          icon: 'assets/images/Settings.png')
+                          icon: 'assets/images/Settings.png'),
+                      ProfileTiles(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => HelpScreen())),
+                          title: LocaleData.help.getString(context),
+                          subtitle: LocaleData.updateSettings.getString(context),
+                          icon: 'assets/images/help1.png')
                     ],
                   ),
                   SizedBox(height: 51.h),
-                  ProfileTiles(onTap: _navigateToAdminPanel, title: 'Admin Panel', subtitle: LocaleData.updateSettings.getString(context), icon: 'assets/images/Settings.png'),
+                  // ProfileTiles(onTap: _navigateToAdminPanel, title: 'Admin Panel', subtitle: LocaleData.updateSettings.getString(context), icon: 'assets/images/Settings.png'),
                   SizedBox(
                     width: 212.w,
                     height: 45.h,
@@ -276,7 +333,7 @@ class _SpecialistProfileScreenState extends State<SpecialistProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => SelectAddressBottomSheet(addressController: _addressController),
+      builder: (context) => SizedBox(width: double.infinity, child: SelectAddressBottomSheet(addressController: _addressController)),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
@@ -443,36 +444,40 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         );
 
         if (user != null) {
-          // Save the password to SharedPreferences
+          // Fetch user document
+          DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+          final data = userDoc.data() as Map<String, dynamic>?;
+
+          if (data == null) {
+            throw Exception("User data is null.");
+          }
+
+          // Safely check for 'suspended'
+          final isSuspended = data['suspended'] == true;
+
+          if (isSuspended) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                content: SizedBox(height: 250.h, child: SuspendedUserScreen()),
+              ),
+            );
+
+            return;
+          }
+
+          // Save the password
           await SharedPreferencesHelper.savePassword(loginPasswordController.text.trim());
 
+          // Continue as normal
           String? role = await _firebaseService.getUserRole(user.uid);
 
-          firebasePushNotificationService.sendPushNotification('Welcome to StyleHub', 'Thank you for logging in. We hope you enjoy our services', user);
-
-          // // String? fcmToken = await _firebaseService.getFcmToken(user.uid);
-          // String? fcmToken = await FirebaseMessaging.instance.getToken();
-          // // print('Current Token: $fcmToken');
-
-          // if (fcmToken != null) {
-          //   // Save to your database
-          //   await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'fcmToken': fcmToken});
-          //   // Send welcome notification
-          //   try {
-          //     // print('Notification sending');
-          //     await PushNotificationService.sendPushNotification(
-          //       // fcmToken,
-          //       // await PushNotificationService.getAccessToken(),
-          //       fcmToken,
-
-          //       'Welcome to StyleHub!',
-          //       'Thank you for logging in. We hope you enjoy our services.',
-          //     );
-          //   } catch (e) {
-          //     // print('Error sending welcome notification: $e');
-          //     // You can choose to handle this error or ignore it
-          //   }
-          // }
+          firebasePushNotificationService.sendPushNotification(
+            'Welcome to StyleHub',
+            'Thank you for logging in. We hope you enjoy our services',
+            user,
+          );
 
           if (role == LocaleData.customer.getString(context)) {
             Navigator.pushReplacement(
@@ -487,13 +492,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           }
         }
       } catch (e) {
+        // print(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text('Login details incorrect. Please try again.')),
         );
       } finally {
         setState(() => _isLoggingIn = false);
       }
     }
+
     // Future<void> login() async {
     //   setState(() => _isLoggingIn = true);
 
@@ -634,6 +641,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               },
             ),
           ),
+
+          SizedBox(height: 40.h),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/admin_page'),
+                child: Text(
+                  LocaleData.goToAdmin.getString(context),
+                  style: appTextStyle16(AppColors.mainBlackTextColor),
+                ),
+              )
+            ],
+          ),
         ],
       ),
     );
@@ -668,14 +690,7 @@ class CustomeTextField extends StatelessWidget {
               filled: true,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.dg), borderSide: BorderSide.none),
             ),
-            validator: validator
-            //  (value) {
-            //   if (value == null || value.isEmpty) {
-            //     return LocaleData.lastNameRequired.getString(context);
-            //   }
-            //   return null;
-            // },
-            ),
+            validator: validator),
       ],
     );
   }
@@ -685,4 +700,32 @@ bool validateEmail(String email) {
   String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$';
   RegExp regex = RegExp(pattern);
   return regex.hasMatch(email);
+}
+
+class SuspendedUserScreen extends StatelessWidget {
+  const SuspendedUserScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Text(
+              'Account Suspended',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Your account has been suspended.\nPlease contact customer support for more information.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

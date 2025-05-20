@@ -83,6 +83,9 @@ class _MyAppState extends State<MyApp> {
                   primarySwatch: Colors.deepPurple,
                   appBarTheme: AppBarTheme(color: AppColors.whiteColor, surfaceTintColor: AppColors.whiteColor),
                   scaffoldBackgroundColor: AppColors.whiteColor,
+                  dialogTheme: DialogTheme(
+                    backgroundColor: AppColors.whiteColor,
+                  ),
                 ),
                 supportedLocales: localization.supportedLocales,
                 localizationsDelegates: localization.localizationsDelegates,

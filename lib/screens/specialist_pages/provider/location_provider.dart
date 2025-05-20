@@ -6,13 +6,13 @@ import 'package:geolocator/geolocator.dart';
 
 class Address {
   final String name;
-  final String details;
+  final String address;
   final double? lat;
   final double? lng;
 
   Address({
     required this.name,
-    required this.details,
+    required this.address,
     this.lat,
     this.lng,
   });
@@ -54,7 +54,7 @@ class AddressProvider with ChangeNotifier {
         final data = doc.data();
         return Address(
           name: data['name'] ?? 'No Name',
-          details: data['details'] ?? '',
+          address: data['address'] ?? '',
           lat: data['lat'] is num ? (data['lat'] as num).toDouble() : null,
           lng: data['lng'] is num ? (data['lng'] as num).toDouble() : null,
         );
@@ -68,11 +68,11 @@ class AddressProvider with ChangeNotifier {
     if (user != null) {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': address.name,
-        'details': address.details,
+        'address': address.address,
         'lat': address.lat,
         'lng': address.lng,
         'timestamp': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     }
   }
 
@@ -125,7 +125,7 @@ class AddressProvider with ChangeNotifier {
       final place = places.first;
       return Address(
         name: 'Current Location',
-        details: '${place.street}, ${place.locality}, ${place.country}',
+        address: '${place.street}, ${place.locality}, ${place.country}',
         lat: position.latitude,
         lng: position.longitude,
       );

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:stylehub/screens/specialist_pages/model/categories_model.dart';
 import 'package:stylehub/storage/category_service.dart';
@@ -65,6 +67,56 @@ class EditCategoryProvider extends ChangeNotifier {
   void updateSubmittedCategories(List<String> categoryNames) {
     _submittedCategories = categoryNames;
     notifyListeners();
+  }
+
+  Future<void> loadExistingServices() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      if (doc.exists && doc.data() != null && doc['services'] != null) {
+        final List<dynamic> rawServices = doc['services'];
+        _services = rawServices.map((item) {
+          return Service(
+            name: item['service'] ?? '',
+            price: item['price']?.toString() ?? '',
+            duration: item['duration']?.toString() ?? '',
+          );
+        }).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading existing services: $e');
+    }
+  }
+
+  Future<void> loadExistingCategories() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      if (doc.exists && doc.data() != null && doc['categories'] != null) {
+        final List<dynamic> rawCategories = doc['categories'];
+        _selectedCategories.clear();
+        // Map category names to their IDs
+        _selectedCategories.addAll(
+          rawCategories.map((categoryName) {
+            final category = _availableCategories.firstWhere(
+              (cat) => cat.name == categoryName || cat.ruName == categoryName,
+              orElse: () => Category(id: '', name: categoryName, ruName: categoryName),
+            );
+            return category.id;
+          }).where((id) => id.isNotEmpty),
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading existing categories: $e');
+    }
   }
 
   void toggleCategory(String categoryId) {

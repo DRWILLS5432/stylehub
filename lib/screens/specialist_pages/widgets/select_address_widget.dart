@@ -29,12 +29,20 @@ class SelectAddressBottomSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.appBGColor, width: 2.w),
                   borderRadius: BorderRadius.circular(25.dg),
+                  color: AppColors.whiteColor,
                 ),
                 padding: const EdgeInsets.all(20),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Container(
+                          margin: EdgeInsets.only(bottom: 20.h),
+                          width: 60.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100.dg),
+                            border: Border.all(color: AppColors.appBGColor, width: 2.w),
+                          )),
                       Text('Pick Your Address', style: appTextStyle18(AppColors.mainBlackTextColor).copyWith(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 20),
                       if (addressProvider.addresses.isNotEmpty)
@@ -42,7 +50,7 @@ class SelectAddressBottomSheet extends StatelessWidget {
                           (address) => RadioListTile<Address>(
                             // title: Text(address.name),
                             title: Text(
-                              address.details,
+                              address.address,
                               style: appTextStyle14(AppColors.mainBlackTextColor).copyWith(fontWeight: FontWeight.w500),
                             ),
                             value: address,
@@ -61,7 +69,7 @@ class SelectAddressBottomSheet extends StatelessWidget {
                             try {
                               final fetchedAddress = await addressProvider.getCurrentLocationAddress();
                               fetchedAddress0 = fetchedAddress;
-                              addressController.text = fetchedAddress.details;
+                              addressController.text = fetchedAddress.address;
                               setState(() => hasFetchedLocation = true);
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -89,6 +97,7 @@ class SelectAddressBottomSheet extends StatelessWidget {
                         Column(
                           children: [
                             TextField(
+                              readOnly: true,
                               controller: addressController,
                               decoration: InputDecoration(
                                 labelText: 'Enter or edit address',
@@ -99,7 +108,7 @@ class SelectAddressBottomSheet extends StatelessWidget {
                                     try {
                                       final fetchedAddress = await addressProvider.getCurrentLocationAddress();
                                       fetchedAddress0 = fetchedAddress;
-                                      addressController.text = fetchedAddress.details;
+                                      addressController.text = fetchedAddress.address;
                                     } catch (e) {
                                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
                                     } finally {
@@ -122,7 +131,7 @@ class SelectAddressBottomSheet extends StatelessWidget {
                                 if (addressController.text.isNotEmpty) {
                                   final newAddress = Address(
                                     name: 'Custom Address',
-                                    details: addressController.text,
+                                    address: addressController.text,
                                     lat: fetchedAddress0?.lat,
                                     lng: fetchedAddress0?.lng,
                                   );

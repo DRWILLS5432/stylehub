@@ -128,7 +128,8 @@ class SpecialistModel {
       categories: categories ?? this.categories,
       images: images ?? this.images,
       services: services ?? this.services,
-      isAvailable: isAvailable ?? this.isAvailable, averageRating: 0,
+      isAvailable: isAvailable ?? this.isAvailable,
+      averageRating: 0,
     );
   }
 

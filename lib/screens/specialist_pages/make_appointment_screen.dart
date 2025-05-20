@@ -63,8 +63,10 @@ class TimeSlot {
 class MakeAppointmentScreen extends StatefulWidget {
   final String specialistId;
   final String specialistName;
+  final String address;
+  final bool isAvailable;
 
-  const MakeAppointmentScreen({super.key, required this.specialistId, required this.specialistName});
+  const MakeAppointmentScreen({super.key, required this.specialistId, required this.specialistName, required this.address, required this.isAvailable});
 
   @override
   State<MakeAppointmentScreen> createState() => _MakeAppointmentScreenState();
@@ -111,13 +113,26 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
     final slots = (doc.data()!['slots'] as List).map((s) => TimeSlot.fromMap(s)).toList();
     final selectedWeekday = _selectedDate.weekday - 1;
 
-    // Provider is needed to get total service duration.
+    // Get total service duration from provider
     final totalServiceDuration = Provider.of<SpecialistProvider>(context, listen: false).totalDuration;
 
     return slots.where((slot) {
+      // Check if slot is for the selected day and is open
       if (slot.day != selectedWeekday || !slot.isOpen) return false;
 
-      // Loop through selected slots to see if this candidate slot should be blocked.
+      // Check if the slot's time has already passed
+      final slotDateTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        slot.hour,
+        slot.minute,
+      );
+      if (slotDateTime.isBefore(DateTime.now())) {
+        return false;
+      }
+
+      // Check against selected slots to block conflicting times
       for (final selectedSlot in _selectedSlots) {
         if (_shouldBlockCandidateSlot(slot, selectedSlot, totalServiceDuration)) {
           return false;
@@ -165,7 +180,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
   Future<void> _bookAppointment(String firstName, String lastName) async {
     setState(() => isLoading = true);
     final specialistProvider = Provider.of<SpecialistProvider>(context, listen: false);
-    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    // final addressProvider = Provider.of<AddressProvider>(context, listen: false);
     String? fcmToken = await FirebaseMessaging.instance.getToken();
 
     if (_selectedSlots.isEmpty || specialistProvider.selectedServices.isEmpty) {
@@ -175,7 +190,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
       setState(() => isLoading = false);
       return;
     }
-    if (specialistProvider.specialistModel!.isAvailable == true && addressProvider.selectedAddress == null) {
+    if (specialistProvider.specialistModel!.isAvailable == true && specialistProvider.specialistModel!.address.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter your address')),
       );
@@ -208,7 +223,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
 
         // Create appointment document.
         batch.set(appointmentRef, {
-          'address': addressProvider.selectedAddress?.details ?? '',
+          'address': specialistProvider.specialistModel?.address ?? '',
           'appointmentId': appointmentRef.id,
           'clientFirstName': firstName,
           'clientLastName': lastName,
@@ -512,33 +527,40 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Consumer<SpecialistProvider>(builder: (context, address, _) {
+                Consumer2<AddressProvider, SpecialistProvider>(builder: (context, addressProvider, address, _) {
+                  if (widget.isAvailable == false) {
+                    return Center(
+                        child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text('Specialist is not available at the moment'),
+                    ));
+                  }
                   return AddressCard(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     title: LocaleData.specialistAddress.getString(context),
-                    address: address.specialistModel?.address != null ? address.specialistModel!.address : 'Specialist Address',
+                    address: widget.address.isNotEmpty ? widget.address : 'Specialist Address',
                   );
                 }),
               ],
             ),
             SizedBox(height: 8),
             Consumer2<AddressProvider, SpecialistProvider>(builder: (context, addressProvider, userProvider, _) {
-              if (userProvider.specialistModel?.isAvailable == false) {
-                return Center(
-                    child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Text('Specialist is not available at the moment'),
-                ));
-              }
+              // if (userProvider.specialistModel?.isAvailable == false) {
+              //   return Center(
+              //       child: Padding(
+              //     padding: const EdgeInsets.all(20.0),
+              //     child: Text('Specialist is not available at the moment'),
+              //   ));
+              // }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AddressCard(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     title: LocaleData.yurAddress.getString(context),
-                    address: addressProvider.selectedAddress != null ? addressProvider.selectedAddress!.details : 'Tap to select address',
+                    address: userProvider.specialistModel!.address.isNotEmpty ? userProvider.specialistModel!.address : 'Tap to select address',
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 10.h),
                   // (Optional) An extra button to add more time slots, if needed.
                   InkWell(
                     onTap: _showAddressBottomSheet,
@@ -597,7 +619,7 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => SelectAddressBottomSheet(addressController: _addressController),
+      builder: (context) => SizedBox(width: double.infinity, child: SelectAddressBottomSheet(addressController: _addressController)),
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:stylehub/auth_screens/login_page.dart';
 import 'package:stylehub/auth_screens/send_otp_screen.dart';
 import 'package:stylehub/auth_screens/splash_screen.dart';
 import 'package:stylehub/onboarding_page/onboarding_screen.dart';
+import 'package:stylehub/screens/admin/admin_login_screen.dart';
 import 'package:stylehub/screens/customer_pages/customer_home_page.dart';
 import 'package:stylehub/screens/specialist_pages/filter_screen.dart';
 import 'package:stylehub/screens/specialist_pages/profile_screen.dart';
@@ -24,6 +25,7 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
     '/specialist_profile': (context) => SpecialistProfileScreen(),
     '/personal_details': (context) => PersonalDetailScreen(),
     '/filter_screen': (context) => FilterScreen(),
+    '/admin_page': (context) => AdminLoginPage(),
     // '/notification_detail': (context) => NotificationScreen(),
     // '/specialist_detail_screen': (context) => SpecialistDetailScreen(),
     // '/make_appointment_screen': (context) => MakeAppointmentScreen(),

@@ -53,22 +53,22 @@ class FireStoreMethod {
   }
 
   // New method to update profession specifically
-  Future<String> updateServiceProfession({
-    required String userId,
-    required String newProfession,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'profession': newProfession,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
+  // Future<String> updateServiceProfession({
+  //   required String userId,
+  //   required String newProfession,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'profession': newProfession,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+  //     res = 'success';
+  //   } catch (err) {
+  //     res = err.toString();
+  //   }
+  //   return res;
+  // }
 
   /// Updates the 'services' field in the user's document in the 'services' collection
   /// with the given list of services.
@@ -80,18 +80,18 @@ class FireStoreMethod {
   ///
   /// Returns 'success' if the operation is successful, or a string describing the
   /// error if the operation fails.
+  ///
+
   Future<String> updateServices({
     required String userId,
     required List<Map<String, String>> newServices,
   }) async {
     try {
-      // Validate input data first
       for (var service in newServices) {
         if (service['service'] == null || service['service']!.isEmpty || service['price'] == null || service['price']!.isEmpty || service['duration'] == null || service['duration']!.isEmpty) {
           return 'All service fields (name, price, duration) are required';
         }
 
-        // Validate price and duration are numbers
         if (double.tryParse(service['price']!) == null) {
           return 'Price must be a valid number';
         }
@@ -108,21 +108,119 @@ class FireStoreMethod {
 
       return 'success';
     } catch (err) {
-      // More specific error handling
       if (err is FirebaseException) {
         return 'Firebase error: ${err.message}';
       }
       return 'Failed to update services: ${err.toString()}';
     }
   }
+
+  Future<String> updateCategories({
+    required String userId,
+    required List<String> newCategories,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'categories': newCategories,
+      });
+      return 'success';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<List<String>> getExistingCategories(String userId) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (doc.exists && doc.data() != null && doc['categories'] != null) {
+        return List<String>.from(doc['categories']);
+      }
+      return [];
+    } catch (e) {
+      // debugPrint('Error fetching categories: $e');
+      return [];
+    }
+  }
+
+  // Future<String> updateCategories({
+  //   required String userId,
+  //   required List<String> newCategories,
+  // }) async {
+  //   try {
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'categories': newCategories,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+
+  //     return 'success';
+  //   } catch (err) {
+  //     return 'Failed to update categories: ${err.toString()}';
+  //   }
+  // }
+}
+
   // Future<String> updateServices({
   //   required String userId,
   //   required List<Map<String, String>> newServices,
   // }) async {
+  //   try {
+  //     // Validate input data first
+  //     for (var service in newServices) {
+  //       if (service['service'] == null || service['service']!.isEmpty || service['price'] == null || service['price']!.isEmpty || service['duration'] == null || service['duration']!.isEmpty) {
+  //         return 'All service fields (name, price, duration) are required';
+  //       }
+
+  //       // Validate price and duration are numbers
+  //       if (double.tryParse(service['price']!) == null) {
+  //         return 'Price must be a valid number';
+  //       }
+
+  //       if (int.tryParse(service['duration']!) == null) {
+  //         return 'Duration must be a valid number (minutes)';
+  //       }
+  //     }
+
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'services': newServices,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+
+  //     return 'success';
+  //   } catch (err) {
+  //     // More specific error handling
+  //     if (err is FirebaseException) {
+  //       return 'Firebase error: ${err.message}';
+  //     }
+  //     return 'Failed to update services: ${err.toString()}';
+  //   }
+  // }
+
+//   Future<String> updateCategories({
+//     required String userId,
+//     required List<String> newCategories,
+//   }) async {
+//     String res = "Some error occurred";
+//     try {
+//       await _firestore.collection('users').doc(userId).set({
+//         'categories': newCategories,
+//         'timestamp': FieldValue.serverTimestamp(),
+//       }, SetOptions(merge: true));
+//       res = 'success';
+//     } catch (err) {
+//       res = err.toString();
+//     }
+//     return res;
+//   }
+// }
+
+  // Future<String> updateBio({
+  //   required String userId,
+  //   required String newBio,
+  // }) async {
   //   String res = "Some error occurred";
   //   try {
   //     await _firestore.collection('users').doc(userId).set({
-  //       'services': newServices,
+  //       'bio': newBio,
   //       'timestamp': FieldValue.serverTimestamp(),
   //     }, SetOptions(merge: true));
   //     res = 'success';
@@ -132,124 +230,90 @@ class FireStoreMethod {
   //   return res;
   // }
 
-  Future<String> updateCategories({
-    required String userId,
-    required List<String> newCategories,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'categories': newCategories,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
+  // Future<String> updatePhone({
+  //   required String userId,
+  //   required String newPhone,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'phone': newPhone,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+  //     res = 'success';
+  //   } catch (err) {
+  //     res = err.toString();
+  //   }
+  //   return res;
+  // }
 
-  Future<String> updateBio({
-    required String userId,
-    required String newBio,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'bio': newBio,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
+  // Future<String> updateCity({
+  //   required String userId,
+  //   required String newCity,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'city': newCity,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+  //     res = 'success';
+  //   } catch (err) {
+  //     res = err.toString();
+  //   }
+  //   return res;
+  // }
 
-  Future<String> updatePhone({
-    required String userId,
-    required String newPhone,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'phone': newPhone,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
+  // Future<String> updateAddress({
+  //   required String userId,
+  //   required String newAddress,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'address': newAddress,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+  //     res = 'success';
+  //   } catch (err) {
+  //     res = err.toString();
+  //   }
+  //   return res;
+  // }
 
-  Future<String> updateCity({
-    required String userId,
-    required String newCity,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'city': newCity,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
+  // Future<String> updateExperience({
+  //   required String userId,
+  //   required String newExperience,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('users').doc(userId).set({
+  //       'experience': newExperience,
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     }, SetOptions(merge: true));
+  //     res = 'success';
+  //   } catch (err) {
+  //     res = err.toString();
+  //   }
+  //   return res;
+  // }
 
-  Future<String> updateAddress({
-    required String userId,
-    required String newAddress,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'address': newAddress,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
-
-  Future<String> updateExperience({
-    required String userId,
-    required String newExperience,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'experience': newExperience,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
-
-  Future<String> addImages({
-    required String userId,
-    required List<String> newImages,
-  }) async {
-    String res = "Some error occurred";
-    try {
-      await _firestore.collection('users').doc(userId).update({
-        'images': FieldValue.arrayUnion(newImages),
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      res = 'success';
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
+  // Future<String> addImages({
+  //   required String userId,
+  //   required List<String> newImages,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('users').doc(userId).update({
+  //       'images': FieldValue.arrayUnion(newImages),
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //     });
+  //     res = 'success';
+  //   } catch (err) {
+  //     res = err.toString();
+  //   }
+  //   return res;
+  // }
 
   /// Retrieves the average rating for a user.
   ///
@@ -261,21 +325,21 @@ class FireStoreMethod {
   ///
   /// - Parameter userId: The ID of the user whose average rating is to be calculated.
 
-  Future<double> getAverageRating(String userId) async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).collection('reviews').get();
+  // Future<double> getAverageRating(String userId) async {
+  //   QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).collection('reviews').get();
 
-    if (querySnapshot.docs.isEmpty) return 0.0;
+  //   if (querySnapshot.docs.isEmpty) return 0.0;
 
-    double totalRating = 0;
-    for (var doc in querySnapshot.docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      totalRating += (data['rating'] ?? 0).toDouble(); // Ensure rating is double
-    }
+  //   double totalRating = 0;
+  //   for (var doc in querySnapshot.docs) {
+  //     final data = doc.data() as Map<String, dynamic>;
+  //     totalRating += (data['rating'] ?? 0).toDouble(); // Ensure rating is double
+  //   }
 
-    return totalRating / querySnapshot.docs.length;
-  }
+  //   return totalRating / querySnapshot.docs.length;
+  // }
 
   
-}
+// }
 
 

@@ -21,8 +21,8 @@ class AppointmentScreen extends StatefulWidget {
 
 class _AppointmentScreenState extends State<AppointmentScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +43,10 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore.collection('appointments').where('clientId', isEqualTo: user.uid).orderBy('date', descending: true).snapshots(),
+              stream: _firestore.collection('appointments').where('clientId', isEqualTo: user.uid).orderBy('createdAt', descending: true).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: SizedBox.shrink());
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -71,12 +71,12 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     final effectiveStatus = (status == 'booked' && date.isBefore(now)) ? 'completed' : status;
 
                     return AppointmentCard(
-                      appointmentId: appointments[index].id, // Pass the document ID
+                      appointmentId: appointments[index].id,
                       specialistId: appointment['specialistId'] as String,
                       date: date,
                       status: effectiveStatus,
                       onCancel: () => _cancelAppointment(context, appointments[index].id),
-                      onDelete: () => _deleteAppointment(appointments[index].id), // Add this line
+                      onDelete: () => _deleteAppointment(appointments[index].id),
                     );
                   },
                 );
@@ -93,6 +93,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }
 
   Future<void> _cancelAppointment(context, String appointmentId) async {
+    setState(() => isLoading = true);
     FirebaseNotificationService firebasePushNotificationService = FirebaseNotificationService();
     try {
       // Fetch appointment details
@@ -110,7 +111,6 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       // Get specialist's details
       final specialistDoc = await _firestore.collection('users').doc(specialistId).get();
       final specialistToken = specialistDoc['fcmToken'] as String?;
-      // final specialistName = '${specialistDoc['firstName']} ${specialistDoc['lastName']}';
 
       // Update appointment status
       await _firestore.collection('appointments').doc(appointmentId).update({
@@ -130,23 +130,27 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       final weekStart = getFirstMonday(date);
       final availabilityRef = _firestore.collection('availability').doc(specialistId).collection('weeks').doc(weekStart.toIso8601String());
 
-      // Reopen slots in availability
+      // Reopen slots in availability for the specific day
       final availabilityDoc = await availabilityRef.get();
       if (availabilityDoc.exists) {
         List<TimeSlot> slots = (availabilityDoc.data()!['slots'] as List).map((s) => TimeSlot.fromMap(s)).toList();
 
-        // Reopen slots affected by this appointment
+        // Calculate the appointment's day offset from weekStart
+        final appointmentDayOffset = date.difference(weekStart).inDays;
+
+        // Reopen slots affected by this appointment only on the same day
         for (int i = 0; i < slots.length; i++) {
           final slot = slots[i];
+          final slotDate = weekStart.add(Duration(days: slot.day));
           final slotTime = DateTime(
-            date.year,
-            date.month,
-            date.day,
+            slotDate.year,
+            slotDate.month,
+            slotDate.day,
             slot.hour,
             slot.minute,
           );
 
-          if (slotTime.isAfter(appointmentStart.subtract(Duration(minutes: 1))) && slotTime.isBefore(breakEnd)) {
+          if (slot.day == appointmentDayOffset && slotTime.isAfter(appointmentStart.subtract(Duration(minutes: 1))) && slotTime.isBefore(breakEnd)) {
             slots[i] = slot.copyWith(isOpen: true);
           }
         }
@@ -168,17 +172,21 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           final apptEnd = apptStart.add(Duration(minutes: apptDuration));
           final apptBreakEnd = apptEnd.add(Duration(minutes: 15));
 
+          // Calculate the active appointment's day offset from weekStart
+          final apptDayOffset = apptDate.difference(weekStart).inDays;
+
           for (int i = 0; i < slots.length; i++) {
             final slot = slots[i];
+            final slotDate = weekStart.add(Duration(days: slot.day));
             final slotTime = DateTime(
-              apptDate.year,
-              apptDate.month,
-              apptDate.day,
+              slotDate.year,
+              slotDate.month,
+              slotDate.day,
               slot.hour,
               slot.minute,
             );
 
-            if (slotTime.isAfter(apptStart.subtract(Duration(minutes: 1))) && slotTime.isBefore(apptBreakEnd)) {
+            if (slot.day == apptDayOffset && slotTime.isAfter(apptStart.subtract(Duration(minutes: 1))) && slotTime.isBefore(apptBreakEnd)) {
               slots[i] = slot.copyWith(isOpen: false);
             }
           }
@@ -193,23 +201,28 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       if (specialistToken != null) {
         final formattedDate = DateFormat('EEE, MMM d, y').format(date);
         final formattedTime = DateFormat('h:mm a').format(date);
-        firebasePushNotificationService.cancelPushNotification('Appointment Cancelled', 'Your appointment on $formattedDate at $formattedTime has been cancelled', specialistToken);
+        firebasePushNotificationService.cancelPushNotification(
+          'Appointment Cancelled',
+          'Your appointment on $formattedDate at $formattedTime has been cancelled',
+          specialistToken,
+        );
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Appointment cancelled successfully')),
       );
+      setState(() => isLoading = false);
       Navigator.pop(context);
     } catch (e) {
-      // print(e);
-      // print(stackTrace);
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text('Failed to cancel appointment: $e')),
-      // );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to cancel appointment: an error occurred')),
+      );
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
-  Future<void> _deleteAppointment( String appointmentId) async {
+  Future<void> _deleteAppointment(String appointmentId) async {
     try {
       await _firestore.collection('appointments').doc(appointmentId).delete();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,7 +230,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete appointment: $e')),
+        SnackBar(content: Text('Failed to delete appointment: an error occurred')),
       );
     }
   }
@@ -308,7 +321,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_isLoading) const Center(child: CircularProgressIndicator()) else if (_specialistData != null) _buildSpecialistInfo(),
+            if (_isLoading) const Center(child: SizedBox()) else if (_specialistData != null) _buildSpecialistInfo(),
             SizedBox(height: 12.h),
             _buildAppointmentInfo(),
             SizedBox(height: 16.h),
@@ -321,18 +334,35 @@ class _AppointmentCardState extends State<AppointmentCard> {
                   InkWell(
                     radius: 20.dg,
                     onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => SizedBox(
-                          height: 250.h,
-                          child: WriteReviewWidget(
-                              // toggleReviewField: toggleReviewField,
-                              onSubmit: (int rating, String review) {
-                            _submitReview(context, rating, review);
-                          }),
-                        ),
-                      );
+                      showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                contentPadding: EdgeInsets.zero,
+                                backgroundColor: Colors.transparent,
+                                content: SizedBox(
+                                  height: 380.h,
+                                  width: 350.w,
+                                  child: WriteReviewWidget(
+                                      // toggleReviewField: toggleReviewField,
+                                      onSubmit: (int rating, String review) {
+                                    _submitReview(context, rating, review);
+                                  }),
+                                ),
+                              ));
+
+                      // showModalBottomSheet(
+                      //   isScrollControlled: true,
+                      //   context: context,
+                      //   backgroundColor: Colors.transparent,
+                      //   builder: (context) => SizedBox(
+                      //     height: 250.h,
+                      //     child: WriteReviewWidget(
+                      //         // toggleReviewField: toggleReviewField,
+                      //         onSubmit: (int rating, String review) {
+                      //       _submitReview(context, rating, review);
+                      //     }),
+                      //   ),
+                      // );
                     },
                     // => setState(() {
                     //   toggle,ReviewField = !toggleReviewField;
@@ -393,16 +423,17 @@ class _AppointmentCardState extends State<AppointmentCard> {
               ),
               child: Text(
                 widget.status.toUpperCase(),
-                style: appTextStyle12K(AppColors.whiteColor),
+                style: appTextStyle10(AppColors.whiteColor),
               ),
             ),
-            if (widget.status == 'booked')
-              IconButton(
-                icon: Icon(
-                  Icons.notifications_on_sharp,
-                ),
-                onPressed: _scheduleReminder,
-              ),
+            // if (widget.status == 'cancelled' || widget.status == 'completed') _buildDeleteButton(),
+            // if (widget.status == 'booked')
+            //   IconButton(
+            //     icon: Icon(
+            //       Icons.notifications_on_sharp,
+            //     ),
+            //     onPressed: _scheduleReminder,
+            //   ),
           ],
         ),
       ],
@@ -444,7 +475,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
     );
   }
 
-  Future<void> _scheduleReminder() async {
+  Future<void> scheduleReminder() async {
     final now = DateTime.now();
     final appointmentTime = widget.date;
     final oneHourBefore = appointmentTime.subtract(Duration(hours: 1));
@@ -469,68 +500,65 @@ class _AppointmentCardState extends State<AppointmentCard> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to set reminder: $e')),
+        SnackBar(content: Text('Failed to set reminder: an error occurred.')),
       );
     }
   }
 
   Widget _buildActionButtons() {
-    final bool canDelete = widget.status == 'cancelled' || widget.status == 'completed' || widget.date.isBefore(DateTime.now());
+    // final bool canDelete = widget.status == 'cancelled' || widget.status == 'completed' || widget.date.isBefore(DateTime.now());
 
     if (widget.status == 'booked') {
-      return _buildCancelButton();
-    } else if (canDelete) {
-      return _buildDeleteButton();
+      return _buildCancelButton(_isLoading);
+      // }
+      // else if (canDelete) {
+      //   return _buildDeleteButton();
     } else {
       return const SizedBox.shrink();
     }
   }
 
   Widget _buildDeleteButton() {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () => showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text('Delete Appointment'),
-                content: Text('Are you sure you want to delete this appointment?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      widget.onDelete(); // Fixed: Call onDelete instead of onCancel
-                    },
-                    child: Text('Yes'),
-                  ),
-                ],
-              ),
-            ),
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 8.h),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.dg),
-                color: Colors.red,
-              ),
-              child: Center(
-                child: Text(
-                  'Delete',
-                  style: appTextStyle12K(AppColors.whiteColor),
-                ),
-              ),
-            ),
+    return GestureDetector(
+      onTap: () => showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Delete Appointment'),
+          content: Text(
+            'Are you sure you want to delete this appointment?',
+            style: appTextStyle14(AppColors.mainBlackTextColor),
           ),
+          actions: [
+            InkWell(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 40.w),
+                decoration: BoxDecoration(color: AppColors.appBGColor, borderRadius: BorderRadius.circular(12.dg)),
+                child: Text('No'),
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                widget.onDelete();
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 40.w),
+                decoration: BoxDecoration(color: AppColors.appBGColor, borderRadius: BorderRadius.circular(12.dg)),
+                child: Text('Yes'),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Icon(Icons.delete, size: 25.dg, color: AppColors.mainBlackTextColor),
+      ),
     );
   }
 
-  Widget _buildCancelButton() {
+  Widget _buildCancelButton(bool isLoading) {
     return Row(
       children: [
         SizedBox(height: 16.h),
@@ -568,11 +596,14 @@ class _AppointmentCardState extends State<AppointmentCard> {
                               ),
                               Spacer(),
                               InkWell(
-                                onTap: widget.onCancel,
+                                onTap: () {
+                                  widget.onCancel();
+                                  Navigator.pop(context);
+                                },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 40.w),
                                   decoration: BoxDecoration(color: AppColors.appBGColor, borderRadius: BorderRadius.circular(12.dg)),
-                                  child: Text('Yes'),
+                                  child: isLoading ? const CircularProgressIndicator() : Text('Yes'),
                                 ),
                               ),
                             ],

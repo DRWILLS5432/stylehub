@@ -14,6 +14,7 @@ import 'package:stylehub/constants/app/textstyle.dart';
 import 'package:stylehub/constants/localization/locales.dart';
 import 'package:stylehub/screens/specialist_pages/provider/edit_category_provider.dart';
 import 'package:stylehub/screens/specialist_pages/provider/location_provider.dart';
+import 'package:stylehub/screens/specialist_pages/provider/specialist_provider.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/edit_category_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/personal_detail_screen.dart';
 import 'package:stylehub/screens/specialist_pages/widgets/select_address_widget.dart';
@@ -261,49 +262,6 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
     }
   }
 
-  // Future<void> _updateProfession(BuildContext context) async {
-  //   if (_professionController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Profession cannot be empty')),
-  //     );
-  //     return;
-  //   }
-
-  //   setState(() => isLoading = true);
-  //   try {
-  //     final user = FirebaseAuth.instance.currentUser;
-  //     if (user == null) return;
-
-  //     final res = await FireStoreMethod().updateServiceProfession(
-  //       userId: user.uid,
-  //       newProfession: _professionController.text,
-  //     );
-
-  //     if (res == 'success') {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text('Profession updated successfully!')),
-  //       );
-  //       setState(() {
-  //         _initialData = {
-  //           ...?_initialData,
-  //           'profession': _professionController.text,
-  //         };
-  //         _isEditingProfession = false;
-  //       });
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Error: $res')),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Error updating profession: $e')),
-  //     );
-  //   } finally {
-  //     setState(() => isLoading = false);
-  //   }
-  // }
-
   Future<void> _updateExperience(context) async {
     if (_experienceController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -433,14 +391,14 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      await _firestore.collection('users').doc(user.uid).set({
+      await _firestore.collection('users').doc(user.uid).update({
         'address': _addressController.text,
         'lat': selectedAddress.lat, // Add latitude
         'lng': selectedAddress.lng, // Add longitude
         'addressStatus': 'pending',
         'status': 'partial-pending',
         'lastUpdated': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Address updated and submitted for approval!')),
@@ -535,7 +493,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
       );
 
       setState(() {
-        _statusFields['experienceStatus'] = 'pending';
+        _statusFields['phoneStatus'] = 'pending';
         _isEditingPhone = false;
       });
 
@@ -804,72 +762,74 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
   Widget _buildAddressSection() {
     final hasAddress = _initialData?['address'] != null && _initialData!['address'].toString().isNotEmpty;
     final selectedAddress = Provider.of<AddressProvider>(context).selectedAddress;
-    final hasValue = _addressController.text.isNotEmpty;
+    // final hasValue = _addressController.text.isNotEmpty;
 
     // if (selectedAddress == null) {
     //   return Container();
     // }
 
-    _addressController.text = selectedAddress?.details.toString() ?? '';
+    _addressController.text = selectedAddress?.address.toString() ?? '';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        PersonalDetailText(text: 'Address'),
-        SizedBox(height: 15.h),
-        InkWell(
-          onTap: _showAddressBottomSheet,
-          child: IgnorePointer(
-            child: TextFormField(
-              controller: _addressController,
-              decoration: InputDecoration(
-                labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
-                hintStyle: appTextStyle16400(AppColors.appGrayTextColor),
-                hintText: '',
-                errorText: hasValue ? null : 'This field is required',
-                fillColor: AppColors.grayColor,
-                suffixIcon: Icon(
-                  Icons.arrow_drop_down,
-                  size: 26.h,
+    return Consumer<SpecialistProvider>(builder: (context, provider, _) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PersonalDetailText(text: 'Address'),
+          SizedBox(height: 15.h),
+          InkWell(
+            onTap: _showAddressBottomSheet,
+            child: IgnorePointer(
+              child: TextFormField(
+                controller: _addressController,
+                decoration: InputDecoration(
+                  labelStyle: appTextStyle12K(AppColors.appGrayTextColor),
+                  hintStyle: appTextStyle16400(AppColors.appGrayTextColor),
+                  hintText: provider.specialistModel!.address,
+                  errorText: provider.specialistModel!.address.isNotEmpty ? null : 'This field is required',
+                  fillColor: AppColors.grayColor,
+                  suffixIcon: Icon(
+                    Icons.arrow_drop_down,
+                    size: 26.h,
+                  ),
+                  filled: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.h), borderSide: BorderSide.none),
                 ),
-                filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.h), borderSide: BorderSide.none),
+                enabled: _isEditingAddress || !hasAddress,
               ),
-              enabled: _isEditingAddress || !hasAddress,
             ),
           ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () {
-                if (_isEditingAddress || !hasAddress) {
-                  _updateAddress(context);
-                }
-                setState(() {
-                  _isEditingAddress = !_isEditingAddress;
-                });
-              },
-              child: Row(
-                children: [
-                  _buildFieldStatusIndicator('addressStatus'),
-                  SizedBox(width: 10.w),
-                  Text(
-                    _isEditingAddress
-                        ? LocaleData.save.getString(context)
-                        : hasAddress
-                            ? LocaleData.edit.getString(context)
-                            : LocaleData.create.getString(context),
-                    style: appTextStyle14(AppColors.newThirdGrayColor),
-                  ),
-                ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  if (_isEditingAddress || !hasAddress) {
+                    _updateAddress(context);
+                  }
+                  setState(() {
+                    _isEditingAddress = !_isEditingAddress;
+                  });
+                },
+                child: Row(
+                  children: [
+                    _buildFieldStatusIndicator('addressStatus'),
+                    SizedBox(width: 10.w),
+                    Text(
+                      _isEditingAddress
+                          ? LocaleData.save.getString(context)
+                          : hasAddress
+                              ? LocaleData.edit.getString(context)
+                              : LocaleData.create.getString(context),
+                      style: appTextStyle14(AppColors.newThirdGrayColor),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
+            ],
+          ),
+        ],
+      );
+    });
   }
 
   Widget _buildBioSection() {
@@ -1408,7 +1368,7 @@ class _UpdateServiceWidgetState extends State<UpdateServiceWidget> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => SelectAddressBottomSheet(addressController: _addressController),
+      builder: (context) => SizedBox(width: double.infinity, child: SelectAddressBottomSheet(addressController: _addressController)),
     );
   }
 }

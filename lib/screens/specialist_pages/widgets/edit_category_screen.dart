@@ -24,6 +24,10 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
   void initState() {
     fetchCategories();
     super.initState();
+    final provider = Provider.of<EditCategoryProvider>(context, listen: false);
+    provider.loadCategories();
+    provider.loadExistingServices();
+    provider.loadExistingCategories();
   }
 
   void fetchCategories() {
@@ -70,6 +74,42 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
     }
   }
 
+  // Future<void> _updateCategory() async {
+  //   setState(() => isLoading = true);
+  //   final provider = Provider.of<EditCategoryProvider>(context, listen: false);
+
+  //   try {
+  //     final user = FirebaseAuth.instance.currentUser;
+  //     if (user == null) return;
+
+  //     // Get the actual category names from the IDs
+  //     List<String> categoryNames = provider.selectedCategories.map((categoryId) {
+  //       return provider.getCategoryName(categoryId, 'en'); // or use current language
+  //     }).toList();
+
+  //     final res = await FireStoreMethod().updateCategories(
+  //       userId: user.uid,
+  //       newCategories: categoryNames, // Send names instead of IDs
+  //     );
+
+  //     if (res == 'success') {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Profession updated successfully!')),
+  //       );
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Error: $res')),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Error updating profession: $e')),
+  //     );
+  //   } finally {
+  //     setState(() => isLoading = false);
+  //   }
+  // }
+
   Future<void> _updateCategory() async {
     setState(() => isLoading = true);
     final provider = Provider.of<EditCategoryProvider>(context, listen: false);
@@ -78,19 +118,18 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // Get the actual category names from the IDs
-      List<String> categoryNames = provider.selectedCategories.map((categoryId) {
-        return provider.getCategoryName(categoryId, 'en'); // or use current language
-      }).toList();
+      // Get category names in the current language
+      final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+      List<String> categoryNames = provider.getSelectedCategoryNames(languageProvider.currentLanguage);
 
       final res = await FireStoreMethod().updateCategories(
         userId: user.uid,
-        newCategories: categoryNames, // Send names instead of IDs
+        newCategories: categoryNames,
       );
 
       if (res == 'success') {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profession updated successfully!')),
+          const SnackBar(content: Text('Categories updated successfully!')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +138,7 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating profession: $e')),
+        SnackBar(content: Text('Error updating categories: $e')),
       );
     } finally {
       setState(() => isLoading = false);
@@ -276,7 +315,8 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: TextField(
+                      child: TextFormField(
+                        initialValue: provider.services[index].name,
                         cursorColor: AppColors.appBGColor,
                         decoration: InputDecoration(
                           hintText: LocaleData.serviceName.getString(context),
@@ -301,7 +341,8 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                     SizedBox(width: 10.w),
                     Expanded(
                       flex: 1,
-                      child: TextField(
+                      child: TextFormField(
+                        initialValue: provider.services[index].price,
                         cursorColor: AppColors.appBGColor,
                         decoration: InputDecoration(
                           hintText: LocaleData.price.getString(context),
@@ -327,7 +368,8 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                     SizedBox(width: 10.w),
                     Expanded(
                       flex: 1,
-                      child: TextField(
+                      child: TextFormField(
+                        initialValue: provider.services[index].duration,
                         cursorColor: AppColors.appBGColor,
                         decoration: InputDecoration(
                           hintText: '60 mins',
@@ -474,76 +516,3 @@ class SelectedCategoryWidget extends StatelessWidget {
     );
   }
 }
-
-// // / Updated ResultsScreen
-// class ResultsScreen extends StatelessWidget {
-//   const ResultsScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final provider = Provider.of<EditCategoryProvider>(context);
-
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Selected Services'),
-//         actions: [
-//           IconButton(
-//             icon: const Icon(Icons.clear_all),
-//             onPressed: () => provider.clearAll(),
-//             tooltip: 'Clear All Data',
-//           ),
-//         ],
-//       ),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // Submitted Categories
-//             Text('Submitted Categories:', style: Theme.of(context).textTheme.titleLarge),
-//             Wrap(
-//               spacing: 8,
-//               children: provider.submittedCategories.map((category) => Chip(label: Text(category))).toList(),
-//             ),
-
-//             const SizedBox(height: 24),
-
-//             // Submitted Services with Selection
-//             Text('Submitted Services:', style: Theme.of(context).textTheme.titleLarge),
-//             const SizedBox(height: 8),
-//             ...provider.submittedServices.asMap().entries.map((entry) {
-//               final index = entry.key;
-//               final service = entry.value;
-//               return Card(
-//                 margin: const EdgeInsets.only(bottom: 8),
-//                 child: CheckboxListTile(
-//                   title: Text(service.name),
-//                   subtitle: Text(service.price),
-//                   value: service.selected,
-//                   onChanged: (_) => provider.toggleSubmittedServiceSelection(index),
-//                 ),
-//               );
-//             }),
-
-//             const SizedBox(height: 24),
-
-//             // Selected Services Summary
-//             if (provider.submittedServices.any((s) => s.selected))
-//               Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text('Selected Services:', style: Theme.of(context).textTheme.titleMedium),
-//                   ...provider.submittedServices.where((s) => s.selected).map(
-//                         (service) => ListTile(
-//                           title: Text(service.name),
-//                           trailing: Text(service.price),
-//                         ),
-//                       ),
-//                 ],
-//               ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

@@ -26,7 +26,7 @@ class SpecialistDashboard extends StatefulWidget {
   State<SpecialistDashboard> createState() => _SpecialistDashboardState();
 }
 
-class _SpecialistDashboardState extends State<SpecialistDashboard> {
+class _SpecialistDashboardState extends State<SpecialistDashboard> with RouteAware {
   String? userName;
   Uint8List? _imageBytes;
   String? currentUserId;
@@ -34,12 +34,22 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   double? _userLat;
   double? _userLng;
   // Address? _selectedAddress;
-
+  static final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
   @override
   void initState() {
     super.initState();
-    _fetchUserData();
+
     fetchCategories();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchUserData();
+    final ModalRoute<dynamic>? modalRoute = ModalRoute.of(context);
+    if (modalRoute is PageRoute) {
+      routeObserver.subscribe(this, modalRoute);
+    }
   }
 
 // 2. Modify _fetchUserData to get stored coordinates
@@ -50,33 +60,119 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   }
 
   Future<void> _fetchUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text('No user is currently signed in')),
+        // );
+        return;
+      }
+
       setState(() => currentUserId = user.uid);
 
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
-      if (userDoc.exists) {
-        Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
-
-        if (userData != null) {
-          setState(() {
-            userName = userData['firstName'] as String?;
-            String? base64Image = userData['profileImage'] as String?;
-            if (base64Image != null) {
-              try {
-                _imageBytes = base64Decode(base64Image);
-              } catch (e) {
-                debugPrint('Error decoding image: $e');
-              }
-            }
-          });
-
-          _userLat = userData['lat']?.toDouble();
-          _userLng = userData['lng']?.toDouble();
-        }
+      if (!userDoc.exists) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text('User data not found')),
+        // );
+        return;
       }
+
+      Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+      if (userData == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User data is empty')),
+        );
+        return;
+      }
+
+      setState(() {
+        // Safely access firstName
+        userName = userData['firstName'] as String? ?? 'Unknown';
+
+        // Safely handle profileImage
+        String? base64Image = userData['profileImage'] as String?;
+        if (base64Image != null && base64Image.isNotEmpty) {
+          try {
+            _imageBytes = base64Decode(base64Image);
+          } catch (e) {
+            debugPrint('Error decoding image: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to load profile image')),
+            );
+          }
+        }
+
+        // Safely handle lat and lng
+        try {
+          _userLat = _parseCoordinate(userData['lat']);
+          _userLng = _parseCoordinate(userData['lng']);
+        } catch (e) {
+          debugPrint('Error parsing coordinates: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load location data')),
+          );
+          _userLat = null;
+          _userLng = null;
+        }
+      });
+    } catch (e) {
+      debugPrint('Error fetching user data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading user data. Please try again.')),
+      );
     }
+  }
+
+  /// Helper function to safely parse coordinates to double
+  double? _parseCoordinate(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
+  }
+  // Future<void> _fetchUserData() async {
+  //   User? user = FirebaseAuth.instance.currentUser;
+  //   if (user != null) {
+  //     setState(() => currentUserId = user.uid);
+
+  //     DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+  //     if (userDoc.exists) {
+  //       Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+  //       if (userData != null) {
+  //         setState(() {
+  //           userName = userData['firstName'] as String?;
+  //           String? base64Image = userData['profileImage'] as String?;
+  //           if (base64Image != null) {
+  //             try {
+  //               _imageBytes = base64Decode(base64Image);
+  //             } catch (e) {
+  //               debugPrint('Error decoding image: $e');
+  //             }
+  //           }
+  //         });
+
+  //         _userLat = userData['lat']?.toDouble();
+  //         _userLng = userData['lng']?.toDouble();
+  //       }
+  //     }
+  //   }
+  // }
+
+  @override
+  void dispose() {
+    // Unsubscribe from RouteAware
+    routeObserver.unsubscribe(this);
+
+    super.dispose();
   }
 
   List<String> categoryImages = [
@@ -88,6 +184,20 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
   ];
   Stream<QuerySnapshot> _getSpecialistsStream(FilterProvider filterProvider) {
     Query query = FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Stylist');
+
+    // Filter for all status fields being "approved"
+    const statusFields = [
+      'professionStatus',
+      'experienceStatus',
+      'cityStatus',
+      'addressStatus',
+      'bioStatus',
+      'phoneStatus',
+      'previousWorkStatus',
+    ];
+    for (final statusField in statusFields) {
+      query = query.where(statusField, isEqualTo: 'approved');
+    }
 
     // Existing filters
     if (filterProvider.selectedCity != null && filterProvider.selectedCity!.isNotEmpty) {
@@ -116,6 +226,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
         slivers: [
           // First SliverAppBar for the header section
           SliverAppBar(
+            automaticallyImplyLeading: false,
             expandedHeight: 170.h,
             toolbarHeight: 10.h,
             pinned: true,
@@ -351,6 +462,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
             builder: (context, filterProvider, child) {
               return StreamBuilder<QuerySnapshot>(
                 stream: _getSpecialistsStream(filterProvider),
+
 // In the StreamBuilder's builder function:
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
@@ -404,6 +516,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
           ),
 
           SliverAppBar(
+            automaticallyImplyLeading: false,
             toolbarHeight: 40,
           )
         ],
@@ -442,7 +555,7 @@ class _SpecialistDashboardState extends State<SpecialistDashboard> {
                     ),
                     child: CircleAvatar(
                       radius: 60.dg,
-                      backgroundImage: user.profileImage != null ? MemoryImage(base64Decode(user.profileImage!)) : AssetImage('assets/master1.png') as ImageProvider,
+                      backgroundImage: user.profileImage != null ? MemoryImage(base64Decode(user.profileImage!)) : AssetImage('assets/images/pro.png') as ImageProvider,
                     ),
                   ),
                   SizedBox(width: 16),

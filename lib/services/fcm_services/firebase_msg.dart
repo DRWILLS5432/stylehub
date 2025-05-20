@@ -115,11 +115,19 @@ class FirebaseNotificationService {
   }
 
   static Future<void> _handleForegroundMessage(RemoteMessage message) async {
+    final user = FirebaseAuth.instance.currentUser;
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+    // Check if the user has notifications enabled
+    bool isNotificationEnabled = userDoc.get('isNotificationsEnabled') ?? false;
+    if (isNotificationEnabled == false) {
+      return;
+    }
+
     await _showNotification(message);
     _saveNotification(message);
   }
 
-  static void _saveNotification(RemoteMessage message) {
+  static Future<void> _saveNotification(RemoteMessage message) async {
     try {
       final context = navigatorKey.currentContext;
       if (context == null) {

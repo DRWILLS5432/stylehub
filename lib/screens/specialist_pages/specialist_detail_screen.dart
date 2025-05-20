@@ -191,6 +191,8 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
 
               final services = List<Map<String, dynamic>>.from(userData['services'] ?? []);
               final phone = userData['phone'];
+              final address = userData['address'];
+              final available = userData['isAvailable'];
 
               // Set default top image if it's not set
               // if (selectedImage == null && images.isNotEmpty) {
@@ -594,7 +596,16 @@ class _SpecialistDetailScreenState extends State<SpecialistDetailScreen> {
                             color: AppColors.appBGColor,
                             text: Text(LocaleData.makeAppointment.getString(context), style: appTextStyle15(AppColors.newThirdGrayColor)),
                             onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => MakeAppointmentScreen(specialistId: widget.userId, specialistName: widget.name)));
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => MakeAppointmentScreen(
+                                            specialistId: widget.userId,
+                                            specialistName: widget.name,
+                                            address: address,
+                                            isAvailable: available,
+
+                                          )));
                             },
                             // onPressed: () => Navigator.pushNamed(context, '/make_appointment_screen'),
                           ),
