@@ -426,7 +426,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                 style: appTextStyle10(AppColors.whiteColor),
               ),
             ),
-            // if (widget.status == 'cancelled' || widget.status == 'completed') _buildDeleteButton(),
+            if (widget.status == 'cancelled' || widget.status == 'completed') _buildDeleteButton(),
             // if (widget.status == 'booked')
             //   IconButton(
             //     icon: Icon(

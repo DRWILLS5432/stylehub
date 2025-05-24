@@ -123,6 +123,7 @@ mixin LocaleData {
   static const String subject = 'Subject';
   static const String message = 'Message';
   static const String submit = 'Submit';
+  static const String specialistNotReady = 'Specialist is not ready to go your address';
 
 // FOR ENGLISH
   static const Map<String, dynamic> EN = {
@@ -239,6 +240,7 @@ mixin LocaleData {
     subject: 'Subject',
     message: 'Message',
     submit: 'Submit',
+    specialistNotReady: 'Specialist is not ready to go your address',
   };
 
   // static const Map<String, dynamic> UK = {
@@ -439,5 +441,6 @@ mixin LocaleData {
     subject: 'Тема',
     message: 'Сообщение',
     submit: 'Отправить',
+    specialistNotReady: 'Специалист не готов приехать по вашему адресу',
   };
 }

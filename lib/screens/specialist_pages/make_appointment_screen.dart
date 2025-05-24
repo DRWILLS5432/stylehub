@@ -528,13 +528,13 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Consumer2<AddressProvider, SpecialistProvider>(builder: (context, addressProvider, address, _) {
-                  if (widget.isAvailable == false) {
-                    return Center(
-                        child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text('Specialist is not available at the moment'),
-                    ));
-                  }
+                  // if (widget.isAvailable == false) {
+                  //   return Center(
+                  //       child: Padding(
+                  //     padding: const EdgeInsets.all(20.0),
+                  //     child: Text('Specialist is not available at the moment'),
+                  //   ));
+                  // }
                   return AddressCard(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     title: LocaleData.specialistAddress.getString(context),
@@ -545,13 +545,13 @@ class _MakeAppointmentScreenState extends State<MakeAppointmentScreen> {
             ),
             SizedBox(height: 8),
             Consumer2<AddressProvider, SpecialistProvider>(builder: (context, addressProvider, userProvider, _) {
-              // if (userProvider.specialistModel?.isAvailable == false) {
-              //   return Center(
-              //       child: Padding(
-              //     padding: const EdgeInsets.all(20.0),
-              //     child: Text('Specialist is not available at the moment'),
-              //   ));
-              // }
+              if (userProvider.specialistModel?.isAvailable == false) {
+                return Center(
+                    child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(LocaleData.specialistNotReady.getString(context)),
+                ));
+              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
