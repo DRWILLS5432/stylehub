@@ -1,31 +1,48 @@
-import com.android.Version
-buildscript {
-    ext.kotlin_version = '1.9.10' // ✅ Required for Firebase plugins
-    repositories {
-        google()
-        mavenCentral()
+def kotlin_version = '1.9.10'  // Make sure this matches your project-level build.gradle
+
+android {
+    namespace 'com.yourcompany.yourapp'  // replace with your app's namespace
+    compileSdkVersion 33  // or your current version
+
+    defaultConfig {
+        applicationId "com.yourcompany.yourapp"  // replace with your app id
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+
+        // If you have multidex enabled
+        // multiDexEnabled true
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.5.0' // ✅ Modern AGP
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true  // THIS ENABLES CORE LIBRARY DESUGARING
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-rootProject.buildDir = "../build"
-subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
-    project.evaluationDependsOn(":app")
-}
+    // Core library desugaring dependency required to fix your build error:
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 
-tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+    // Your other dependencies, for example:
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+
+    // Add any Firebase, Flutter dependencies, etc.
 }
