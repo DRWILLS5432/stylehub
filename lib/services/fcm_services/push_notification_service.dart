@@ -1,34 +1,34 @@
 import 'dart:convert';
-
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:http/http.dart' as http;
 
 class PushNotificationService {
   static Future<String> getAccessToken() async {
-    final serviceAccessJson =
-        // ADD THE SERVICE ACCOUNT JSON
+    final serviceAccessJson = jsonDecode(
+      await rootBundle.loadString('assets/service_account.json'),
+    );
 
+    final credentials = auth.ServiceAccountCredentials.fromJson(serviceAccessJson);
 
-    // Properly formatted scopes with commas
-    List<String> scopes = ['https://www.googleapis.com/auth/firebase.messaging', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'];
+    const scopes = [
+      'https://www.googleapis.com/auth/firebase.messaging',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/userinfo.profile',
+    ];
 
     try {
-      final client = await auth.clientViaServiceAccount(auth.ServiceAccountCredentials.fromJson(serviceAccessJson), scopes);
-
-      final credentials = await auth.obtainAccessCredentialsViaServiceAccount(auth.ServiceAccountCredentials.fromJson(serviceAccessJson), scopes, client);
-
+      final client = await auth.clientViaServiceAccount(credentials, scopes);
+      final accessToken = client.credentials.accessToken.data;
       client.close();
-      return credentials.accessToken.data;
+      return accessToken;
     } catch (e) {
-      // print('Error getting access token: $e');
       rethrow;
     }
   }
 
-  // static Future<void> sendPushNotificationToClient(
-
   static Future<void> sendPushNotification(String fcmToken, String title, String body) async {
-    final accessToken = await PushNotificationService.getAccessToken();
+    final accessToken = await getAccessToken();
 
     final response = await http.post(
       Uri.parse('https://fcm.googleapis.com/v1/projects/stylehub-1cfee/messages:send'),
@@ -39,15 +39,13 @@ class PushNotificationService {
       body: jsonEncode({
         "message": {
           "token": fcmToken,
-          'notification': {
-            'title': title,
-            'body': body,
+          "notification": {
+            "title": title,
+            "body": body,
           },
           "data": {
             "title": title,
             "body": body,
-            // "screen": "broadcast",
-            // "broadcastId": "123",
           },
           "android": {
             "priority": "high",
@@ -61,10 +59,8 @@ class PushNotificationService {
       }),
     );
 
-    // print('Response status:}');
-    // print('Response body: ');
+    // Uncomment for debugging:
+    // print('Response status: ${response.statusCode}');
+    // print('Response body: ${response.body}');
   }
 }
-
-// Url to allow /expose secret key
-// https://github.com/DRWILLS5432/stylehub/security/secret-scanning/unblock-secret/2votLMVyNHSIv9w2YQrrjfL8qlb
