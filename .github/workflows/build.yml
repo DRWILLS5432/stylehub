@@ -33,7 +33,7 @@ jobs:
           flutter pub get
 
       - name: Build
-        run: flutter build apk --debug --android-skip-build-dependency-validation
+        run: flutter build apk --debug 
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
