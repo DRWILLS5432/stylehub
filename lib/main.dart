@@ -20,18 +20,16 @@ import 'firebase_options.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterLocalization.instance.ensureInitialized();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Africa/Casablanca'));
-  // Initialize FCM and get token
+
   final firebaseService = FirebaseService();
-  // Initialize FCM
-  // await FirebaseNotificationService.initialize();
-  // Initialize notifications
+
   await FirebaseNotificationService.initialize();
 
-  // Set up token refresh listener
   FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
     if (FirebaseAuth.instance.currentUser != null) {
       firebaseService.saveFcmToken(FirebaseAuth.instance.currentUser!.uid, newToken);
@@ -40,6 +38,7 @@ Future<void> main() async {
 
   runApp(MyApp());
 }
+
 
 class MyApp extends StatefulWidget {
   const MyApp({
@@ -83,7 +82,7 @@ class _MyAppState extends State<MyApp> {
                   primarySwatch: Colors.deepPurple,
                   appBarTheme: AppBarTheme(color: AppColors.whiteColor, surfaceTintColor: AppColors.whiteColor),
                   scaffoldBackgroundColor: AppColors.whiteColor,
-                  dialogTheme: DialogTheme(
+                  dialogTheme: const DialogTheme(
                     backgroundColor: AppColors.whiteColor,
                   ),
                 ),
