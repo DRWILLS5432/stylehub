@@ -1,12 +1,3 @@
-name: Build
-
-on:
-  push:
-    branches:
-      - dev
-  pull_request:
-    types: [opened, synchronize, reopened]
-
 jobs:
   sonarqube:
     name: SonarQube
@@ -20,7 +11,32 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2.10.0
         with:
-          flutter-version: '3.22.1' # 👈 Make sure it's at least 3.22.1
+          flutter-version: '3.22.2' # ✅ Flutter 3.22.2 includes Dart 3.5.4
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build
+        run: flutter build apk --debug
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+jobs:
+  sonarqube:
+    name: SonarQube
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.10.0
+        with:
+          flutter-version: '3.22.2' # ✅ Flutter 3.22.2 includes Dart 3.5.4
 
       - name: Install dependencies
         run: flutter pub get
