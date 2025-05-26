@@ -82,7 +82,7 @@ class _MyAppState extends State<MyApp> {
                   primarySwatch: Colors.deepPurple,
                   appBarTheme: AppBarTheme(color: AppColors.whiteColor, surfaceTintColor: AppColors.whiteColor),
                   scaffoldBackgroundColor: AppColors.whiteColor,
-                  dialogTheme: const DialogTheme(
+                  dialogTheme: const DialogThemeData(
                     backgroundColor: AppColors.whiteColor,
                   ),
                 ),
