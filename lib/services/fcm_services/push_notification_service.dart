@@ -8,7 +8,7 @@ class PushNotificationService {
     final serviceAccessJson =
         // ADD THE SERVICE ACCOUNT JSON
 
-
+    
     // Properly formatted scopes with commas
     List<String> scopes = ['https://www.googleapis.com/auth/firebase.messaging', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'];
 
